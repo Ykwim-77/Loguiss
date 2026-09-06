@@ -1,5 +1,5 @@
 function Politicas() {
-return (
+  return (
     <div className="min-h-screen bg-gradient-to-b from-[#050212] via-[#0b0820] to-[#0b0a1a] flex items-start justify-center py-16">
       <div className="w-full max-w-3xl px-6">
         <header className="mb-8">
@@ -99,7 +99,7 @@ return (
               Em caso de dúvidas ou para exercer direitos previstos na LGPD, contacte:
             </p>
             <p className="mt-3 text-sm text-gray-400">
-              E-mails: rafaelpilonetto59@gmail.com | christian.martinkoski@gmail.com<br/>
+              E-mails: rafaelpilonetto59@gmail.com | christian.martinkoski@gmail.com<br />
               Responsáveis: Rafael Luiz Pilonetto e Christian da Rosa Martinkoski
             </p>
           </section>

@@ -53,7 +53,7 @@ function Home() {
             icon: Cog,
             href: "/configuracoes",
         },
-    ];  
+    ];
 
     return (
         <div className="min-h-screen bg-[#050212] text-white">

@@ -9,6 +9,7 @@ export default async function list_produto_service(req, res) {
                         categoria: true
                     }
                 }
+                
             }
         })
         return res.status(200).json({MSG: "produtos encontrados!!", produtos: produtos})

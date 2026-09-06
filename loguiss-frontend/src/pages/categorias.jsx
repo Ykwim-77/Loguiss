@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search } from 'lucide-react';
 import { SideBar } from '../components/sidebar';
@@ -19,7 +18,8 @@ function Categorias() {
             label: "Cadastros",
             icon: Folder,
             subMenu: [
-                { label: "Produtos", 
+                {
+                    label: "Produtos",
                     subMenu: [
                         { label: "Produtos", href: "/produtos" },
                         { label: "Unidade de Medida", href: "/unidades-medida" },
@@ -64,7 +64,7 @@ function Categorias() {
             icon: Cog,
             href: "/configuracoes",
         },
-    ];  
+    ];
 
     const [showCategoryForm, setShowCategoryForm] = useState(false);
 
@@ -86,7 +86,7 @@ function Categorias() {
             desc: "",
         });
     };
-    
+
     const [categories, setCategories] = useState([]);
 
     return (
@@ -116,7 +116,7 @@ function Categorias() {
                         className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
                         onClick={() => setShowCategoryForm(true)}
                     >
-                        Adicionar nova categoria    
+                        Adicionar nova categoria
                     </Button>
 
                 </div>
@@ -124,7 +124,7 @@ function Categorias() {
                 <Inputs
                     type="text"
                     placeholder="Pesquisar categorias..."
-                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"   
+                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
                     icon={Search}
                 />
 
@@ -152,7 +152,7 @@ function Categorias() {
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-2xl font-bold">
-                                    Adicionar categoria 
+                                    Adicionar categoria
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-400">
