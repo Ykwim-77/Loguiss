@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock } from 'lucide-react';
 
 //importação de components e funções reutilizáveis
-import { validarEmail, validarSenha } from '../utils/validacoes';
+import { validarFormatoEmail, validarSenha } from '../utils/validacoes';
 import { Button } from '../components/button';
 import { ButtonEye } from '../components/buttonEye';
 import { Inputs } from '../components/inputs';
@@ -31,7 +31,7 @@ function Login() {
         setEmailTocado(true);
         setSenhaTocada(true);
 
-        if (validarEmail(email) || validarSenha(senha)) {
+        if (validarFormatoEmail(email) || validarSenha(senha)) {
             return;
         }
 
@@ -41,7 +41,7 @@ function Login() {
 
     const erro_email =
         (email_tocado || enviar_formulario)
-            ? validarEmail(email)
+            ? validarFormatoEmail(email)
             : "";
 
     const erro_senha =
@@ -82,7 +82,7 @@ function Login() {
                                 icon={User}
                                 className="rounded-lg border focus:border-[#4EDB4E] w-full"
                             />
-                            
+
                         </div>
 
                         {erro_email && (
@@ -110,7 +110,7 @@ function Login() {
                                     />
                                 }
                             />
-                            
+
                         </div>
 
                         {erro_senha && (
@@ -130,7 +130,7 @@ function Login() {
 
                         </div>
 
-                        <Button 
+                        <Button
                             type="submit"
                             className="bg-[#4EDB4E] hover:bg-[#3CB43C] w-full p-3 mt-5">
                             Entrar

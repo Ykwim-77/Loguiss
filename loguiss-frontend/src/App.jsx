@@ -13,15 +13,17 @@ import Home from './pages/home';
 import Produtos from './pages/produtos';
 import UnidadesMedida from './pages/unidades-medida';
 import Categorias from './pages/categorias';
+import Usuarios from './pages/usuarios';
+import Fornecedor from './pages/fornecedor';
 
 
 function App() {
   return (
-      <>
+    <>
 
-        <Toaster position="top-right" />
+      <Toaster position="top-right" />
 
-        <BrowserRouter>
+      <BrowserRouter>
 
         <Routes>
 
@@ -47,10 +49,14 @@ function App() {
 
           <Route path="/categorias" element={<Categorias />} />
 
+          <Route path="/usuarios" element={<Usuarios />} />
+
+          <Route path="/fornecedores" element={<Fornecedor />} />
+
         </Routes>
 
       </BrowserRouter>
-    
+
     </>
 
   );

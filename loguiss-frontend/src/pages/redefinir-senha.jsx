@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Inputs } from '../components/inputs';
 import { ButtonEye } from '../components/buttonEye';
 import { Button } from '../components/button';
-import {validarSenha} from '../utils/validacoes';
+import { validarSenha } from '../utils/validacoes';
 
 function RedefinirSenha() {
 

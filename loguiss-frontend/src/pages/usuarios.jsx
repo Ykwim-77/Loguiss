@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Package } from 'lucide-react';
+import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, User } from 'lucide-react';
+import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';
+import { ButtonEye } from '../components/buttonEye';
 
-function Produtos() {
+function Usuarios() {
 
     const menuItems = [
         {
@@ -69,71 +71,66 @@ function Produtos() {
         },
     ];
 
-    const [showProductForm, setShowProductForm] = useState(false);
+    const [showUsuariosForm, setShowUsuariosForm] = useState(false);
 
-    const [newProduct, setNewProduct] = useState({
+    const [newUsuario, setNewUsuario] = useState({
         desc: "",
-        categoria: "",
-        minimo: "",
-        unidade: "",
-        valor: "",
-        quantidade: "",
-        fornecedor: "",
-        dt_entrada: "",
-        prazo_saida: "",
+        email: "",
+        senha: "",
+        confirm_senha: "",
+        telefone: "",
+        cpf: "",
+        tipo_usuario: ""
     });
 
-    //CRUD de produtos
-    const addNewProduct = () => {
+    //CRUD de usuários
+    const addNewUsuario = () => {
 
-        setProducts((produtosAtuais) => [
-            ...produtosAtuais,
-            newProduct
+        setUsuarios((usuariosAtuais) => [
+            ...usuariosAtuais,
+            newUsuario
         ]);
 
-        setShowProductForm(false);
+        setShowUsuariosForm(false);
 
-        setNewProduct({
+        setNewUsuario({
             desc: "",
-            categoria: "",
-            minimo: "",
-            unidade: "",
-            valor: "",
-            quantidade: "",
-            fornecedor: "",
-            dt_entrada: "",
-            prazo_saida: "",
+            email: "",
+            senha: "",
+            confirm_senha: "",
+            telefone: "",
+            cpf: "",
+            tipo_usuario: ""
         });
     };
 
-    const editProduct = (index, updatedProduct) => {
-        setProducts((produtosAtuais) => {
-            const produtosAtualizados = [...produtosAtuais];
-            produtosAtualizados[index] = updatedProduct;
-            return produtosAtualizados;
+    const editUsuario = (index, updatedUsuario) => {
+        setUsuarios((usuariosAtuais) => {
+            const usuariosAtualizados = [...usuariosAtuais];
+            usuariosAtualizados[index] = updatedUsuario;
+            return usuariosAtualizados;
         });
     };
 
-    const deleteProduct = (index) => {
-        setProducts((produtosAtuais) => {
-            const produtosAtualizados = [...produtosAtuais];
-            produtosAtualizados.splice(index, 1);
-            return produtosAtualizados;
+    const deleteUsuario = (index) => {
+        setUsuarios((usuariosAtuais) => {
+            const usuariosAtualizados = [...usuariosAtuais];
+            usuariosAtualizados.splice(index, 1);
+            return usuariosAtualizados;
         });
     };
 
-    const [products, setProducts] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState("");
-
     const [appliedSearch, setAppliedSearch] = useState("");
-
     const [editingIndex, setEditingIndex] = useState(null);
-
-    const filteredProducts = products
-        .map((produto, index) => ({ produto, index }))
-        .filter(({ produto }) =>
-            produto.desc.toLowerCase().includes(appliedSearch.toLowerCase())
+    const [visualizar_senha, setVisualizarSenha] = useState(false);
+    const [visualizar_confirmar_senha, setVisualizarConfirmarSenha] = useState(false);
+    const filteredUsuarios = usuarios
+        .map((usuario, index) => ({ usuario, index }))
+        .filter(({ usuario }) =>
+            usuario.desc.toLowerCase().includes(appliedSearch.toLowerCase())
         );
 
     return (
@@ -149,36 +146,34 @@ function Produtos() {
                     <div> {/* Agrupa o título e a descrição para separá-los do botão no layout flex */}
 
                         <h1 className="text-3xl font-bold mb-2 mt-2">
-                            Produtos
+                            Usuários
                         </h1>
 
                         <p className="text-gray-400">
-                            Esta é a página de produtos. Aqui você pode gerenciar os produtos cadastrados no sistema.
+                            Esta é a página de usuários. Aqui você pode gerenciar os usuários cadastrados no sistema.
                         </p>
 
                     </div>
 
-                    {/*Adicionar novo produto*/}
+                    {/*Adicionar novo usuário*/}
                     <Button
                         type="button"
                         className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
                         onClick={() => {
                             setEditingIndex(null);
-                            setNewProduct({
+                            setNewUsuario({
                                 desc: "",
-                                categoria: "",
-                                minimo: "",
-                                unidade: "",
-                                valor: "",
-                                quantidade: "",
-                                fornecedor: "",
-                                dt_entrada: "",
-                                prazo_saida: "",
+                                email: "",
+                                senha: "",
+                                confirm_senha: "",
+                                telefone: "",
+                                cpf: "",
+                                tipo_usuario: ""
                             });
-                            setShowProductForm(true);
+                            setShowUsuariosForm(true);
                         }}
                     >
-                        Adicionar novo produto
+                        Adicionar novo usuário
                     </Button>
 
                 </div>
@@ -187,7 +182,7 @@ function Produtos() {
 
                     <Inputs
                         type="text"
-                        placeholder="Pesquisar produtos..."
+                        placeholder="Pesquisar usuários..."
                         className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
                         icon={Search}
                         value={searchTerm}
@@ -202,40 +197,44 @@ function Produtos() {
 
                 </div>
 
-                {/*Card de produtos*/}
+                {/*Card de usuários*/}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredProducts.map(({ produto, index }) => (
+                    {filteredUsuarios.map(({ usuario, index }) => (
                         <Card
                             key={index}
-                            desc={produto.desc}
-                            icon={<Package className="h-6 w-6 mt-2 text-gray-400" />}
+                            desc={usuario.desc}
+                            icon={<User className="h-6 w-6 mt-2 text-gray-400" />}
                             onEdit={() => {
                                 setEditingIndex(index);
-                                setNewProduct(produto);
-                                setShowProductForm(true);
+                                setNewUsuario(usuario);
+                                setShowUsuariosForm(true);
                             }}
                             onDelete={() => {
-                                if (window.confirm("Deseja excluir este produto?")) {
-                                    deleteProduct(index);
-                                    toast.success("Produto excluído com sucesso!");
+                                if (window.confirm("Deseja excluir este usuário?")) {
+                                    deleteUsuario(index);
+                                    toast.success("Usuário excluído com sucesso!");
                                 }
                             }}
                         >
 
                             <p className="mt-2 text-gray-400">
-                                Categoria: {produto.categoria}
+                                Nome: {usuario.desc}
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Quantidade: {produto.quantidade}
+                                Email: {usuario.email}
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Valor: R$ {produto.valor}
+                                Telefone: {usuario.telefone}
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Fornecedor: {produto.fornecedor}
+                                CPF: {usuario.cpf}
+                            </p>
+
+                            <p className="mt-1 text-gray-400">
+                                Tipo de usuário: {usuario.tipo_usuario}
                             </p>
 
                         </Card>
@@ -245,32 +244,36 @@ function Produtos() {
 
             </main>
 
-            {/*Formulário de produtos*/}
-            {showProductForm && (
+            {/*Formulário de Usuários*/}
+            {showUsuariosForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
 
                     <div className="w-full max-w-2xl rounded-xl bg-[#050210] p-6 shadow-2xl">
 
                         <div className="mb-6 flex items-center justify-between">
+
                             <div>
+
                                 <h2 className="text-2xl font-bold">
-                                    {editingIndex !== null ? "Editar produto" : "Adicionar produto"}
+                                    {editingIndex !== null ? "Editar usuário" : "Adicionar usuário"}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-400">
                                     {editingIndex !== null
-                                        ? "Atualize os dados do produto."
-                                        : "Preencha os dados do novo produto."}
+                                        ? "Atualize os dados do usuário."
+                                        : "Preencha os dados do novo usuário."}
                                 </p>
+
                             </div>
 
                             <button
                                 type="button"
-                                onClick={() => setShowProductForm(false)}
+                                onClick={() => setShowUsuariosForm(false)}
                                 className="text-2xl text-gray-400 hover:text-white"
                             >
                                 ×
                             </button>
+
                         </div>
 
                         <form
@@ -278,15 +281,16 @@ function Produtos() {
                                 e.preventDefault();
 
                                 if (editingIndex !== null) {
-                                    editProduct(editingIndex, newProduct);
-                                    toast.success("Produto atualizado com sucesso!");
-                                } else {
-                                    addNewProduct();
-                                    toast.success("Produto cadastrado com sucesso!");
+                                    editUsuario(editingIndex, newUsuario);
+                                    toast.success("Usuário atualizado com sucesso!");
+                                }
+                                else {
+                                    addNewUsuario();
+                                    toast.success("Usuário cadastrado com sucesso!");
                                 }
 
                                 setEditingIndex(null);
-                                setShowProductForm(false);
+                                setShowUsuariosForm(false);
                             }}
                         >
 
@@ -294,19 +298,19 @@ function Produtos() {
 
                                 <div className="sm:col-span-2">
                                     <label className="mb-1 block text-sm font-medium">
-                                        Descrição
+                                        Nome do usuário
                                     </label>
 
-                                    <input
+                                    <Inputs
                                         type="text"
-                                        value={newProduct.desc}
+                                        value={newUsuario.desc}
                                         onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
+                                            setNewUsuario({
+                                                ...newUsuario,
                                                 desc: e.target.value
                                             })
                                         }
-                                        placeholder="Nome do produto"
+                                        placeholder="Nome do usuário"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
@@ -314,19 +318,76 @@ function Produtos() {
 
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">
-                                        Categoria
+                                        Email
                                     </label>
 
-                                    <input
+                                    <Inputs
+                                        type="email"
+                                        value={newUsuario.email}
+                                        onChange={(e) =>
+                                            setNewUsuario({
+                                                ...newUsuario,
+                                                email: e.target.value
+                                            })
+                                        }
+                                        placeholder="Ex: nomeusuario@dominio.com"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Senha
+                                    </label>
+
+                                    <Inputs
+                                        type={visualizar_senha ? 'text' : 'password'}
+                                        placeholder="Senha"
+                                        value={newUsuario.senha}
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, senha: e.target.value })}
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        rightElement={
+                                            <ButtonEye
+                                                visualizar_senha={visualizar_senha}
+                                                setVisualizarSenha={setVisualizarSenha}
+                                            />
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Confirmar senha
+                                    </label>
+
+                                    <Inputs
+                                        type={visualizar_confirmar_senha ? 'text' : 'password'}
+                                        placeholder="Confirmar senha"
+                                        value={newUsuario.confirm_senha}
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, confirm_senha: e.target.value })}
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        rightElement={
+                                            <ButtonEye
+                                                visualizar_senha={visualizar_confirmar_senha}
+                                                setVisualizarSenha={setVisualizarConfirmarSenha}
+                                            />
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Telefone
+                                    </label>
+
+                                    <Inputs
                                         type="text"
-                                        value={newProduct.categoria}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                categoria: e.target.value
-                                            })
-                                        }
-                                        placeholder="Ex: Eletrônico"
+                                        value={newUsuario.telefone}
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, telefone: formatarTelefone(e.target.value) })}
+                                        placeholder="Ex: (00) 00000-0000"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
@@ -334,19 +395,14 @@ function Produtos() {
 
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">
-                                        Unidade
+                                        CPF
                                     </label>
 
-                                    <input
+                                    <Inputs
                                         type="text"
-                                        value={newProduct.unidade}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                unidade: e.target.value
-                                            })
-                                        }
-                                        placeholder="Ex: UN"
+                                        value={newUsuario.cpf}
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, cpf: formatarCPFCNPJ(e.target.value) })}
+                                        placeholder="Ex: 123.456.789-00"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
@@ -354,119 +410,25 @@ function Produtos() {
 
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">
-                                        Estoque mínimo
+                                        Tipo de usuário
                                     </label>
 
-                                    <input
-                                        type="number"
-                                        value={newProduct.minimo}
+                                    <Inputs
+                                        type="select"
+                                        value={newUsuario.tipo_usuario}
                                         onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                minimo: e.target.value
+                                            setNewUsuario({
+                                                ...newUsuario,
+                                                tipo_usuario: e.target.value
                                             })
                                         }
-                                        placeholder="0"
+                                        options={[
+                                            { value: "Administrador", label: "Administrador" },
+                                            { value: "Operador", label: "Operador" },
+                                            { value: "Gerente", label: "Gerente" }
+                                        ]}
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Quantidade
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        value={newProduct.quantidade}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                quantidade: e.target.value
-                                            })
-                                        }
-                                        placeholder="0"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Valor
-                                    </label>
-
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={newProduct.valor}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                valor: e.target.value
-                                            })
-                                        }
-                                        placeholder="0,00"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Fornecedor
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        value={newProduct.fornecedor}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                fornecedor: e.target.value
-                                            })
-                                        }
-                                        placeholder="Nome do fornecedor"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Data de entrada
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={newProduct.dt_entrada}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                dt_entrada: e.target.value
-                                            })
-                                        }
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Prazo de saída
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        value={newProduct.prazo_saida}
-                                        onChange={(e) =>
-                                            setNewProduct({
-                                                ...newProduct,
-                                                prazo_saida: e.target.value
-                                            })
-                                        }
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                     />
                                 </div>
 
@@ -476,7 +438,7 @@ function Produtos() {
 
                                 <button
                                     type="button"
-                                    onClick={() => setShowProductForm(false)}
+                                    onClick={() => setShowUsuariosForm(false)}
                                     className="rounded-lg bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
                                 >
                                     Cancelar
@@ -486,7 +448,7 @@ function Produtos() {
                                     type="submit"
                                     className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
                                 >
-                                    {editingIndex !== null ? "Salvar alterações" : "Cadastrar produto"}
+                                    {editingIndex !== null ? "Salvar alterações" : "Cadastrar Usuário"}
                                 </Button>
 
                             </div>
@@ -503,4 +465,4 @@ function Produtos() {
     )
 }
 
-export default Produtos;
+export default Usuarios;

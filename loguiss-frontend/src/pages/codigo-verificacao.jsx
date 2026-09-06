@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/button';
 
@@ -32,7 +32,7 @@ function CodigoVerificacao() {
         }
         return "";
     }
-    
+
     function handleKeyDown(e, index) {
         if (e.key === 'Backspace') {
             // se tem valor no campo atual -> apaga ele
@@ -79,14 +79,14 @@ function CodigoVerificacao() {
 
                     <aside className="hidden lg:flex w-1/2 bg-[#0D0B12] items-center justify-center">
 
-                        <img src="./images/imagem-estoque.png" alt="Imagem de estoque" className="w-full h-full"/>
+                        <img src="./images/imagem-estoque.png" alt="Imagem de estoque" className="w-full h-full" />
 
                     </aside>
 
-                    <form onSubmit={ formularioEnviado } className="bg-[#100E14] p-10 rounded-sm w-[400px] shadow-lg">
+                    <form onSubmit={formularioEnviado} className="bg-[#100E14] p-10 rounded-sm w-[400px] shadow-lg">
 
-                        <img src="./images/logo.png" alt="Logo da Loguiss" className="w-20 h-20 mx-auto mb-4 rounded-xl"/>
-                        
+                        <img src="./images/logo.png" alt="Logo da Loguiss" className="w-20 h-20 mx-auto mb-4 rounded-xl" />
+
                         <p className="text-center text-green-500 mb-5">
                             Informe o código de verificação enviado para o seu email para redefinir sua senha.
                         </p>
@@ -173,7 +173,7 @@ function CodigoVerificacao() {
                             </p>
                         )}
 
-                        <Button 
+                        <Button
                             type="submit"
                             className="bg-[#4EDB4E] hover:bg-[#3CB43C]">
                             Verificar código
@@ -188,9 +188,9 @@ function CodigoVerificacao() {
                         </Button>
 
                     </form>
-   
+
                 </div>
-            
+
             </div>
 
         </div>

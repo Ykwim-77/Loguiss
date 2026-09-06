@@ -11,11 +11,10 @@ function MenuItem({ item, nested = false }) {
         <div className={`relative ${groupClass}`}>
             <a
                 href={hasSubmenu ? undefined : item.href}
-                className={`flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-all ${
-                    item.active
-                        ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white"
+                className={`flex w-full items-center gap-4 rounded-xl px-4 py-3 text-sm font-medium transition-all ${item.active
+                        ? "bg-green-600 text-white"
                         : "text-slate-400 hover:bg-white/10 hover:text-white"
-                }`}
+                    }`}
             >
                 {Icon && <Icon size={20} />}
                 <span>{item.label}</span>
@@ -27,7 +26,7 @@ function MenuItem({ item, nested = false }) {
 
             {hasSubmenu && (
                 <div
-                    className={`absolute left-full top-0 z-50 hidden w-56 rounded-xl border border-white/10 bg-[#0b0620] p-2 shadow-xl shadow-black/30 ${hoverClass}`}
+                    className={`absolute left-full top-0 z-50 hidden w-56 rounded-xl border border-white/10 bg-[#050212] p-2 shadow-xl shadow-black/30 ${hoverClass}`}
                 >
                     {item.subMenu.map((subItem) => (
                         <MenuItem
@@ -44,7 +43,7 @@ function MenuItem({ item, nested = false }) {
 
 export function SideBar({ menuItems }) {
     return (
-        <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-[#0b0620] px-5 py-6">
+        <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-white/10 bg-[#050212] px-5 py-6">
             <div className="mb-8 flex items-center gap-4">
                 <img
                     src="/images/logo.png"

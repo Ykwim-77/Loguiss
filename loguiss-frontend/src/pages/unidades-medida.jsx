@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search } from 'lucide-react';
 import { SideBar } from '../components/sidebar';
@@ -19,7 +18,8 @@ function UnidadesMedida() {
             label: "Cadastros",
             icon: Folder,
             subMenu: [
-                { label: "Produtos", 
+                {
+                    label: "Produtos",
                     subMenu: [
                         { label: "Produtos", href: "/produtos" },
                         { label: "Unidade de Medida", href: "/unidades-medida" },
@@ -64,7 +64,7 @@ function UnidadesMedida() {
             icon: Cog,
             href: "/configuracoes",
         },
-    ];  
+    ];
 
     const [showUnitForm, setShowUnitForm] = useState(false);
 
@@ -92,7 +92,7 @@ function UnidadesMedida() {
             fgFracionavel: false,
         });
     };
-    
+
     const [units, setUnits] = useState([]);
 
     return (
@@ -130,7 +130,7 @@ function UnidadesMedida() {
                 <Inputs
                     type="text"
                     placeholder="Pesquisar unidades de medida..."
-                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"   
+                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
                     icon={Search}
                 />
 
@@ -166,7 +166,7 @@ function UnidadesMedida() {
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-2xl font-bold">
-                                    Adicionar unidade de medida 
+                                    Adicionar unidade de medida
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-400">
@@ -214,7 +214,7 @@ function UnidadesMedida() {
 
                                 <div>
                                     <label className="mb-1 block text-sm font-medium">
-                                        Gramatura   
+                                        Gramatura
                                     </label>
 
                                     <input
@@ -252,7 +252,7 @@ function UnidadesMedida() {
                                     />
                                 </div>
 
-                                
+
                                 <div>
 
                                     <label className="flex cursor-pointer items-center gap-3 rounded-lg  p-3">
