@@ -8,6 +8,9 @@ import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
 import api_produto from '../services/api_produto';
 import { Card } from '../components/card';
+import api_fornecedor from '../services/api_fornecedor';
+import api_categoria from '../services/api_categoria';
+import api_unidade from '../services/api_unidades';
 
 function Produtos() {
 
@@ -83,13 +86,46 @@ function Produtos() {
         dt_entrada: "",
         prazo_saida: "",
     });
+
+
+
+    
     const  produto_api = async () => {
         const produtos = await api_produto.get('/list_produtos')
         setProducts(produtos.data.produtos)
+        console.log(produtos)
     }
+    const fornecedor_api = async () => {
+        const fornecedores = await api_fornecedor.get('/list_fornecedor');
+        setFornecedores(fornecedores.data.fornecedores)
+        
+    }
+    const categoria_api = async () =>{
+        const categorias = await api_categoria.get('/list_categorias');
+        setCategorias(categorias.data.categorias)
+        console.log(categorias.data.categorias)
+        // console.log(categorias)
+    }
+    const unidade_api = async () =>{
+        const unidades = await api_unidade.get('/list_unidade_medida');
+        setUnidades(unidades.data.unidades)
+    }
+ 
     useEffect(()=> {
         produto_api();
+        fornecedor_api();
+        categoria_api();
+        unidade_api();
     }, [])
+
+    const [fornecedores, setFornecedores] = useState([]);
+    const [categorias, setCategorias] = useState([]);
+    const [unidades, setUnidades] = useState([]);
+
+    const [mostrarFornecedores, setMostrarFornecedores] = useState(false);
+    const [mostrarCategorias, setMostrarCategorias] = useState(false);
+    const [mostrarUnidades, setMostrarUnidades] = useState(false);
+
 
 
     //CRUD de produtos
@@ -213,19 +249,19 @@ function Produtos() {
 
                 {/*Card de produtos*/}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredProducts.map(({ produto, index }) => (
+                    {filteredProducts.map(({ produto, id_produto }) => (
                         <Card
-                            key={index}
-                            desc={produto.desc}
+                            key={id_produto}
+                            desc={produto.descricao}
                             icon={<Package className="h-6 w-6 mt-2 text-gray-400" />}
                             onEdit={() => {
-                                setEditingIndex(index);
+                                setEditingIndex(id_produto);
                                 setNewProduct(produto);
                                 setShowProductForm(true);
                             }}
                             onDelete={() => {
                                 if (window.confirm("Deseja excluir este produto?")) {
-                                    deleteProduct(index);
+                                    deleteProduct(id_produto);
                                     toast.success("Produto excluído com sucesso!");
                                 }
                             }}
@@ -247,7 +283,7 @@ function Produtos() {
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Fornecedor: {produto.fornecedor}
+                                Fornecedor: {produto.fornecedores[0]?.fornecedor.nome || "Sem fornecedor!"}
                             </p>
 
                         </Card>
@@ -324,7 +360,7 @@ function Produtos() {
                                     />
                                 </div>
 
-                                <div>
+                                <div className="relative">
                                     <label className="mb-1 block text-sm font-medium">
                                         Categoria
                                     </label>
@@ -332,19 +368,51 @@ function Produtos() {
                                     <input
                                         type="text"
                                         value={newProduct.categoria}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            setMostrarCategorias(true);
+
                                             setNewProduct({
                                                 ...newProduct,
-                                                categoria: e.target.value
-                                            })
-                                        }
+                                                categoria: e.target.value,
+                                                id_categoria: null
+                                            });
+                                        }}
                                         placeholder="Ex: Eletrônico"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
+
+                                    {mostrarCategorias && newProduct.categoria && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {categorias
+                                                .filter((categoria) =>
+                                                    categoria.descricao
+                                                        .toLowerCase()
+                                                        .includes(newProduct.categoria.toLowerCase())
+                                                )
+                                                .map((categoria) => (
+                                                    <button
+                                                        type="button"
+                                                        key={categoria.id_categoria}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                categoria: categoria.descricao,
+                                                                id_categoria: categoria.id_categoria
+                                                            });
+
+                                                            setMostrarCategorias(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {categoria.descricao}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div>
+                                <div className="relative">
                                     <label className="mb-1 block text-sm font-medium">
                                         Unidade
                                     </label>
@@ -352,16 +420,48 @@ function Produtos() {
                                     <input
                                         type="text"
                                         value={newProduct.unidade}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            setMostrarUnidades(true);
+
                                             setNewProduct({
                                                 ...newProduct,
-                                                unidade: e.target.value
-                                            })
-                                        }
+                                                unidade: e.target.value,
+                                                id_unidade_medida: null
+                                            });
+                                        }}
                                         placeholder="Ex: UN"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
+
+                                    {mostrarUnidades && newProduct.unidade && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {unidades
+                                                .filter((unidade) =>
+                                                    unidade.descrunidade
+                                                        .toLowerCase()
+                                                        .includes(newProduct.unidade.toLowerCase())
+                                                )
+                                                .map((unidade) => (
+                                                    <button
+                                                        type="button"
+                                                        key={unidade.id_unidade}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                unidade: unidade.descrunidade,
+                                                                id_unidade_medida: unidade.id_unidade
+                                                            });
+
+                                                            setMostrarUnidades(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {unidade.descrunidade} - {unidade.nomenclatura}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
@@ -425,7 +525,7 @@ function Produtos() {
                                     />
                                 </div>
 
-                                <div>
+                                <div className="relative">
                                     <label className="mb-1 block text-sm font-medium">
                                         Fornecedor
                                     </label>
@@ -433,16 +533,47 @@ function Produtos() {
                                     <input
                                         type="text"
                                         value={newProduct.fornecedor}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            setMostrarFornecedores(true);
+
                                             setNewProduct({
                                                 ...newProduct,
-                                                fornecedor: e.target.value
-                                            })
-                                        }
+                                                fornecedor: e.target.value,
+                                                id_fornecedor: null
+                                            });
+                                        }}
                                         placeholder="Nome do fornecedor"
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
+                                    {mostrarFornecedores && newProduct.fornecedor && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {fornecedores
+                                                .filter((fornecedor) =>
+                                                    fornecedor.nome
+                                                        .toLowerCase()
+                                                        .includes(newProduct.fornecedor.toLowerCase())
+                                                )
+                                                .map((fornecedor) => (
+                                                    <button
+                                                        type="button"
+                                                        key={fornecedor.id_fornecedor}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                fornecedor: fornecedor.nome,
+                                                                id_fornecedor: fornecedor.id_fornecedor
+                                                            });
+
+                                                            setMostrarFornecedores(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {fornecedor.nome}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>

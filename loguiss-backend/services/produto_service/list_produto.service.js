@@ -8,8 +8,13 @@ export default async function list_produto_service(req, res) {
                     include:{
                         categoria: true
                     }
-                }
-                
+                },
+                fornecedores:{
+                    include:{
+                        fornecedor: true
+                    }
+                },
+                unidade_medida: true
             }
         })
         return res.status(200).json({MSG: "produtos encontrados!!", produtos: produtos})
