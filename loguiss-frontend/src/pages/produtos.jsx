@@ -1,0 +1,649 @@
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+
+import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Package } from 'lucide-react';
+
+import { SideBar } from '../components/sidebar';
+import { Button } from '../components/button'
+import { Inputs } from '../components/inputs';
+import api_produto from '../services/api_produto';
+import { Card } from '../components/card';
+import api_fornecedor from '../services/api_fornecedor';
+import api_categoria from '../services/api_categoria';
+import api_unidade from '../services/api_unidades';
+
+function Produtos() {
+
+    const menuItems = [
+        {
+            label: "Dashboard",
+            icon: LayoutDashboard,
+            href: "/home",
+            active: true,
+        },
+        {
+            label: "Cadastros",
+            icon: Folder,
+            subMenu: [
+                {
+                    label: "Produtos",
+                    subMenu: [
+                        { label: "Produtos", href: "/produtos" },
+                        { label: "Unidade de Medida", href: "/unidades-medida" },
+                        { label: "Categorias", href: "/categorias" },
+                    ],
+                },
+                { label: "Usuários", href: "/usuarios" },
+                { label: "Clientes", href: "/clientes" },
+                { label: "Fornecedores", href: "/fornecedores" },
+            ],
+        },
+        {
+            label: "Movimentações",
+            icon: Shuffle,
+            subMenu: [
+                {
+                    label: "Movimentações de saída",
+                    href: "/movimentacoes-saida",
+                },
+                {
+                    label: "Movimentações de entrada",
+                    href: "/movimentacoes-entrada",
+                },
+            ],
+        },
+        {
+            label: "Previsão IA",
+            icon: Brain,
+            subMenu: [
+                {
+                    label: "Previsão de demanda",
+                    href: "/previsao-demanda",
+                },
+                {
+                    label: "Configurações da IA",
+                    href: "/configuracoes-ia",
+                },
+            ],
+        },
+        {
+            label: "Configurações",
+            icon: Cog,
+            href: "/configuracoes",
+        },
+    ];
+
+    const [showProductForm, setShowProductForm] = useState(false);
+
+    const [newProduct, setNewProduct] = useState({
+        desc: "",
+        categoria: "",
+        minimo: "",
+        unidade: "",
+        valor: "",
+        quantidade: "",
+        fornecedor: "",
+        dt_entrada: "",
+        prazo_saida: "",
+    });
+
+
+
+    
+    const  produto_api = async () => {
+        const produtos = await api_produto.get('/list_produtos')
+        setProducts(produtos.data.produtos)
+        console.log(produtos)
+    }
+    const fornecedor_api = async () => {
+        const fornecedores = await api_fornecedor.get('/list_fornecedor');
+        setFornecedores(fornecedores.data.fornecedores)
+        
+    }
+    const categoria_api = async () =>{
+        const categorias = await api_categoria.get('/list_categorias');
+        setCategorias(categorias.data.categorias)
+        console.log(categorias.data.categorias)
+        // console.log(categorias)
+    }
+    const unidade_api = async () =>{
+        const unidades = await api_unidade.get('/list_unidade_medida');
+        setUnidades(unidades.data.unidades)
+    }
+ 
+    useEffect(()=> {
+        produto_api();
+        fornecedor_api();
+        categoria_api();
+        unidade_api();
+    }, [])
+
+    const [fornecedores, setFornecedores] = useState([]);
+    const [categorias, setCategorias] = useState([]);
+    const [unidades, setUnidades] = useState([]);
+
+    const [mostrarFornecedores, setMostrarFornecedores] = useState(false);
+    const [mostrarCategorias, setMostrarCategorias] = useState(false);
+    const [mostrarUnidades, setMostrarUnidades] = useState(false);
+
+
+
+    //CRUD de produtos
+    const addNewProduct = () => {
+
+        setProducts((produtosAtuais) => [
+            ...produtosAtuais,
+            newProduct
+        ]);
+
+        setShowProductForm(false);
+
+        setNewProduct({
+            desc: "",
+            categoria: "",
+            minimo: "",
+            unidade: "",
+            valor: "",
+            quantidade: "",
+            fornecedor: "",
+            dt_entrada: "",
+            prazo_saida: "",
+        });
+    };
+
+    const editProduct = (index, updatedProduct) => {
+        setProducts((produtosAtuais) => {
+            const produtosAtualizados = [...produtosAtuais];
+            produtosAtualizados[index] = updatedProduct;
+            return produtosAtualizados;
+        });
+    };
+
+    const deleteProduct = (index) => {
+        setProducts((produtosAtuais) => {
+            const produtosAtualizados = [...produtosAtuais];
+            produtosAtualizados.splice(index, 1);
+            return produtosAtualizados;
+        });
+    };
+
+    const [products, setProducts] = useState([]);
+
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const [appliedSearch, setAppliedSearch] = useState("");
+
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const filteredProducts = products
+        .map((produto, index) => ({ produto, index }))
+        .filter(({ produto }) =>
+            produto.descricao.toLowerCase().includes(appliedSearch.toLowerCase())
+        );
+
+    return (
+
+        <div className="min-h-screen bg-[#050212] text-white">
+
+            <SideBar menuItems={menuItems} />
+
+            <main className="ml-72 min-h-screen p-5">
+
+                <div className="flex items-center justify-between mb-3">
+
+                    <div> {/* Agrupa o título e a descrição para separá-los do botão no layout flex */}
+
+                        <h1 className="text-3xl font-bold mb-2 mt-2">
+                            Produtos
+                        </h1>
+
+                        <p className="text-gray-400">
+                            Esta é a página de produtos. Aqui você pode gerenciar os produtos cadastrados no sistema.
+                        </p>
+
+                    </div>
+
+                    {/*Adicionar novo produto*/}
+                    <Button
+                        type="button"
+                        className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
+                        onClick={() => {
+                            setEditingIndex(null);
+                            setNewProduct({
+                                desc: "",
+                                categoria: "",
+                                minimo: "",
+                                unidade: "",
+                                valor: "",
+                                quantidade: "",
+                                fornecedor: "",
+                                dt_entrada: "",
+                                prazo_saida: "",
+                            });
+                            setShowProductForm(true);
+                        }}
+                    >
+                        Adicionar novo produto
+                    </Button>
+
+                </div>
+
+                <div className="flex items-center justify-between">
+
+                    <Inputs
+                        type="text"
+                        placeholder="Pesquisar produtos..."
+                        className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
+                        icon={Search}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                setAppliedSearch(searchTerm);
+                            }
+                        }}
+                    />
+
+                </div>
+
+                {/*Card de produtos*/}
+                <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredProducts.map(({ produto, id_produto }) => (
+                        <Card
+                            key={id_produto}
+                            desc={produto.descricao}
+                            icon={<Package className="h-6 w-6 mt-2 text-gray-400" />}
+                            onEdit={() => {
+                                setEditingIndex(id_produto);
+                                setNewProduct(produto);
+                                setShowProductForm(true);
+                            }}
+                            onDelete={() => {
+                                if (window.confirm("Deseja excluir este produto?")) {
+                                    deleteProduct(id_produto);
+                                    toast.success("Produto excluído com sucesso!");
+                                }
+                            }}
+                        >
+                            <h2 className="text-xl font-bold">
+                                {produto.descricao}
+                            </h2>
+
+                            <p className="mt-2 text-gray-400">
+                                Categoria: {produto.categorias[0]?.categoria?.descricao || "Sem categoria"}
+                            </p>
+
+                            <p className="mt-1 text-gray-400">
+                                Quantidade: {produto.quantidade}
+                            </p>
+
+                            <p className="mt-1 text-gray-400">
+                                Valor: R$ {produto.valor}
+                            </p>
+
+                            <p className="mt-1 text-gray-400">
+                                Fornecedor: {produto.fornecedores[0]?.fornecedor.nome || "Sem fornecedor!"}
+                            </p>
+
+                        </Card>
+                    ))}
+
+                </div>
+
+            </main>
+
+            {/*Formulário de produtos*/}
+            {showProductForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+
+                    <div className="w-full max-w-2xl rounded-xl bg-[#050210] p-6 shadow-2xl">
+
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold">
+                                    {editingIndex !== null ? "Editar produto" : "Adicionar produto"}
+                                </h2>
+
+                                <p className="mt-1 text-sm text-gray-400">
+                                    {editingIndex !== null
+                                        ? "Atualize os dados do produto."
+                                        : "Preencha os dados do novo produto."}
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setShowProductForm(false)}
+                                className="text-2xl text-gray-400 hover:text-white"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+
+                                if (editingIndex !== null) {
+                                    editProduct(editingIndex, newProduct);
+                                    toast.success("Produto atualizado com sucesso!");
+                                } else {
+                                    addNewProduct();
+                                    toast.success("Produto cadastrado com sucesso!");
+                                }
+
+                                setEditingIndex(null);
+                                setShowProductForm(false);
+                            }}
+                        >
+
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                                <div className="sm:col-span-2">
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Descrição
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={newProduct.desc}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                desc: e.target.value
+                                            })
+                                        }
+                                        placeholder="Nome do produto"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Categoria
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={newProduct.categoria}
+                                        onChange={(e) => {
+                                            setMostrarCategorias(true);
+
+                                            setNewProduct({
+                                                ...newProduct,
+                                                categoria: e.target.value,
+                                                id_categoria: null
+                                            });
+                                        }}
+                                        placeholder="Ex: Eletrônico"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+
+                                    {mostrarCategorias && newProduct.categoria && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {categorias
+                                                .filter((categoria) =>
+                                                    categoria.descricao
+                                                        .toLowerCase()
+                                                        .includes(newProduct.categoria.toLowerCase())
+                                                )
+                                                .map((categoria) => (
+                                                    <button
+                                                        type="button"
+                                                        key={categoria.id_categoria}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                categoria: categoria.descricao,
+                                                                id_categoria: categoria.id_categoria
+                                                            });
+
+                                                            setMostrarCategorias(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {categoria.descricao}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="relative">
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Unidade
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={newProduct.unidade}
+                                        onChange={(e) => {
+                                            setMostrarUnidades(true);
+
+                                            setNewProduct({
+                                                ...newProduct,
+                                                unidade: e.target.value,
+                                                id_unidade_medida: null
+                                            });
+                                        }}
+                                        placeholder="Ex: UN"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+
+                                    {mostrarUnidades && newProduct.unidade && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {unidades
+                                                .filter((unidade) =>
+                                                    unidade.descrunidade
+                                                        .toLowerCase()
+                                                        .includes(newProduct.unidade.toLowerCase())
+                                                )
+                                                .map((unidade) => (
+                                                    <button
+                                                        type="button"
+                                                        key={unidade.id_unidade}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                unidade: unidade.descrunidade,
+                                                                id_unidade_medida: unidade.id_unidade
+                                                            });
+
+                                                            setMostrarUnidades(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {unidade.descrunidade} - {unidade.nomenclatura}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Estoque mínimo
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        value={newProduct.minimo}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                minimo: e.target.value
+                                            })
+                                        }
+                                        placeholder="0"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Quantidade
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        value={newProduct.quantidade}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                quantidade: e.target.value
+                                            })
+                                        }
+                                        placeholder="0"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Valor
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={newProduct.valor}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                valor: e.target.value
+                                            })
+                                        }
+                                        placeholder="0,00"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Fornecedor
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        value={newProduct.fornecedor}
+                                        onChange={(e) => {
+                                            setMostrarFornecedores(true);
+
+                                            setNewProduct({
+                                                ...newProduct,
+                                                fornecedor: e.target.value,
+                                                id_fornecedor: null
+                                            });
+                                        }}
+                                        placeholder="Nome do fornecedor"
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                    {mostrarFornecedores && newProduct.fornecedor && (
+                                        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-lg border border-gray-700 bg-[#15102b] shadow-lg">
+                                            {fornecedores
+                                                .filter((fornecedor) =>
+                                                    fornecedor.nome
+                                                        .toLowerCase()
+                                                        .includes(newProduct.fornecedor.toLowerCase())
+                                                )
+                                                .map((fornecedor) => (
+                                                    <button
+                                                        type="button"
+                                                        key={fornecedor.id_fornecedor}
+                                                        onClick={() => {
+                                                            setNewProduct({
+                                                                ...newProduct,
+                                                                fornecedor: fornecedor.nome,
+                                                                id_fornecedor: fornecedor.id_fornecedor
+                                                            });
+
+                                                            setMostrarFornecedores(false);
+                                                        }}
+                                                        className="block w-full px-3 py-2 text-left text-white hover:bg-[#241b45]"
+                                                    >
+                                                        {fornecedor.nome}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Data de entrada
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        value={newProduct.dt_entrada}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                dt_entrada: e.target.value
+                                            })
+                                        }
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium">
+                                        Prazo de saída
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        value={newProduct.prazo_saida}
+                                        onChange={(e) =>
+                                            setNewProduct({
+                                                ...newProduct,
+                                                prazo_saida: e.target.value
+                                            })
+                                        }
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                                    />
+                                </div>
+
+                            </div>
+
+                            <div className="mt-6 flex justify-end gap-3">
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowProductForm(false)}
+                                    className="rounded-lg bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
+                                >
+                                    Cancelar
+                                </button>
+
+                                <Button
+                                    type="submit"
+                                    className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
+                                >
+                                    {editingIndex !== null ? "Salvar alterações" : "Cadastrar produto"}
+                                </Button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+            )}
+
+        </div>
+
+    )
+}
+
+export default Produtos;

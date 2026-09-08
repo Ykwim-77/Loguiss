@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Bossgames123
+      POSTGRES_PASSWORD: Bossgames@123
       POSTGRES_DB: Loguiss
     ports:
       - "5432"

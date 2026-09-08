@@ -17,7 +17,12 @@ export default async function forgot_password(req, res, next) {
             where:{
                 id_user: decodificado.id,
                 email: decodificado.email,
-                cod_verify: decodificado.codigo_verify
+                verificacao:{
+                    cod_verify: decodificado.codigo_verify
+                }
+            },
+            include:{
+                verificacao: true
             }
         })
         if(!usuarioVerify){

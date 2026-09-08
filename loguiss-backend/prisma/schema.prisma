@@ -15,6 +15,167 @@ model user {
   senha_pdv    String
   tipo_user    String
   telefone     String
-  cod_verify   String?
-  expira_em    DateTime?
+  email_verificado Boolean @default(false)
+
+  verificacao verificacao_user?
+}
+model verificacao_user {
+  id_verificacao   String   @id @default(uuid())
+
+  cod_verify       String?
+  expira_em   DateTime?
+
+  id_user    Int      @unique
+  usuario    user     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+}
+model unidade_medida {
+  id_unidade    Int      @id @default(autoincrement())
+  descrunidade  String
+  nomenclatura  String
+  flag_ativo    String?   @default("T")
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @updatedAt
+
+  produtos produto[]
+  receitas  receita_produto[]
+}
+
+model categoria {
+  id_categoria Int      @id @default(autoincrement())
+  descricao    String
+  flag_ativo   String   @default("T")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  produtos_categoria produto_categoria[]
+}
+
+model produto_categoria {
+  id_produto_categoria Int @id @default(autoincrement())
+  id_produto           Int
+  id_categoria         Int
+
+  produto   produto   @relation(fields: [id_produto], references: [id_produto])
+  categoria categoria @relation(fields: [id_categoria], references: [id_categoria])
+
+  @@unique([id_produto, id_categoria])
+}
+
+model tipo_produto {
+  id_tipo_produto Int      @id @default(autoincrement())
+  descricao       String
+  flag_ativo      String   @default("T")
+  created_at      DateTime @default(now())
+  updated_at      DateTime? @updatedAt
+
+  produtos produto[]
+}
+
+model produto {
+  id_produto        Int      @id @default(autoincrement())
+  descricao         String
+
+  id_tipo_produto   Int
+  id_unidade_medida Int
+
+  is_fracionado     String   @default("F")
+  valor             Decimal
+  quantidade        Decimal  @default(0)
+
+  minimo            Decimal  @default(0)
+  dt_entrada        DateTime?
+  prazo_saida       DateTime?
+
+  flag_ativo        String   @default("T")
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tipo_produto      tipo_produto          @relation(fields: [id_tipo_produto], references: [id_tipo_produto])
+  unidade_medida    unidade_medida        @relation(fields: [id_unidade_medida], references: [id_unidade])
+
+  categorias        produto_categoria[]
+  receitas          receita_produto[]
+  movimentacoes    movimentacao_estoque[]
+  fornecedores      fornecedor_produto[]
+}
+
+model receita {
+  id_receita Int      @id @default(autoincrement())
+  descricao  String
+  flag_ativo String   @default("T")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  produtos receita_produto[]
+}
+
+model receita_produto {
+  id_receita_produto Int      @id @default(autoincrement())
+  id_receita         Int
+  id_produto         Int
+  quantidade         Decimal
+  id_unidade         Int
+
+  receita       receita        @relation(fields: [id_receita], references: [id_receita])
+  produto       produto        @relation(fields: [id_produto], references: [id_produto])
+  unidade_medida unidade_medida @relation(fields: [id_unidade], references: [id_unidade])
+
+  @@unique([id_receita, id_produto])
+}
+
+model movimentacao_estoque {
+  id_movimentacao Int      @id @default(autoincrement())
+  id_produto      Int
+  tipo            String
+  quantidade      Decimal
+  saldo_final     Decimal
+  data_movimento  DateTime @default(now())
+  observacao      String?
+
+  produto produto @relation(fields: [id_produto], references: [id_produto])
+
+  @@index([id_produto])
+  @@index([data_movimento])
+}
+model endereco {
+  id_endereco Int    @id @default(autoincrement())
+  rua         String
+  bairro      String
+  numero      String
+  estado      String
+
+  fornecedor fornecedor[]
+  cliente    cliente[]
+}
+model fornecedor {
+  id_fornecedor Int    @id @default(autoincrement())
+  cnpj          String @unique
+  nome          String
+  id_endereco   Int
+  email         String
+  telefone      String
+
+  endereco endereco @relation(fields: [id_endereco], references: [id_endereco])
+  produtos  fornecedor_produto[]
+}
+model fornecedor_produto {
+  id_fornecedor_produto Int     @id @default(autoincrement())
+  id_fornecedor         Int
+  id_produto            Int
+  quantidade            Decimal
+
+  fornecedor fornecedor @relation(fields: [id_fornecedor], references: [id_fornecedor])
+  produto    produto    @relation(fields: [id_produto], references: [id_produto])
+
+  @@unique([id_fornecedor, id_produto])
+}
+model cliente {
+  id_cliente  Int    @id @default(autoincrement())
+  nome        String
+  cpf         String @unique
+  email       String?
+  telefone    String?
+  id_endereco Int?
+
+  endereco endereco? @relation(fields: [id_endereco], references: [id_endereco])
 }
