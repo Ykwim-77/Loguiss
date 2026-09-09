@@ -275,7 +275,7 @@ function Produtos() {
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Quantidade: {produto.quantidade}
+                                Quantidade: {produto.estoque?.quantidade || "sem quantidade"}
                             </p>
 
                             <p className="mt-1 text-gray-400">

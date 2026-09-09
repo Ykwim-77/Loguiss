@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Building2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';
+import api_fornecedor from '../services/api_fornecedor';
 
 function Fornecedor() {
 
@@ -92,12 +93,31 @@ function Fornecedor() {
     const [appliedSearch, setAppliedSearch] = useState("");
     const [editingIndex, setEditingIndex] = useState(null);
 
+    
     // CRUD de fornecedores
-    const addNewFornecedor = () => {
-        setFornecedores((fornecedoresAtuais) => [
-            ...fornecedoresAtuais,
-            newFornecedor
-        ]);
+
+    const fornecedores_api = async ()=> {
+        const Fornecedores = await api_fornecedor.get('/list_fornecedor')
+        console.log(Fornecedores.data.fornecedores)
+        setFornecedores(Fornecedores.data.fornecedores)
+    }
+    useState(() => {
+        fornecedores_api();
+    }, []) 
+    
+    const addNewFornecedor = async () => {
+
+        const create_fornecedor = await api_fornecedor.post('/create_fornecedor', {
+            cnpj: newFornecedor.cnpj,
+            nome: newFornecedor.nome,
+            rua: newFornecedor.endereco.rua,
+            bairro: newFornecedor.endereco.bairro,
+            numero: newFornecedor.endereco.numero,
+            estado: newFornecedor.endereco.estado,
+            email: newFornecedor.email,
+            telefone: newFornecedor.telefone
+        })
+        fornecedores_api(); 
 
         setShowFornecedorForm(false);
 

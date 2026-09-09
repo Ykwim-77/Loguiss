@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search } from 'lucide-react';
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
+import api_categoria from '../services/api_categoria';
 
 function Categorias() {
 
@@ -73,19 +74,24 @@ function Categorias() {
     });
 
     //CRUD de categorias
-    const addNewCategory = () => {
+    const addNewCategory = async() => {
 
-        setCategories((categoriasAtuais) => [
-            ...categoriasAtuais,
-            newCategory
-        ]);
-
+        const create_categoria = await api_categoria.post('/create_categoria', {
+            descricao: newCategory.desc
+        })
+        categoria_api();
         setShowCategoryForm(false);
 
-        setNewCategory({
-            desc: "",
-        });
     };
+
+    const categoria_api = async () =>{
+        const categorias = await api_categoria.get('/list_categorias')
+        setCategories(categorias.data.categorias)
+    }
+    
+    useState(()=> {
+        categoria_api();
+    }, [])
 
     const [categories, setCategories] = useState([]);
 
@@ -135,7 +141,7 @@ function Categorias() {
                             className="rounded-xl border border-gray-800 bg-[#0d0920] p-5"
                         >
                             <h2 className="text-xl font-bold">
-                                {categoria.desc}
+                                {categoria.descricao || "Sem Descrição"}
                             </h2>
 
                         </div>
@@ -213,7 +219,7 @@ function Categorias() {
                                 <Button
                                     type="submit"
                                     className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
-                                >
+                                >   
                                     Cadastrar categoria
                                 </Button>
 
