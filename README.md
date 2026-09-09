@@ -1,4 +1,3 @@
-# Loguiss Backend
 
 Backend desenvolvido em Node.js utilizando Express, Prisma ORM e PostgreSQL.
 
