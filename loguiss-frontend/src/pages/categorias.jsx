@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search } from 'lucide-react';
+import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Layers2 } from 'lucide-react';
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
+import { Card } from '../components/card';
 
 function Categorias() {
 
@@ -74,20 +76,46 @@ function Categorias() {
 
     //CRUD de categorias
     const addNewCategory = () => {
-
-        setCategories((categoriasAtuais) => [
-            ...categoriasAtuais,
-            newCategory
-        ]);
+        if (editingIndex !== null) {
+            editCategory(editingIndex, newCategory);
+            toast.success("Categoria atualizada com sucesso!");
+        } else {
+            setCategories((categoriasAtuais) => [
+                ...categoriasAtuais,
+                newCategory,
+            ]);
+            toast.success("Categoria cadastrada com sucesso!");
+        }
 
         setShowCategoryForm(false);
+        setEditingIndex(null);
+        setNewCategory({ desc: "" });
+    };
 
-        setNewCategory({
-            desc: "",
+    const editCategory = (index, updatedCategory) => {
+        setCategories((categoriasAtuais) => {
+            const categoriasAtualizadas = [...categoriasAtuais];
+            categoriasAtualizadas[index] = updatedCategory;
+            return categoriasAtualizadas;
+        });
+    };
+
+    const deleteCategory = (index) => {
+        setCategories((categoriasAtuais) => {
+            const categoriasAtualizadas = [...categoriasAtuais];
+            categoriasAtualizadas.splice(index, 1);
+            return categoriasAtualizadas;
         });
     };
 
     const [categories, setCategories] = useState([]);
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const filteredCategories = categories
+        .map((categoria, index) => ({ categoria, index }))
+        .filter(({ categoria }) =>
+            categoria.desc.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
     return (
 
@@ -114,7 +142,11 @@ function Categorias() {
                     <Button
                         type="button"
                         className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
-                        onClick={() => setShowCategoryForm(true)}
+                        onClick={() => {
+                            setEditingIndex(null);
+                            setNewCategory({ desc: "" });
+                            setShowCategoryForm(true);
+                        }}
                     >
                         Adicionar nova categoria
                     </Button>
@@ -124,22 +156,40 @@ function Categorias() {
                 <Inputs
                     type="text"
                     placeholder="Pesquisar categorias..."
-                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                    }}
+                    className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
                     icon={Search}
                 />
 
+                {/*Card de categorias*/}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {categories.map((categoria, index) => (
-                        <div
+                    {filteredCategories.map(({ categoria, index }) => (
+                        <Card
                             key={index}
-                            className="rounded-xl border border-gray-800 bg-[#0d0920] p-5"
+                            desc={categoria.desc}
+                            icon={<Layers2 className="h-6 w-6 mt-2 text-gray-400" />}
+                            onEdit={() => {
+                                setEditingIndex(index);
+                                setNewCategory(categoria);
+                                setShowCategoryForm(true);
+                            }}
+                            onDelete={() => {
+                                if (window.confirm("Deseja excluir esta categoria?")) {
+                                    deleteCategory(index);
+                                    toast.success("Categoria excluída com sucesso!");
+                                }
+                            }}
                         >
-                            <h2 className="text-xl font-bold">
-                                {categoria.desc}
-                            </h2>
+                            <p className="mt-2 text-gray-400">
+                                Categoria: {categoria.desc}
+                            </p>
 
-                        </div>
+                        </Card>
                     ))}
+
                 </div>
 
             </main>
@@ -152,7 +202,7 @@ function Categorias() {
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-2xl font-bold">
-                                    Adicionar categoria
+                                    {editingIndex !== null ? "Editar categoria" : "Adicionar categoria"}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-400">
@@ -214,7 +264,7 @@ function Categorias() {
                                     type="submit"
                                     className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
                                 >
-                                    Cadastrar categoria
+                                    {editingIndex !== null ? "Salvar alterações" : "Cadastrar categoria"}
                                 </Button>
 
                             </div>

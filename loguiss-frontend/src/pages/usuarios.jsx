@@ -341,19 +341,16 @@ function Usuarios() {
                                         Senha
                                     </label>
 
-                                    <Inputs
-                                        type={visualizar_senha ? 'text' : 'password'}
-                                        placeholder="Senha"
-                                        value={newUsuario.senha}
-                                        onChange={(e) => setNewUsuario({ ...newUsuario, senha: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        rightElement={
-                                            <ButtonEye
-                                                visualizar_senha={visualizar_senha}
-                                                setVisualizarSenha={setVisualizarSenha}
-                                            />
-                                        }
-                                        required
+ 
+                                    <Inputs 
+                                        type={visualizar_senha ? 'text' : 'password'} 
+                                        placeholder="Senha" 
+                                        value={newUsuario.senha} 
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, senha: e.target.value })} 
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"                                        rightElement={ 
+                                            <ButtonEye visualizar_senha={visualizar_senha} setVisualizarSenha={setVisualizarSenha} /> 
+                                        } 
+                                        required 
                                     />
                                 </div>
 
