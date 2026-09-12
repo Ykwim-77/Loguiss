@@ -1,9 +1,9 @@
 import { Pencil, Trash2 } from 'lucide-react';
-import { Button } from './button';
+import { Button } from './Button';
 
 export function Card({ children, icon, desc, onEdit, onDelete }) {
     return (
-        <div className="rounded-xl border border-gray-800 border-l-4 border-l-green-500 bg-[#0d0920] p-5">
+        <div className="rounded-lg border border-gray-800 border-l-4 border-l-green-500 bg-[#0d0920] p-5">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold">
                     {desc}

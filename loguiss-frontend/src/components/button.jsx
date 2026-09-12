@@ -1,19 +1,13 @@
 export function Button({
     children,
+    type = "button",
     className = '',
     ...props
 }) {
     return (
         <button
-            className={`
-                cursor-pointer
-                border-none
-                rounded-sm
-                text-white
-                font-bold
-                transition-colors
-                ${className}
-            `}
+            type={type}
+            className={`cursor-pointer text-white border-none rounded-lg font-bold transition-colors ${className}`}
             {...props}
         >
             {children}

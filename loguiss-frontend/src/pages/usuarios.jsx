@@ -1,77 +1,30 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, User } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 
-import { SideBar } from '../components/sidebar';
-import { Button } from '../components/button'
-import { Inputs } from '../components/inputs';
-import { Card } from '../components/card';
-import { ButtonEye } from '../components/buttonEye';
+import { SideBar } from '../components/Sidebar';
+import { Button } from '../components/Button'
+import { Inputs } from '../components/Inputs';
+import { Card } from '../components/Card';
+import { ButtonEye } from '../components/ButtonEye';
 
 function Usuarios() {
 
-    const menuItems = [
-        {
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            href: "/home",
-            active: true,
-        },
-        {
-            label: "Cadastros",
-            icon: Folder,
-            subMenu: [
-                {
-                    label: "Produtos",
-                    subMenu: [
-                        { label: "Produtos", href: "/produtos" },
-                        { label: "Unidade de Medida", href: "/unidades-medida" },
-                        { label: "Categorias", href: "/categorias" },
-                    ],
-                },
-                { label: "Usuários", href: "/usuarios" },
-                { label: "Clientes", href: "/clientes" },
-                { label: "Fornecedores", href: "/fornecedores" },
-            ],
-        },
-        {
-            label: "Movimentações",
-            icon: Shuffle,
-            subMenu: [
-                {
-                    label: "Movimentações de saída",
-                    href: "/movimentacoes-saida",
-                },
-                {
-                    label: "Movimentações de entrada",
-                    href: "/movimentacoes-entrada",
-                },
-            ],
-        },
-        {
-            label: "Previsão IA",
-            icon: Brain,
-            subMenu: [
-                {
-                    label: "Previsão de demanda",
-                    href: "/previsao-demanda",
-                },
-                {
-                    label: "Configurações da IA",
-                    href: "/configuracoes-ia",
-                },
-            ],
-        },
-        {
-            label: "Configurações",
-            icon: Cog,
-            href: "/configuracoes",
-        },
-    ];
-
     const [showUsuariosForm, setShowUsuariosForm] = useState(false);
+    const [usuarios, setUsuarios] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [visualizar_senha, setVisualizarSenha] = useState(false);
+    const [visualizar_confirmar_senha, setVisualizarConfirmarSenha] = useState(false);
+    const filteredUsuarios = usuarios
+        .map((usuario, index) => ({ usuario, index }))
+        .filter(({ usuario }) => {
+            const texto = (usuario.desc ?? usuario.descricao ?? usuario.nome ?? "").toLowerCase();
+            return texto.includes(appliedSearch.toLowerCase());
+        });
 
     const [newUsuario, setNewUsuario] = useState({
         desc: "",
@@ -83,7 +36,18 @@ function Usuarios() {
         tipo_usuario: ""
     });
 
-    //CRUD de usuários
+    function validarConfirmarSenha(senha, confirmarSenha) {
+        if (confirmarSenha.trim() === '') {
+            return 'A confirmação da senha é obrigatória';
+        }
+
+        if (confirmarSenha !== senha) {
+            return 'As senhas não coincidem';
+        }
+
+        return '';
+    }
+
     const addNewUsuario = () => {
 
         setUsuarios((usuariosAtuais) => [
@@ -120,31 +84,17 @@ function Usuarios() {
         });
     };
 
-    const [usuarios, setUsuarios] = useState([]);
-
-    const [searchTerm, setSearchTerm] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
-    const [editingIndex, setEditingIndex] = useState(null);
-    const [visualizar_senha, setVisualizarSenha] = useState(false);
-    const [visualizar_confirmar_senha, setVisualizarConfirmarSenha] = useState(false);
-    const filteredUsuarios = usuarios
-        .map((usuario, index) => ({ usuario, index }))
-        .filter(({ usuario }) =>
-            usuario.desc.toLowerCase().includes(appliedSearch.toLowerCase())
-        );
-
     return (
 
         <div className="min-h-screen bg-[#050212] text-white">
 
-            <SideBar menuItems={menuItems} />
+            <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
 
                 <div className="flex items-center justify-between mb-3">
 
-                    <div> {/* Agrupa o título e a descrição para separá-los do botão no layout flex */}
-
+                    <div>
                         <h1 className="text-3xl font-bold mb-2 mt-2">
                             Usuários
                         </h1>
@@ -155,7 +105,6 @@ function Usuarios() {
 
                     </div>
 
-                    {/*Adicionar novo usuário*/}
                     <Button
                         type="button"
                         className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
@@ -182,22 +131,21 @@ function Usuarios() {
 
                     <Inputs
                         type="text"
-                        placeholder="Pesquisar usuários..."
-                        className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
-                        icon={Search}
+                        placeholder="Pesquisar..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
-                                setAppliedSearch(searchTerm);
+                                setAppliedSearch(searchTerm.trim());
                             }
                         }}
+                        className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
+                        icon={Search}
                     />
 
                 </div>
 
-                {/*Card de usuários*/}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {filteredUsuarios.map(({ usuario, index }) => (
                         <Card
@@ -216,10 +164,6 @@ function Usuarios() {
                                 }
                             }}
                         >
-
-                            <p className="mt-2 text-gray-400">
-                                Nome: {usuario.desc}
-                            </p>
 
                             <p className="mt-1 text-gray-400">
                                 Email: {usuario.email}
@@ -244,11 +188,10 @@ function Usuarios() {
 
             </main>
 
-            {/*Formulário de Usuários*/}
             {showUsuariosForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
 
-                    <div className="w-full max-w-2xl rounded-xl bg-[#050210] p-6 shadow-2xl">
+                    <div className="w-full max-w-2xl rounded-lg bg-[#050210] p-6 shadow-2xl">
 
                         <div className="mb-6 flex items-center justify-between">
 
@@ -280,11 +223,23 @@ function Usuarios() {
                             onSubmit={(e) => {
                                 e.preventDefault();
 
+                                const erro = validarConfirmarSenha(
+                                    newUsuario.senha,
+                                    newUsuario.confirm_senha
+                                );
+
+                                if (erro) {
+                                    setErroConfirmarSenha(erro);
+                                    toast.error(erro);
+                                    return;
+                                }
+
+                                setErroConfirmarSenha('');
+
                                 if (editingIndex !== null) {
                                     editUsuario(editingIndex, newUsuario);
                                     toast.success("Usuário atualizado com sucesso!");
-                                }
-                                else {
+                                } else {
                                     addNewUsuario();
                                     toast.success("Usuário cadastrado com sucesso!");
                                 }
@@ -293,6 +248,7 @@ function Usuarios() {
                                 setShowUsuariosForm(false);
                             }}
                         >
+
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -341,16 +297,16 @@ function Usuarios() {
                                         Senha
                                     </label>
 
- 
-                                    <Inputs 
-                                        type={visualizar_senha ? 'text' : 'password'} 
-                                        placeholder="Senha" 
-                                        value={newUsuario.senha} 
-                                        onChange={(e) => setNewUsuario({ ...newUsuario, senha: e.target.value })} 
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"                                        rightElement={ 
-                                            <ButtonEye visualizar_senha={visualizar_senha} setVisualizarSenha={setVisualizarSenha} /> 
-                                        } 
-                                        required 
+
+                                    <Inputs
+                                        type={visualizar_senha ? 'text' : 'password'}
+                                        placeholder="Senha"
+                                        value={newUsuario.senha}
+                                        onChange={(e) => setNewUsuario({ ...newUsuario, senha: e.target.value })}
+                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]" rightElement={
+                                            <ButtonEye visualizar_senha={visualizar_senha} setVisualizarSenha={setVisualizarSenha} />
+                                        }
+                                        required
                                     />
                                 </div>
 

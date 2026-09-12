@@ -1,81 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Layers2 } from 'lucide-react';
-import { SideBar } from '../components/sidebar';
-import { Button } from '../components/button'
-import { Inputs } from '../components/inputs';
+import { Search, Layers2 } from 'lucide-react';
+import { SideBar } from '../components/Sidebar';
+import { Button } from '../components/Button'
+import { Inputs } from '../components/Inputs';
+import { Card } from '../components/Card';
+
 import api_categoria from '../services/api_categoria';
-import { Card } from '../components/card';
 
 function Categorias() {
 
-    const menuItems = [
-        {
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            href: "/home",
-            active: true,
-        },
-        {
-            label: "Cadastros",
-            icon: Folder,
-            subMenu: [
-                {
-                    label: "Produtos",
-                    subMenu: [
-                        { label: "Produtos", href: "/produtos" },
-                        { label: "Unidade de Medida", href: "/unidades-medida" },
-                        { label: "Categorias", href: "/categorias" },
-                    ],
-                },
-                { label: "Usuários", href: "/usuarios" },
-                { label: "Clientes", href: "/clientes" },
-                { label: "Fornecedores", href: "/fornecedores" },
-            ],
-        },
-        {
-            label: "Movimentações",
-            icon: Shuffle,
-            subMenu: [
-                {
-                    label: "Movimentações de saída",
-                    href: "/movimentacoes-saida",
-                },
-                {
-                    label: "Movimentações de entrada",
-                    href: "/movimentacoes-entrada",
-                },
-            ],
-        },
-        {
-            label: "Previsão IA",
-            icon: Brain,
-            subMenu: [
-                {
-                    label: "Previsão de demanda",
-                    href: "/previsao-demanda",
-                },
-                {
-                    label: "Configurações da IA",
-                    href: "/configuracoes-ia",
-                },
-            ],
-        },
-        {
-            label: "Configurações",
-            icon: Cog,
-            href: "/configuracoes",
-        },
-    ];
-
     const [showCategoryForm, setShowCategoryForm] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+    const filteredCategories = categories
+        .map((categoria, index) => ({ categoria, index }))
+        .filter(({ categoria }) => {
+            const texto = (categoria.desc ?? "").toLowerCase();
+            return texto.includes(appliedSearch.toLowerCase());
+        });
 
     const [newCategory, setNewCategory] = useState({
         desc: "",
     });
 
-    //CRUD de categorias
     const addNewCategory = async () => {
         if (editingIndex !== null) {
             editCategory(editingIndex, newCategory);
@@ -113,36 +64,26 @@ function Categorias() {
         });
     };
 
-    const categoria_api = async () =>{
+    const categoria_api = async () => {
         const categorias = await api_categoria.get('/list_categorias')
         setCategories(categorias.data.categorias)
     }
-    
-    useState(()=> {
+
+    useState(() => {
         categoria_api();
     }, [])
-
-    const [categories, setCategories] = useState([]);
-    const [editingIndex, setEditingIndex] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const filteredCategories = categories
-        .map((categoria, index) => ({ categoria, index }))
-        .filter(({ categoria }) =>
-            categoria.desc.toLowerCase().includes(searchTerm.toLowerCase())
-        );
 
     return (
 
         <div className="min-h-screen bg-[#050212] text-white">
 
-            <SideBar menuItems={menuItems} />
+            <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
 
                 <div className="flex items-center justify-between mb-3">
 
-                    <div> {/* Agrupa o título e a descrição para separá-los do botão no layout flex */}
-
+                    <div>
                         <h1 className="text-3xl font-bold mb-2 mt-2">
                             Categorias
                         </h1>
@@ -169,16 +110,19 @@ function Categorias() {
 
                 <Inputs
                     type="text"
-                    placeholder="Pesquisar categorias..."
+                    placeholder="Pesquisar..."
                     value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            setAppliedSearch(searchTerm.trim());
+                        }
                     }}
                     className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
                     icon={Search}
                 />
 
-                {/*Card de categorias*/}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {filteredCategories.map(({ categoria, index }) => (
                         <Card
@@ -211,7 +155,7 @@ function Categorias() {
             {showCategoryForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 
-                    <div className="w-full max-w-2xl rounded-xl bg-[#0d0920] p-6 shadow-2xl">
+                    <div className="w-full max-w-2xl rounded-lg bg-[#0d0920] p-6 shadow-2xl">
 
                         <div className="mb-6 flex items-center justify-between">
                             <div>
@@ -243,6 +187,7 @@ function Categorias() {
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                                 <div className="sm:col-span-2">
+                                    
                                     <label className="mb-1 block text-sm font-medium">
                                         Descrição
                                     </label>
@@ -260,6 +205,7 @@ function Categorias() {
                                         className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
                                         required
                                     />
+
                                 </div>
 
                             </div>
