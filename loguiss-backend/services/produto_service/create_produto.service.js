@@ -19,10 +19,6 @@ export async function create_produto_service(req, res) {
         dt_entrada,
         minimo,
         prazo_saida } = req.body
-    
-    const produtos_receita =req.body.ingredientes;
-    console.log(produtos_receita)
-
 
     let campos_obrigatorios = [
         descricao, 
@@ -70,6 +66,9 @@ export async function create_produto_service(req, res) {
             }
         })
         if(tipo_produto.flag_tipo == 'P'){
+            const produtos_receita =req.body.ingredientes;
+            console.log(produtos_receita);
+            
 
         }
 
