@@ -64,6 +64,7 @@ model produto_categoria {
 model tipo_produto {
   id_tipo_produto Int      @id @default(autoincrement())
   descricao       String
+  flag_tipo       String?
   flag_ativo      String   @default("T")
   created_at      DateTime @default(now())
   updated_at      DateTime? @updatedAt
@@ -113,11 +114,14 @@ model estoque {
 
 
 model receita {
-  id_receita Int      @id @default(autoincrement())
-  descricao  String
-  flag_ativo String   @default("T")
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id_receita           Int      @id @default(autoincrement())
+  descricao            String
+  margem_perda         Decimal  @default(0)
+  quantidade_produzida Decimal  @default(0)
+  quantidade_perdida   Decimal  @default(0)
+  flag_ativo           String   @default("T")
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 
   produtos receita_produto[]
 }

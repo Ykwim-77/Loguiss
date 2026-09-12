@@ -19,6 +19,9 @@ export async function create_produto_service(req, res) {
         dt_entrada,
         minimo,
         prazo_saida } = req.body
+    
+    const produtos_receita =req.body.ingredientes;
+    console.log(produtos_receita)
 
 
     let campos_obrigatorios = [
@@ -61,6 +64,15 @@ export async function create_produto_service(req, res) {
         if(!existe_categoria){
             return res.status(400).json({MSG: "favor informar uma categoria válida!"})
         }
+        const tipo_produto = await prisma.tipo_produto.findUnique({
+            where:{
+                id_tipo_produto: id_tipo_produto
+            }
+        })
+        if(tipo_produto.flag_tipo == 'P'){
+
+        }
+
         
         const produto = await prisma.produto.create({
             data:{
