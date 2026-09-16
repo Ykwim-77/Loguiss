@@ -14,6 +14,9 @@ export default async function list_produto_service(req, res) {
                         fornecedor: true
                     }
                 },
+                estoque:{
+                    include: true
+                },
                 unidade_medida: true
             }
         })

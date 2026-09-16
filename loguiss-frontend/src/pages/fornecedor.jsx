@@ -1,77 +1,30 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search, Building2 } from 'lucide-react';
+import { Search, Building2 } from 'lucide-react';
 
 import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 
-import { SideBar } from '../components/sidebar';
-import { Button } from '../components/button';
-import { Inputs } from '../components/inputs';
-import { Card } from '../components/card';
+import { SideBar } from '../components/Sidebar';
+import { Button } from '../components/Button';
+import { Inputs } from '../components/Inputs';
+import { Card } from '../components/Card';
+import api_fornecedor from '../services/api_fornecedor';
 
 function Fornecedor() {
 
-    const menuItems = [
-        {
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            href: "/home",
-            active: true,
-        },
-        {
-            label: "Cadastros",
-            icon: Folder,
-            subMenu: [
-                {
-                    label: "Produtos",
-                    subMenu: [
-                        { label: "Produtos", href: "/produtos" },
-                        { label: "Unidade de Medida", href: "/unidades-medida" },
-                        { label: "Categorias", href: "/categorias" },
-                    ],
-                },
-                { label: "Usuários", href: "/usuarios" },
-                { label: "Clientes", href: "/clientes" },
-                { label: "Fornecedores", href: "/fornecedores" },
-            ],
-        },
-        {
-            label: "Movimentações",
-            icon: Shuffle,
-            subMenu: [
-                {
-                    label: "Movimentações de saída",
-                    href: "/movimentacoes-saida",
-                },
-                {
-                    label: "Movimentações de entrada",
-                    href: "/movimentacoes-entrada",
-                },
-            ],
-        },
-        {
-            label: "Previsão IA",
-            icon: Brain,
-            subMenu: [
-                {
-                    label: "Previsão de demanda",
-                    href: "/previsao-demanda",
-                },
-                {
-                    label: "Configurações da IA",
-                    href: "/configuracoes-ia",
-                },
-            ],
-        },
-        {
-            label: "Configurações",
-            icon: Cog,
-            href: "/configuracoes",
-        },
-    ];
-
     const [showFornecedorForm, setShowFornecedorForm] = useState(false);
+    const [fornecedores, setFornecedores] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+    const [editingIndex, setEditingIndex] = useState(null);
+    const filteredFornecedores = fornecedores
+        .map((fornecedor, index) => ({ fornecedor, index }))
+        .filter(({ fornecedor }) => {
+            const texto = (fornecedor.nome ?? "").toLowerCase();
+            return texto.includes(appliedSearch.toLowerCase());
+        });
+
 
     const [newFornecedor, setNewFornecedor] = useState({
         cnpj: "",
@@ -86,18 +39,28 @@ function Fornecedor() {
         telefone: ""
     });
 
-    const [fornecedores, setFornecedores] = useState([]);
+    const fornecedores_api = async () => {
+        const Fornecedores = await api_fornecedor.get('/list_fornecedor')
+        console.log(Fornecedores.data.fornecedores)
+        setFornecedores(Fornecedores.data.fornecedores)
+    }
+    useState(() => {
+        fornecedores_api();
+    }, [])
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
-    const [editingIndex, setEditingIndex] = useState(null);
+    const addNewFornecedor = async () => {
 
-    // CRUD de fornecedores
-    const addNewFornecedor = () => {
-        setFornecedores((fornecedoresAtuais) => [
-            ...fornecedoresAtuais,
-            newFornecedor
-        ]);
+        const create_fornecedor = await api_fornecedor.post('/create_fornecedor', {
+            cnpj: newFornecedor.cnpj,
+            nome: newFornecedor.nome,
+            rua: newFornecedor.endereco.rua,
+            bairro: newFornecedor.endereco.bairro,
+            numero: newFornecedor.endereco.numero,
+            estado: newFornecedor.endereco.estado,
+            email: newFornecedor.email,
+            telefone: newFornecedor.telefone
+        })
+        fornecedores_api();
 
         setShowFornecedorForm(false);
 
@@ -135,19 +98,11 @@ function Fornecedor() {
         });
     };
 
-    const filteredFornecedores = fornecedores
-        .map((fornecedor, index) => ({ fornecedor, index }))
-        .filter(({ fornecedor }) =>
-            fornecedor.nome
-                .toLowerCase()
-                .includes(appliedSearch.toLowerCase())
-        );
-
     return (
 
         <div className="min-h-screen bg-[#050212] text-white">
 
-            <SideBar menuItems={menuItems} />
+            <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
 
@@ -195,21 +150,17 @@ function Fornecedor() {
 
                     <Inputs
                         type="text"
-                        placeholder="Pesquisar fornecedores..."
-                        className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
-                        icon={Search}
+                        placeholder="Pesquisar..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => {
-
                             if (e.key === "Enter") {
-
                                 e.preventDefault();
-
-                                setAppliedSearch(searchTerm);
+                                setAppliedSearch(searchTerm.trim());
                             }
-
                         }}
+                        className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
+                        icon={Search}
                     />
 
                 </div>
@@ -240,10 +191,6 @@ function Fornecedor() {
                             }}
                         >
 
-                            <p className="mt-2 text-gray-400">
-                                Nome: {fornecedor.nome}
-                            </p>
-
                             <p className="mt-1 text-gray-400">
                                 CNPJ: {fornecedor.cnpj}
                             </p>
@@ -272,7 +219,7 @@ function Fornecedor() {
 
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
 
-                    <div className="w-full max-w-2xl rounded-xl bg-[#050210] p-6 shadow-2xl">
+                    <div className="w-full max-w-2xl rounded-lg bg-[#050210] p-6 shadow-2xl">
 
                         <div className="mb-6 flex items-center justify-between">
 

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Inputs } from '../components/inputs';
-import { ButtonEye } from '../components/buttonEye';
-import { Button } from '../components/button';
+import { Inputs } from '../components/Inputs';
+import { ButtonEye } from '../components/ButtonEye';
+import { Button } from '../components/Button';
 import { validarSenha } from '../utils/validacoes';
 
 function RedefinirSenha() {
@@ -66,7 +66,7 @@ function RedefinirSenha() {
 
             <div className="flex flex-col gap-5">
 
-                <div className="flex w-full max-w-6xl rounded-xl overflow-hidden shadow-2xl">
+                <div className="flex w-full max-w-6xl rounded-lg overflow-hidden shadow-2xl">
 
                     <aside className="hidden lg:flex w-1/2 bg-[#0D0B12] items-center justify-center">
 
@@ -80,13 +80,13 @@ function RedefinirSenha() {
 
                     <form
                         onSubmit={formularioEnviado}
-                        className="bg-[#100E14] p-10 rounded-sm w-[400px] shadow-lg"
+                        className="bg-[#100E14] p-10 rounded-lg w-[400px] shadow-lg"
                     >
 
                         <img
                             src="./images/logo.png"
                             alt="Logo da Loguiss"
-                            className="w-20 h-20 mx-auto mb-4 rounded-xl"
+                            className="w-20 h-20 mx-auto mb-4 rounded-lg"
                         />
 
                         <h1 className="text-2xl font-bold text-green-500 text-center mb-2">
@@ -96,51 +96,55 @@ function RedefinirSenha() {
                         <p className="text-center text-green-500 mb-5 text-sm">
                             Digite sua nova senha e confirme para concluir a redefinição.
                         </p>
+                        
+                        <div className="flex flex-col gap-4 mb-4">
 
-                        <Inputs
-                            type={visualizar_senha ? 'text' : 'password'}
-                            placeholder="Nova senha"
-                            value={senha}
-                            onChange={(e) => setSenha(e.target.value)}
-                            onBlur={() => setSenhaTocada(true)}
-                            error={erro_senha}
-                            touched={senha_tocada || enviar_formulario}
-                            icon={Lock}
-                            rightElement={
-                                <ButtonEye
-                                    visualizar_senha={visualizar_senha}
-                                    setVisualizarSenha={setVisualizarSenha}
-                                />
-                            }
-                        />
+                            <Inputs
+                                type={visualizar_senha ? 'text' : 'password'}
+                                placeholder="Nova senha"
+                                value={senha}
+                                onChange={(e) => setSenha(e.target.value)}
+                                onBlur={() => setSenhaTocada(true)}
+                                error={erro_senha}
+                                touched={senha_tocada || enviar_formulario}
+                                icon={Lock}
+                                rightElement={
+                                    <ButtonEye
+                                        visualizar_senha={visualizar_senha}
+                                        setVisualizarSenha={setVisualizarSenha}
+                                    />
+                                }
+                            />
 
-                        <Inputs
-                            type={visualizar_confirmar_senha ? 'text' : 'password'}
-                            placeholder="Confirmar nova senha"
-                            value={confirmar_senha}
-                            onChange={(e) => setConfirmarSenha(e.target.value)}
-                            onBlur={() => setConfirmarSenhaTocada(true)}
-                            error={erro_confirmar_senha}
-                            touched={confirmar_senha_tocada || enviar_formulario}
-                            icon={Lock}
-                            rightElement={
-                                <ButtonEye
-                                    visualizar_senha={visualizar_confirmar_senha}
-                                    setVisualizarSenha={setVisualizarConfirmarSenha}
-                                />
-                            }
-                        />
+                            <Inputs
+                                type={visualizar_confirmar_senha ? 'text' : 'password'}
+                                placeholder="Confirmar nova senha"
+                                value={confirmar_senha}
+                                onChange={(e) => setConfirmarSenha(e.target.value)}
+                                onBlur={() => setConfirmarSenhaTocada(true)}
+                                error={erro_confirmar_senha}
+                                touched={confirmar_senha_tocada || enviar_formulario}
+                                icon={Lock}
+                                rightElement={
+                                    <ButtonEye
+                                        visualizar_senha={visualizar_confirmar_senha}
+                                        setVisualizarSenha={setVisualizarConfirmarSenha}
+                                    />
+                                }
+                            />
+                            
+                        </div>
 
                         <Button
                             type="submit"
-                            className="bg-[#4EDB4E] hover:bg-[#3CB43C]"
+                            className="w-full p-3 mb-2 bg-[#4EDB4E] hover:bg-[#3CB43C]"
                         >
                             Redefinir senha
                         </Button>
 
                         <Button
                             type="button"
-                            className="bg-[#0B0819] hover:bg-[#170F3C] mt-3"
+                            className="w-full p-3 bg-[#0B0819] hover:bg-[#170F3C] mt-3"
                             onClick={() => navigate('/login')}
                         >
                             Voltar para o login

@@ -64,6 +64,7 @@ model produto_categoria {
 model tipo_produto {
   id_tipo_produto Int      @id @default(autoincrement())
   descricao       String
+  flag_tipo       String?
   flag_ativo      String   @default("T")
   created_at      DateTime @default(now())
   updated_at      DateTime? @updatedAt
@@ -78,33 +79,49 @@ model produto {
   id_tipo_produto   Int
   id_unidade_medida Int
 
-  is_fracionado     String   @default("F")
   valor             Decimal
-  quantidade        Decimal  @default(0)
-
-  minimo            Decimal  @default(0)
-  dt_entrada        DateTime?
-  prazo_saida       DateTime?
 
   flag_ativo        String   @default("T")
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  tipo_produto      tipo_produto          @relation(fields: [id_tipo_produto], references: [id_tipo_produto])
-  unidade_medida    unidade_medida        @relation(fields: [id_unidade_medida], references: [id_unidade])
+  tipo_produto      tipo_produto   @relation(fields: [id_tipo_produto], references: [id_tipo_produto])
+  unidade_medida    unidade_medida @relation(fields: [id_unidade_medida], references: [id_unidade])
 
   categorias        produto_categoria[]
   receitas          receita_produto[]
-  movimentacoes    movimentacao_estoque[]
+  movimentacoes     movimentacao_estoque[]
   fornecedores      fornecedor_produto[]
+
+  estoque           estoque?
+}
+model estoque {
+  id_estoque      Int      @id @default(autoincrement())
+  id_produto      Int      @unique
+
+  quantidade      Decimal  @default(0)
+  minimo          Decimal  @default(0)
+  is_fracionado   String   @default("F")
+
+  dt_entrada      DateTime?
+  prazo_saida     DateTime?
+
+  produto         produto  @relation(fields: [id_produto], references: [id_produto], onDelete: Cascade)
+
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
 
+
 model receita {
-  id_receita Int      @id @default(autoincrement())
-  descricao  String
-  flag_ativo String   @default("T")
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id_receita           Int      @id @default(autoincrement())
+  descricao            String
+  margem_perda         Decimal  @default(0)
+  quantidade_produzida Decimal  @default(0)
+  quantidade_perdida   Decimal  @default(0)
+  flag_ativo           String   @default("T")
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 
   produtos receita_produto[]
 }

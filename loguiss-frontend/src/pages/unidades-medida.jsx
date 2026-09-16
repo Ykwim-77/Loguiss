@@ -1,111 +1,82 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { LayoutDashboard, Folder, Shuffle, Brain, Cog, Search } from 'lucide-react';
-import { SideBar } from '../components/sidebar';
-import { Button } from '../components/button'
-import { Inputs } from '../components/inputs';
+import { Search, Combine } from 'lucide-react';
+import { SideBar } from '../components/Sidebar';
+import { Button } from '../components/Button'
+import { Inputs } from '../components/Inputs';
+import { Card } from '../components/Card';
 
 function UnidadesMedida() {
 
-    const menuItems = [
-        {
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            href: "/home",
-            active: true,
-        },
-        {
-            label: "Cadastros",
-            icon: Folder,
-            subMenu: [
-                {
-                    label: "Produtos",
-                    subMenu: [
-                        { label: "Produtos", href: "/produtos" },
-                        { label: "Unidade de Medida", href: "/unidades-medida" },
-                        { label: "Categorias", href: "/categorias" },
-                    ],
-                },
-                { label: "Usuários", href: "/usuarios" },
-                { label: "Clientes", href: "/clientes" },
-                { label: "Fornecedores", href: "/fornecedores" },
-            ],
-        },
-        {
-            label: "Movimentações",
-            icon: Shuffle,
-            subMenu: [
-                {
-                    label: "Movimentações de saída",
-                    href: "/movimentacoes-saida",
-                },
-                {
-                    label: "Movimentações de entrada",
-                    href: "/movimentacoes-entrada",
-                },
-            ],
-        },
-        {
-            label: "Previsão IA",
-            icon: Brain,
-            subMenu: [
-                {
-                    label: "Previsão de demanda",
-                    href: "/previsao-demanda",
-                },
-                {
-                    label: "Configurações da IA",
-                    href: "/configuracoes-ia",
-                },
-            ],
-        },
-        {
-            label: "Configurações",
-            icon: Cog,
-            href: "/configuracoes",
-        },
-    ];
-
     const [showUnitForm, setShowUnitForm] = useState(false);
+    const [units, setUnits] = useState([]);
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [appliedSearch, setAppliedSearch] = useState("");
+    const filteredUnidades = units
+        .map((unidade, index) => ({ unidade, index }))
+        .filter(({ unidade }) => {
+            const texto = (unidade.desc ?? unidade.descricao ?? unidade.nome ?? "").toLowerCase();
+            return texto.includes(appliedSearch.toLowerCase());
+        });
 
     const [newUnit, setNewUnit] = useState({
         desc: "",
         gramatura: "",
         unidade: "",
-        fgFracionavel: false,
+        fgFracionavel: false
     });
 
-    //CRUD de unidades de medida
     const addNewUnit = () => {
-
-        setUnits((unidadesAtuais) => [
-            ...unidadesAtuais,
-            newUnit
-        ]);
+        if (editingIndex !== null) {
+            editUnit(editingIndex, newUnit);
+            toast.success("Unidade de medida atualizada com sucesso!");
+        } else {
+            setUnits((unidadesAtuais) => [
+                ...unidadesAtuais,
+                newUnit,
+            ]);
+            toast.success("Unidade de medida cadastrada com sucesso!");
+        }
 
         setShowUnitForm(false);
-
+        setEditingIndex(null);
         setNewUnit({
             desc: "",
             gramatura: "",
             unidade: "",
-            fgFracionavel: false,
+            fgFracionavel: false
         });
     };
 
-    const [units, setUnits] = useState([]);
+    const editUnit = (index, updatedUnit) => {
+        setUnits((unidadesAtuais) => {
+            const unidadesAtualizadas = [...unidadesAtuais];
+            unidadesAtualizadas[index] = updatedUnit;
+            return unidadesAtualizadas;
+        });
+    };
+
+    const deleteUnit = (index) => {
+        setUnits((unidadesAtuais) => {
+            const unidadesAtualizadas = [...unidadesAtuais];
+            unidadesAtualizadas.splice(index, 1);
+            return unidadesAtualizadas;
+        });
+    };
 
     return (
 
         <div className="min-h-screen bg-[#050212] text-white">
 
-            <SideBar menuItems={menuItems} />
+            <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
 
                 <div className="flex items-center justify-between mb-3">
 
-                    <div> {/* Agrupa o título e a descrição para separá-los do botão no layout flex */}
+                    <div>
 
                         <h1 className="text-3xl font-bold mb-2 mt-2">
                             Unidades de Medida
@@ -120,7 +91,16 @@ function UnidadesMedida() {
                     <Button
                         type="button"
                         className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
-                        onClick={() => setShowUnitForm(true)}
+                        onClick={() => {
+                            setEditingIndex(null);
+                            setNewUnit({
+                                desc: "",
+                                gramatura: "",
+                                unidade: "",
+                                fgFracionavel: false,
+                            });
+                            setShowUnitForm(true);
+                        }}
                     >
                         Adicionar nova unidade de medida
                     </Button>
@@ -129,31 +109,53 @@ function UnidadesMedida() {
 
                 <Inputs
                     type="text"
-                    placeholder="Pesquisar unidades de medida..."
-                    className="mt-5 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E] w-1/2"
+                    placeholder="Pesquisar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            setAppliedSearch(searchTerm.trim());
+                        }
+                    }}
+                    className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
                     icon={Search}
                 />
 
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {units.map((unidade, index) => (
-                        <div
+                    {filteredUnidades.map(({ unidade, index }) => (
+                        <Card
                             key={index}
-                            className="rounded-xl border border-gray-800 bg-[#0d0920] p-5"
+                            desc={unidade.desc}
+                            icon={<Combine className="h-6 w-6 mt-2 text-gray-400" />}
+                            onEdit={() => {
+                                setEditingIndex(index);
+                                setNewUnit(unidade);
+                                setShowUnitForm(true);
+                            }}
+                            onDelete={() => {
+                                if (window.confirm("Deseja excluir esta unidade de medida?")) {
+                                    deleteUnit(index);
+                                    toast.success("Unidade de medida excluída com sucesso!");
+                                }
+                            }}
                         >
-                            <h2 className="text-xl font-bold">
-                                {unidade.desc}
-                            </h2>
 
-                            <p className="mt-2 text-gray-400">
+                            <p className="mt-1 text-gray-400">
                                 Gramatura: {unidade.gramatura}
                             </p>
 
                             <p className="mt-1 text-gray-400">
-                                Fracionável: {unidade.fgFracionavel ? "Sim" : "Não"}
+                                Unidade: {unidade.unidade}
                             </p>
 
-                        </div>
+                            <p className="mt-1 text-gray-400">
+                                Fracíonavel: {unidade.fgFracionavel ? "Sim" : "Não"}
+                            </p>
+
+                        </Card>
                     ))}
+
                 </div>
 
             </main>
@@ -161,12 +163,14 @@ function UnidadesMedida() {
             {showUnitForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 
-                    <div className="w-full max-w-2xl rounded-xl bg-[#0d0920] p-6 shadow-2xl">
+                    <div className="w-full max-w-2xl rounded-lg bg-[#0d0920] p-6 shadow-2xl">
 
                         <div className="mb-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-2xl font-bold">
-                                    Adicionar unidade de medida
+                                    {editingIndex !== null
+                                        ? "Editar unidade de medida"
+                                        : "Adicionar unidade de medida"}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-gray-400">
@@ -274,6 +278,7 @@ function UnidadesMedida() {
                                                 : "Unidade não fracionável"}
                                         </span>
                                     </label>
+
                                 </div>
 
                             </div>
@@ -292,7 +297,10 @@ function UnidadesMedida() {
                                     type="submit"
                                     className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
                                 >
-                                    Cadastrar unidade
+                                    {editingIndex !== null
+                                        ? "Salvar alterações"
+                                        : "Cadastrar unidade"
+                                    }
                                 </Button>
 
                             </div>

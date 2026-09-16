@@ -3,7 +3,9 @@ import { prisma } from '../../database.js';
 
 export async function create_categoria(req, res) {
     const { descricao } = req.body
-    console.log(descricao)
+    if(!descricao){
+        return res.status(400).json({MSG:"favor inserir todos os dados corretamente!"})
+    }
     try{
        const categoria = await prisma.categoria.create({
             data:{
