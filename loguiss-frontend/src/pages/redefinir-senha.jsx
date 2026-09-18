@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Inputs } from '../components/Inputs';
-import { ButtonEye } from '../components/ButtonEye';
-import { Button } from '../components/Button';
+import { SideBar } from '../components/sidebar';
+import { Button } from '../components/button'
+import { Card } from '../components/card';
 import { validarSenha } from '../utils/validacoes';
 
 function RedefinirSenha() {
