@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock } from 'lucide-react';
 
 import { validarFormatoEmail, validarSenha } from '../utils/validacoes';
-import { Button } from '../components/Button';
-import { ButtonEye } from '../components/ButtonEye';
-import { Inputs } from '../components/Inputs';
+import { Button } from '../components/button';
+import { ButtonEye } from '../components/buttonEye';
+import { Inputs } from '../components/inputs';
 
 import api_login from '../services/api.js';
 
