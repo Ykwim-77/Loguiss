@@ -8,7 +8,7 @@ import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';
-import { ButtonEye } from '../components/ButtonEye';
+import { ButtonEye } from '../components/buttonEye';
 
 function Usuarios() {
 
