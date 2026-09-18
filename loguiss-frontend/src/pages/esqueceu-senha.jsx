@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { Inputs } from '../components/Inputs';
-import { Button } from '../components/Button';
+import { Inputs } from '../components/inputs';
+import { Button } from '../components/button';
 import { validarFormatoEmail } from '../utils/validacoes';
 
 function EsqueceuSenha() {
