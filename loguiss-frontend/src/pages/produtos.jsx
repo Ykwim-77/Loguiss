@@ -41,6 +41,7 @@ function Produtos() {
         fornecedor: "",
         dt_entrada: "",
         prazo_saida: "",
+        dt_validade: "",
         fgTipoProducao: false,
         receita: null
     });
@@ -132,6 +133,7 @@ function Produtos() {
                                 fornecedor: "",
                                 dt_entrada: "",
                                 prazo_saida: "",
+                                dt_validade: "",
                                 fgTipoProducao: false,
                                 receita: null
                             });
@@ -486,7 +488,23 @@ function Produtos() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg  p-3">
+                                        <label className="mb-1 block text-sm font-medium">
+                                            Data de Validade
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={newProduct.dt_validade}
+                                            onChange={(e) =>
+                                                setNewProduct({
+                                                    ...newProduct,
+                                                    dt_validade: e.target.value
+                                                })
+                                            }
+                                            className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E] "
+                                        />
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <label className="flex cursor-pointer items-center gap-3 rounded-lg p-3">
                                             <input
                                                 type="checkbox"
                                                 checked={newProduct.fgTipoProducao}

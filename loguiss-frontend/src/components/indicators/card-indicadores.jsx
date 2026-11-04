@@ -9,7 +9,7 @@ export function CardsIndicadores({ produtos }) {
     );
 
     return (
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 mb-5">
             <Card
                 desc="Total de produtos cadastrados"
                 icon={<Package size={24} className="text-green-500" />}

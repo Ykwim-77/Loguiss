@@ -6,7 +6,7 @@ export function AlertaEstoque({ produtos }) {
     return (
         <div className="mb-5 rounded-xl border border-gray-800 bg-[#0d0920] p-5">
             <h2 className="mb-4 text-xl font-bold">
-                Alertas de estoque
+                Alertas de estoque baixo
             </h2>
             {produtosComEstoqueBaixo.length === 0 ? (
                 <p className="text-sm text-gray-400">
