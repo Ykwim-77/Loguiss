@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { SideBar } from '../components/Sidebar';
-import { Button } from '../components/Button';
+import { SideBar } from '../components/sidebar';
+import { Button } from '../components/button';
 import { ButtonEye } from '../components/buttonEye';
-import { Inputs } from '../components/Inputs';
+import { Inputs } from '../components/inputs';
 import { formatarCPFCNPJ } from '../utils/validacoes';
 
 const movimentacaoInicial = {

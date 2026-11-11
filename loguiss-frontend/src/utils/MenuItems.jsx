@@ -1,10 +1,4 @@
-import {
-  LayoutDashboard,
-  Folder,
-  Shuffle,
-  Brain,
-  Cog,
-} from 'lucide-react';
+import { LayoutDashboard, Folder, Shuffle, Brain, Cog, } from 'lucide-react';
 
 export const menuItems = [
   {

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Search, Combine } from 'lucide-react';
-import { SideBar } from '../components/Sidebar';
+
+import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';

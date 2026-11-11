@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Search, User } from 'lucide-react';
 import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 
-import { SideBar } from '../components/Sidebar';
+import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
 import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';

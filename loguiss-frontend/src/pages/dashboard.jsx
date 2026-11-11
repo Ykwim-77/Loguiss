@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { SideBar } from '../components/Sidebar';
+import { SideBar } from '../components/sidebar';
 
 import { Movimentacoes } from '../components/indicators/movimentacoes';
 import { AlertaEstoque } from '../components/indicators/alerta-estoque';
