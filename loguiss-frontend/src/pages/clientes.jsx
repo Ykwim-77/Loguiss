@@ -5,10 +5,10 @@ import { Search, User } from 'lucide-react';
 import api from '../services/api'
 import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 
-import { SideBar } from '../components/Sidebar';
+import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button'
-import { Inputs } from '../components/Inputs';
-import { Card } from '../components/Card';
+import { Inputs } from '../components/inputs';
+import { Card } from '../components/card';
 
 function Clientes() {
 
