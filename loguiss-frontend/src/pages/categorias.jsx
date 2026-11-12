@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Search, Layers2 } from 'lucide-react';
-import { SideBar } from '../components/Sidebar';
-import { Button } from '../components/Button'
-import { Inputs } from '../components/Inputs';
-import { Card } from '../components/Card';
+import { SideBar } from '../components/sidebar';
+import { Button } from '../components/button'
+import { Inputs } from '../components/inputs';
+import { Card } from '../components/card';
 
 import api from '../services/api';
 
@@ -28,40 +28,41 @@ function Categorias() {
     });
 
     const addNewCategory = async () => {
-        if (editingIndex !== null) {
-            editCategory(editingIndex, newCategory);
-            toast.success("Categoria atualizada com sucesso!");
-        } else {
-            setCategories((categoriasAtuais) => [
-                ...categoriasAtuais,
-                newCategory,
-            ]);
-            toast.success("Categoria cadastrada com sucesso!");
+        try {
+            if (editingIndex !== null) {
+                await editCategory(editingIndex, newCategory.desc);
+                toast.success("Categoria atualizada com sucesso!");
+            } else {
+                await api.post('/categoria/create_categoria', {
+                    descricao: newCategory.desc
+                });
+
+                toast.success("Categoria cadastrada com sucesso!");
+            }
+
+            await categoria_api();
+
+            setShowCategoryForm(false);
+            setEditingIndex(null);
+            setNewCategory({ desc: "" });
+
+        } catch (error) {
+            console.error("Erro ao salvar categoria:", error);
+            toast.error("Erro ao salvar categoria!");
         }
+    };
 
-        const create_categoria = await api.post('/categoria/create_categoria', {
-            descricao: newCategory.desc
-        })
+    const editCategory = async (id, descricao) => {
+        const categoria_editar = await api.patch('/categoria/edit_categoria', {
+            id_categoria: id,
+            descricao: descricao
+        });
         categoria_api();
-        setShowCategoryForm(false);
-        setEditingIndex(null);
-        setNewCategory({ desc: "" });
     };
 
-    const editCategory = (index, updatedCategory) => {
-        setCategories((categoriasAtuais) => {
-            const categoriasAtualizadas = [...categoriasAtuais];
-            categoriasAtualizadas[index] = updatedCategory;
-            return categoriasAtualizadas;
-        });
-    };
-
-    const deleteCategory = (index) => {
-        setCategories((categoriasAtuais) => {
-            const categoriasAtualizadas = [...categoriasAtuais];
-            categoriasAtualizadas.splice(index, 1);
-            return categoriasAtualizadas;
-        });
+    const deleteCategory = async (index) => {
+        const deletar_categoria = await api.delete(`/categoria/delete_categoria/${index}`)
+        categoria_api();
     };
 
     const categoria_api = async () => {
@@ -114,19 +115,21 @@ function Categorias() {
                     icon={Search}
                 />
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredCategories.map(({ categoria, index }) => (
+                    {filteredCategories.map(({ categoria, id_categoria }) => (
                         <Card
-                            key={index}
+                            key={categoria.id_categoria}
                             desc={categoria.desc}
                             icon={<Layers2 className="h-6 w-6 mt-2 text-gray-400" />}
                             onEdit={() => {
-                                setEditingIndex(index);
-                                setNewCategory(categoria);
+                                setEditingIndex(categoria.id_categoria);
+                                setNewCategory({
+                                    desc: categoria.descricao
+                                });
                                 setShowCategoryForm(true);
                             }}
                             onDelete={() => {
                                 if (window.confirm("Deseja excluir esta categoria?")) {
-                                    deleteCategory(index);
+                                    deleteCategory(categoria.id_categoria);
                                     toast.success("Categoria excluída com sucesso!");
                                 }
                             }}

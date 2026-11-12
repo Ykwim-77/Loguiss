@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { menuItems as menuList } from '../utils/MenuItems';
+import { menuItems as menuList } from '../utils/menuItems';
 
 function MenuItem({ item, nested = false }) {
     const Icon = item.icon;

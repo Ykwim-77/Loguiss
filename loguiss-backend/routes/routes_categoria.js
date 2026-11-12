@@ -9,7 +9,7 @@ router_categoria.post('/create_categoria', (req, res)=> {
 router_categoria.patch('/edit_categoria', (req, res)=>{
     controller.editar_categoria(req,res)
 })
-router_categoria.delete('/delete_categoria', (req, res)=>{
+router_categoria.delete('/delete_categoria/:id_categoria', (req, res)=>{
     controller.apagar_categoria(req, res)
 })
 router_categoria.get('/list_categorias', (req, res)=>{

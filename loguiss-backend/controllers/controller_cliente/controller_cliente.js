@@ -1,4 +1,5 @@
 import {create_cliente_service} from "../../services/cliente_service/create_cliente.service.js";
+import delete_cliente_service from "../../services/cliente_service/delete_cliente.service.js";
 import {edit_cliente_service} from "../../services/cliente_service/edit_cliente.service.js";
 import { list_cliente_service } from "../../services/cliente_service/list_cliente.service.js";
 
@@ -12,5 +13,9 @@ async function create_cliente(req, res) {
 async function list_clientes(req, res) {
     await list_cliente_service(req, res);
 }
+async function delete_cliente(req, res) {
+    await delete_cliente_service(req, res);
+    
+}
 
-export default {edit_cliente, create_cliente, list_clientes}
+export default {edit_cliente, create_cliente, list_clientes, delete_cliente}

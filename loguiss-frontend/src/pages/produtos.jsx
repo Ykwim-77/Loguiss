@@ -3,9 +3,9 @@ import { toast } from 'sonner';
 
 import { Search, Package } from 'lucide-react';
 
-import { SideBar } from '../components/Sidebar';
+import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
-import { Inputs } from '../components/Inputs';
+import { Inputs } from '../components/inputs';
 import { Card } from '../components/card';
 
 import api from '../services/api';
@@ -41,6 +41,7 @@ function Produtos() {
         fornecedor: "",
         dt_entrada: "",
         prazo_saida: "",
+        dt_validade: "",
         fgTipoProducao: false,
         receita: null
     });
@@ -132,6 +133,7 @@ function Produtos() {
                                 fornecedor: "",
                                 dt_entrada: "",
                                 prazo_saida: "",
+                                dt_validade: "",
                                 fgTipoProducao: false,
                                 receita: null
                             });

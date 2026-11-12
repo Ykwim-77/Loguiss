@@ -12,5 +12,8 @@ router_cliente.patch('/edit_cliente', (req, res) =>{
 router_cliente.get('/list_clientes', (req, res) =>{
     controller.list_clientes(req, res);
 })
+router_cliente.delete('/delete_cliente/:id_cliente', (req, res)=>{
+    controller.delete_cliente(req, res);
+})
 
 export default router_cliente;
