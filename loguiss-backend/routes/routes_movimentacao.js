@@ -6,6 +6,9 @@ const router_movimentacao = express.Router();
 router_movimentacao.post('/create_movi', (req, res) => {
     controller.create_movi(req, res);
 });
+router_movimentacao.get('/list_movi/:Tipo_movi', ( req, res ) =>{
+    controller.list_movi(req, res);
+})
 
 
 export default router_movimentacao;

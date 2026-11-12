@@ -25,14 +25,22 @@ export function validarSenha(senha) {
 }
 
 export function formatarCPFCNPJ(valor) {
-    valor = valor.replace(/\D/g, '');
+    if (!valor) return "";
+
+    valor = String(valor).replace(/\D/g, '');
 
     if (valor.length === 11) {
         // Formato CPF: 000.000.000-00
-        valor = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        valor = valor.replace(
+            /(\d{3})(\d{3})(\d{3})(\d{2})/,
+            '$1.$2.$3-$4'
+        );
     } else if (valor.length === 14) {
         // Formato CNPJ: 00.000.000/0000-00
-        valor = valor.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        valor = valor.replace(
+            /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+            '$1.$2.$3/$4-$5'
+        );
     }
 
     return valor;

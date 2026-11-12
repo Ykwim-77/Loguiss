@@ -11,6 +11,7 @@ export async function create_cliente_service(req, res) {
     if(!email || !nome_cliente || !telefone || !cpf_cnpj){
         return res.status(400).json({MSG: "Alguns dados faltantes, favor conferir!"})
     }
+    
 
     try {
         const create_cliente = await prisma.cliente.create({

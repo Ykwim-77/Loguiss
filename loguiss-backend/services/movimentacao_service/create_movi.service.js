@@ -9,6 +9,7 @@ export default async function create_movi_service(req, res) {
         tipo, // S = saída // E = Entrada 
         valor_unitario,
         id_fornecedor,
+        prazo_chegada
     } = req.body
 
     if(!data_movi || !id_produto || !quantidade || !tipo || !valor_unitario){
@@ -95,13 +96,16 @@ export default async function create_movi_service(req, res) {
                 const movi = await pris.movimentacao_estoque.create({
                     data:{
                         data_movimento: new Date(),
-                        id_cliente: Number(id_cliente),
+                        id_fornecedor: Number(id_fornecedor),
                         id_produto: Number(id_produto),
                         quantidade: Number(quantidade),
                         saldo_final: produto.quantidade,
                         tipo: tipo,
                         valor_total: valor_unitario * Number(quantidade),
-                        valor_unitario: Number(valor_unitario)
+                        valor_unitario: Number(valor_unitario),
+                        prazo_chegada: prazo_chegada
+                            ? new Date(`${prazo_chegada}T12:00:00`)
+                            : null
                     }
                 })
 
