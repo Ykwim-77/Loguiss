@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 
 import { SideBar } from '../components/sidebar';
@@ -36,17 +37,19 @@ function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#050212] text-white">
+        <div className="min-h-screen bg-[#111111] text-[#F5F5F5]">
             <SideBar />
             <main className="ml-72 min-h-screen p-5">
                 <div className="mb-5">
-                    <h1 className="text-3xl font-bold">Dashboard</h1>
-                    <p className="text-gray-400">
+                    <h1 className="text-3xl font-bold text-[#F5F5F5]">
+                        Dashboard
+                    </h1>
+                    <p className="text-[#A3A3A3]">
                         Visualize as métricas e os indicadores do sistema.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-1  ">
+                <div className="grid grid-cols-1 gap-1">
                     <CardsIndicadores produtos={produtos} />
                     <AlertaEstoque produtos={produtos} />
                     <Movimentacoes />

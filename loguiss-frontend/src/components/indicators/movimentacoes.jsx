@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 
 import {
@@ -46,25 +47,25 @@ export function Movimentacoes() {
     );
 
     return (
-        <div className="h-[380px] w-full rounded-xl border border-gray-800 bg-[#0d0920] p-5 mb-5">
+        <div className="mb-5 h-[380px] w-full rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
 
             <div className="mb-2 flex items-center justify-between gap-4">
 
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-[#F5F5F5]">
                     Movimentações
                 </h2>
 
-                <p className="mr-4 text-sm text-gray-400">
-                    <span className="text-[#4EDB4E]">Entradas</span>
+                <p className="mr-4 text-sm text-[#A3A3A3]">
+                    <span className="text-[#A3E635]">Entradas</span>
                     {` e `}
-                    <span className="text-[#ef4444]">Saídas</span>
+                    <span className="text-red-400">Saídas</span>
                 </p>
 
                 <div className="relative">
 
                     <Button
                         type="button"
-                        className="w-auto bg-[#4EDB4E] p-2 hover:bg-[#3CB43C]"
+                        className="w-auto bg-[#A3E635] p-2 text-[#111111] transition-colors hover:bg-[#BEF264]"
                         aria-haspopup="menu"
                         aria-expanded={menuAberto}
                         onClick={() => setMenuAberto((aberto) => !aberto)}
@@ -82,7 +83,7 @@ export function Movimentacoes() {
 
                     {menuAberto && (
                         <ul
-                            className="absolute right-0 z-10 mt-2 min-w-full overflow-hidden rounded-lg border border-gray-700 bg-[#0d0920] py-1 shadow-lg"
+                            className="absolute right-0 z-10 mt-2 min-w-full overflow-hidden rounded-lg border border-[#404040] bg-[#222222] py-1 shadow-lg shadow-black/30"
                             role="menu"
                             aria-label="Selecionar período"
                         >
@@ -91,10 +92,10 @@ export function Movimentacoes() {
                                     <button
                                         type="button"
                                         role="menuitem"
-                                        className={`w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors hover:bg-[#2a2638] ${
+                                        className={`w-full whitespace-nowrap px-4 py-2 text-left text-sm transition-colors hover:bg-[#343434] ${
                                             periodoSelecionado.meses === periodo.meses
-                                                ? 'text-[#4EDB4E]'
-                                                : 'text-white'
+                                                ? 'text-[#A3E635]'
+                                                : 'text-[#F5F5F5]'
                                         }`}
                                         onClick={() => {
                                             setPeriodoSelecionado(periodo);
@@ -117,22 +118,29 @@ export function Movimentacoes() {
 
                     <CartesianGrid
                         strokeDasharray="3 3"
-                        stroke="#2a2638"
+                        stroke="#343434"
                     />
 
-                    <XAxis dataKey="mes" stroke="#9ca3af" />
+                    <XAxis
+                        dataKey="mes"
+                        stroke="#A3A3A3"
+                        tickLine={false}
+                    />
 
-                    <YAxis stroke="#9ca3af" />
+                    <YAxis
+                        stroke="#A3A3A3"
+                        tickLine={false}
+                    />
 
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: '#15102b',
-                            border: '1px solid #2a2638',
+                            backgroundColor: '#222222',
+                            border: '1px solid #404040',
                             borderRadius: '8px',
-                            color: '#ffffff'
+                            color: '#F5F5F5'
                         }}
                         labelStyle={{
-                            color: '#ffffff',
+                            color: '#F5F5F5',
                             fontWeight: 'bold'
                         }}
                         cursor={{
@@ -144,14 +152,14 @@ export function Movimentacoes() {
                     <Bar
                         dataKey="entradas"
                         name="Entradas"
-                        fill="#22c55e"
+                        fill="#A3E635"
                         radius={[4, 4, 0, 0]}
                     />
 
                     <Bar
                         dataKey="saidas"
                         name="Saídas"
-                        fill="#ef4444"
+                        fill="#EF4444"
                         radius={[4, 4, 0, 0]}
                     />
 
