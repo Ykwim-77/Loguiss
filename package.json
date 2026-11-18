@@ -4,8 +4,11 @@
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.4" ,
+    "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.10.0",
     "typescript-eslint": "^8.67.0"
+  },
+  "dependencies": {
+    "recharts": "^3.10.1"
   }
 }

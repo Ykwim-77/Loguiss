@@ -1,12 +1,28 @@
+import { SideBar } from '../components/sidebar';
+
 function Configuracoes() {
 
     return (
-        <main className="min-h-screen bg-[#050212] flex items-center justify-center p-4">
-            <div className="w-full max-w-[900px] flex flex-col lg:flex-row overflow-hidden rounded-2xl border border-[#292631] shadow-2xl">
-                <h1 className="text-3xl font-bold text-white text-center mt-8 lg:mt-0 lg:mb-8">Configurações em desenvolvimento</h1>
-            </div>
-        </main>
-    );
+        <div className="min-h-screen bg-[#111111] text-[#F5F5F5]">
+            <SideBar />
+            <main className="ml-72 min-h-screen p-5">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2 mt-2">
+                            Configurações
+                        </h1>
+                        <p className="text-gray-400">
+                            Esta é a página de configurações. Aqui você pode gerenciar todas as configurações e personalizações do sistema.
+                        </p>
+                    </div>
+
+                    <div className="mt-5 h-[380px] w-full rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
+                        <h2 className="text-xl font-bold text-[#F5F5F5]">
+                            Configurações da empresa
+                        </h2>
+                    </div>
+            </main>
+        </div>
+    )
 }
 
 export default Configuracoes;

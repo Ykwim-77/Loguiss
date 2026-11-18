@@ -53,7 +53,7 @@ function Dashboard() {
                     <CardsIndicadores produtos={produtos} />
                     <AlertaEstoque produtos={produtos} />
                     <Movimentacoes />
-                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-0 xl:grid-cols-2">
                         <DistribuicaoCategoria />
                         <ProdutosParados produtos={produtos} />
                     </div>
