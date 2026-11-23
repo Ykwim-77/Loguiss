@@ -137,3 +137,10 @@ export const evolucaoVendas = {
         ],
     },
 };
+
+export const dadosDaEmpresa = {
+    nome: 'Loguiss Tecnologia LTDA',
+    cnpj: '42.318.907/0001-65',
+    email: 'financeiro@loguiss.com.br',
+    telefone: '(11) 98765-4321',
+};

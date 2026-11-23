@@ -19,6 +19,8 @@ import Clientes from './pages/clientes';
 import MovimentacaoSaida from './pages/movimentacao-saida';
 import MovimentacaoEntrada from './pages/movimentacao-entrada';
 import Configuracoes from './pages/configuracoes';
+import ConfiguracoesIA from './pages/configuracoes-ia';
+import PrevisaoDemandas from './pages/previsao-demanda';
 
 function App() {
   return (
@@ -43,6 +45,8 @@ function App() {
           <Route path="/movimentacao-saida" element={<MovimentacaoSaida />} />
           <Route path="/movimentacao-entrada" element={<MovimentacaoEntrada />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/configuracoes-ia" element={<ConfiguracoesIA />} />
+          <Route path="/previsao-demanda" element={<PrevisaoDemandas />} />
         </Routes>
       </BrowserRouter>
     </>
