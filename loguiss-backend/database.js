@@ -1,20 +1,19 @@
+
 import 'dotenv/config';
 
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-if (!DATABASE_URL) {
-    throw new Error("DATABASE_URL não encontrada");
+if (!DATABASE_URL || typeof DATABASE_URL !== "string") {
+    throw new Error("DATABASE_URL não encontrada ou inválida.");
 }
 
-const adapter = new PrismaNeon({
-    connectionString: DATABASE_URL
-});
-
 export const prisma = new PrismaClient({
-    adapter
+    adapter: new PrismaPg({
+        connectionString: DATABASE_URL
+    })
 });
 
 

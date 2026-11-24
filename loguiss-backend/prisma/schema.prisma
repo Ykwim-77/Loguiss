@@ -9,6 +9,7 @@ datasource db {
 model user {
   id_user          Int               @id @default(autoincrement())
   nome_usuario     String
+  flag_ativo       String            @default("T")
   email            String            @unique
   senha            String
   cpf              String            @unique
@@ -163,6 +164,7 @@ model fornecedor {
   id_endereco   Int
   email         String
   telefone      String
+  flag_ativo    String? @default("T")
   endereco      endereco             @relation(fields: [id_endereco], references: [id_endereco])
   produtos      fornecedor_produto[]
 
@@ -187,6 +189,7 @@ model cliente {
   email       String?
   telefone    String?
   id_endereco Int?
+  flag_ativo  String? @default("T")
   endereco    endereco? @relation(fields: [id_endereco], references: [id_endereco])
 
   movimentacoes movimentacao_estoque[]

@@ -63,7 +63,6 @@ export async function Cod_verify(req,res) {
         });
 
 
-
         const mailOptions = { // funcão principal para enviar email
             from: process.env.EMAIL_APP,
             to: email_existente.email,

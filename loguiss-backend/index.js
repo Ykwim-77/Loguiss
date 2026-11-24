@@ -9,6 +9,7 @@ import router_unidade_medida from './routes/routes_unidade_medida.js';
 import router_cliente from './routes/routes_clientes.js';
 import router_user from './routes/routes_user.js';
 import router_movimentacao from './routes/routes_movimentacao.js';
+import router_dashboard from './routes/router_dashboard.js';
 
 const app = express();
 
@@ -22,7 +23,8 @@ app.use("/fornecedor", router_fornecedor);
 app.use("/unidade_medida", router_unidade_medida);
 app.use("/cliente", router_cliente);
 app.use("/user", router_user);
-app.use("/movi", router_movimentacao)
+app.use("/movi", router_movimentacao);
+app.use("/dashboard", router_dashboard)
 
 
 app.listen(3000);

@@ -3,6 +3,9 @@ import { prisma } from "../../database.js";
 export default async function list_fornecedor_service(req, res) {
     try{
         const fornecedores = await prisma.fornecedor.findMany({
+            where:{
+                flag_ativo: "T"
+            },
             include:{
                 endereco: true
             }
