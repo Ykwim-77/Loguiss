@@ -4,30 +4,26 @@ export function AlertaEstoque({ produtos }) {
     );
 
     return (
-        <div className="mb-5 rounded-xl border border-gray-800 bg-[#0d0920] p-5">
-            <h2 className="mb-4 text-xl font-bold">
+        <div className="mb-5 rounded-xl border border-borda bg-superficie p-5">
+            <h2 className="mb-4 text-xl font-bold text-texto">
                 Alertas de estoque baixo
             </h2>
             {produtosComEstoqueBaixo.length === 0 ? (
-                <p className="text-sm text-gray-400">
-                    Nenhum produto com estoque baixo.
-                </p>
+                <p className="text-sm text-texto-suave">Nenhum produto com estoque baixo.</p>
             ) : (
                 <div className="space-y-3">
                     {produtosComEstoqueBaixo.map((produto) => (
                         <div
                             key={produto.id}
-                            className="flex items-center justify-between gap-4 rounded-lg border border-gray-800 p-3"
+                            className="flex items-center justify-between gap-4 rounded-lg border border-borda bg-elevada p-3"
                         >
                             <div className="min-w-0">
-                                <p className="truncate font-medium">
-                                    {produto.nome}
-                                </p>
-                                <p className="text-sm text-gray-400">
+                                <p className="truncate font-medium text-texto">{produto.nome}</p>
+                                <p className="text-sm text-texto-suave">
                                     Estoque atual: {produto.estoqueAtual} unidades
                                 </p>
                             </div>
-                            <span className="shrink-0 rounded-md bg-red-500/10 px-3 py-1 text-sm text-red-400">
+                            <span className="shrink-0 rounded-md bg-perigo/10 px-3 py-1 text-sm text-perigo-texto">
                                 Estoque baixo
                             </span>
                         </div>

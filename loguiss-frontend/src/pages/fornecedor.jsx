@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { Search, Building2 } from 'lucide-react';
@@ -8,9 +9,22 @@ import { formatarCPFCNPJ, formatarTelefone } from '../utils/validacoes';
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
-import { Card } from '../components/card';
+import { EntityCard } from '../components/card';
 
 import api from '../services/api';
+
+const fornecedorInicial = {
+    cnpj: "",
+    nome: "",
+    endereco: {
+        rua: "",
+        bairro: "",
+        numero: "",
+        estado: ""
+    },
+    email: "",
+    telefone: ""
+};
 
 function Fornecedor() {
 
@@ -19,35 +33,60 @@ function Fornecedor() {
     const [searchTerm, setSearchTerm] = useState("");
     const [appliedSearch, setAppliedSearch] = useState("");
     const [editingIndex, setEditingIndex] = useState(null);
-    const filteredFornecedores = fornecedores
+    const [newFornecedor, setNewFornecedor] = useState(fornecedorInicial);
+
+    const filteredFornecedores = (fornecedores ?? [])
         .map((fornecedor, index) => ({ fornecedor, index }))
         .filter(({ fornecedor }) => {
             const texto = (fornecedor.nome ?? "").toLowerCase();
             return texto.includes(appliedSearch.toLowerCase());
         });
 
-    const [newFornecedor, setNewFornecedor] = useState({
-        cnpj: "", //verificar como fazer pra ser ou CPF ou CNPJ
-        nome: "",
-        endereco: {
-            rua: "",
-            bairro: "",
-            numero: "",
-            estado: ""
-        },
-        email: "",
-        telefone: ""
-    });
-
+    // Listar fornecedores
     const fornecedores_api = async () => {
-        const Fornecedores = await api.get('/fornecedor/list_fornecedor')
-        console.log(Fornecedores.data.fornecedores)
-        setFornecedores(Fornecedores.data.fornecedores)
-    }
-    useState(() => {
-        fornecedores_api();
-    }, [])
+        try {
+            const response = await api.get('/fornecedor/list_fornecedor');
 
+            const lista = response.data.fornecedores;
+
+            setFornecedores(Array.isArray(lista) ? lista : []);
+
+        } catch (error) {
+            console.error(
+                "Erro ao buscar fornecedores:",
+                error.response?.data || error
+            );
+
+            toast.error("Erro ao carregar fornecedores.");
+        }
+    };
+
+    useEffect(() => {
+        fornecedores_api();
+    }, []);
+
+    // Atualizar endereço
+    const setEndereco = (campo) => (e) => {
+        setNewFornecedor((atual) => ({
+            ...atual,
+            endereco: {
+                ...atual.endereco,
+                [campo]: e.target.value
+            }
+        }));
+    };
+
+    // Limpar formulário
+    const resetFornecedor = () => {
+        setNewFornecedor({
+            ...fornecedorInicial,
+            endereco: { ...fornecedorInicial.endereco }
+        });
+
+        setEditingIndex(null);
+    };
+
+    // Cadastrar fornecedor
     const addNewFornecedor = async () => {
         try {
             await api.post('/fornecedor/create_fornecedor', {
@@ -64,28 +103,24 @@ function Fornecedor() {
             await fornecedores_api();
 
             setShowFornecedorForm(false);
-
-            setNewFornecedor({
-                cnpj: "",
-                nome: "",
-                endereco: {
-                    rua: "",
-                    bairro: "",
-                    numero: "",
-                    estado: ""
-                },
-                email: "",
-                telefone: ""
-            });
+            resetFornecedor();
 
             toast.success("Fornecedor cadastrado com sucesso!");
 
         } catch (error) {
-            console.error("Erro ao cadastrar fornecedor:", error);
-            toast.error("Erro ao cadastrar fornecedor!");
+            console.error(
+                "Erro ao cadastrar fornecedor:",
+                error.response?.data || error
+            );
+
+            toast.error(
+                error.response?.data?.MSG ||
+                "Erro ao cadastrar fornecedor!"
+            );
         }
     };
 
+    // Editar fornecedor
     const editFornecedor = async (id, updatedFornecedor) => {
         try {
             await api.patch(`/fornecedor/edit_fornecedor/${id}`, {
@@ -100,343 +135,330 @@ function Fornecedor() {
             });
 
             await fornecedores_api();
+
             setShowFornecedorForm(false);
+            resetFornecedor();
+
             toast.success("Fornecedor atualizado com sucesso!");
+
         } catch (error) {
-            console.error("Erro ao atualizar fornecedor:", error);
-            toast.error("Erro ao atualizar fornecedor!");
+            console.error(
+                "Erro ao atualizar fornecedor:",
+                error.response?.data || error
+            );
+
+            toast.error(
+                error.response?.data?.MSG ||
+                "Erro ao atualizar fornecedor!"
+            );
         }
     };
 
-    const deleteFornecedor = async (index) => {
-        const delFornecedor = await api.delete(`/fornecedor/delete_fornecedor/${index}`)
+    // Excluir fornecedor
+    const deleteFornecedor = async (id) => {
+        try {
+            await api.delete(`/fornecedor/delete_fornecedor/${id}`);
 
-        await fornecedores_api();
-        
+            await fornecedores_api();
+
+            toast.success("Fornecedor excluído com sucesso!");
+
+        } catch (error) {
+            console.error(
+                "Erro ao excluir fornecedor:",
+                error.response?.data || error
+            );
+
+            toast.error(
+                error.response?.data?.MSG ||
+                "Erro ao excluir fornecedor!"
+            );
+        }
+    };
+
+    // Abrir edição
+    const onEdit = (fornecedor) => {
+        setEditingIndex(fornecedor.id_fornecedor);
+
+        setNewFornecedor({
+            ...fornecedorInicial,
+            ...fornecedor,
+            endereco: {
+                ...fornecedorInicial.endereco,
+                ...(fornecedor.endereco ?? {})
+            }
+        });
+
+        setShowFornecedorForm(true);
     };
 
     return (
+        <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
 
-        <div className="min-h-screen bg-[#050212] text-white">
             <SideBar />
+
             <main className="ml-72 min-h-screen p-5">
-                <div className="flex items-center justify-between mb-3">
+
+                {/* Cabeçalho */}
+                <div className="mb-3 flex items-center justify-between">
+
                     <div>
-                        <h1 className="text-3xl font-bold mb-2 mt-2">
+                        <h1 className="mt-2 mb-2 text-3xl font-bold text-[var(--text)]">
                             Fornecedores
                         </h1>
-                        <p className="text-gray-400">
+
+                        <p className="text-[var(--text-secondary)]">
                             Esta é a página de fornecedores. Aqui você pode gerenciar os fornecedores cadastrados no sistema.
                         </p>
                     </div>
+
                     <Button
                         type="button"
-                        className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
+                        className="mt-2 w-auto bg-[#A3E635] p-3 text-[#111111] transition-colors hover:bg-[#BEF264]"
                         onClick={() => {
-                            setEditingIndex(null);
-                            setNewFornecedor({
-                                cnpj: "",
-                                nome: "",
-                                endereco: {
-                                    rua: "",
-                                    bairro: "",
-                                    numero: "",
-                                    estado: ""
-                                },
-                                email: "",
-                                telefone: ""
-                            });
+                            resetFornecedor();
                             setShowFornecedorForm(true);
                         }}
                     >
                         Adicionar novo fornecedor
                     </Button>
+
                 </div>
-                <div className="flex items-center justify-between">
-                    <Inputs
-                        type="text"
-                        placeholder="Pesquisar..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                setAppliedSearch(searchTerm.trim());
-                            }
-                        }}
-                        className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
-                        icon={Search}
-                    />
-                </div>
+
+                {/* Pesquisa */}
+                <Inputs
+                    placeholder="Pesquisar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            setAppliedSearch(searchTerm.trim());
+                        }
+                    }}
+                    className="mt-5 w-1/2"
+                    icon={Search}
+                />
+
+                {/* Cards */}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredFornecedores.map(({ fornecedor}) => (
-                        <Card
+
+                    {filteredFornecedores.length === 0 && (
+                        <p className="text-[var(--text-secondary)]">
+                            Nenhum fornecedor encontrado.
+                        </p>
+                    )}
+
+                    {filteredFornecedores.map(({ fornecedor }) => (
+                        <EntityCard
                             key={fornecedor.id_fornecedor}
-                            desc={fornecedor.nome}
+                            titulo={fornecedor.nome}
                             icon={
-                                <Building2 className="h-6 w-6 mt-2 text-gray-400" />
+                                <Building2 className="mt-2 h-6 w-6 text-[var(--text-secondary)]" />
                             }
-                            onEdit={() => {
-                                setEditingIndex(fornecedor.id_fornecedor);
-                                setNewFornecedor(fornecedor);
-                                setShowFornecedorForm(true);
-                            }}
+                            onEdit={() => onEdit(fornecedor)}
                             onDelete={() => {
                                 if (window.confirm("Deseja excluir este fornecedor?")) {
                                     deleteFornecedor(fornecedor.id_fornecedor);
-                                    toast.success(
-                                        "Fornecedor excluído com sucesso!"
-                                    );
                                 }
                             }}
                         >
-                            <p className="mt-1 text-gray-400">
+                            <p className="mt-1 text-[var(--text-secondary)]">
                                 CNPJ: {fornecedor.cnpj}
                             </p>
-                            <p className="mt-1 text-gray-400">
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
                                 Email: {fornecedor.email}
                             </p>
-                            <p className="mt-1 text-gray-400">
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
                                 Telefone: {fornecedor.telefone}
                             </p>
-                            <p className="mt-1 text-gray-400">
-                                Endereço: {fornecedor.endereco.bairro}, {fornecedor.endereco.rua}, {fornecedor.endereco.numero}, {fornecedor.endereco.estado}
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
+                                Endereço: {fornecedor.endereco?.bairro}, {fornecedor.endereco?.rua}, {fornecedor.endereco?.numero}, {fornecedor.endereco?.estado}
                             </p>
-                        </Card>
+                        </EntityCard>
                     ))}
+
                 </div>
+
             </main>
+
+            {/* Modal */}
             {showFornecedorForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-2xl rounded-lg bg-[#050210] p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+
+                    <div className="w-full max-w-2xl rounded-2xl border border-[#343434] bg-[#1B1B1B] p-6 shadow-2xl">
+
+                        {/* Cabeçalho do modal */}
                         <div className="mb-6 flex items-center justify-between">
+
                             <div>
-                                <h2 className="text-2xl font-bold">
+                                <h2 className="text-2xl font-bold text-[#F5F5F5]">
                                     {editingIndex !== null
                                         ? "Editar fornecedor"
                                         : "Adicionar fornecedor"}
                                 </h2>
-                                <p className="mt-1 text-sm text-gray-400">
+
+                                <p className="mt-1 text-sm text-[#A3A3A3]">
                                     {editingIndex !== null
                                         ? "Atualize os dados do fornecedor."
                                         : "Preencha os dados do novo fornecedor."}
                                 </p>
                             </div>
+
                             <button
                                 type="button"
-                                onClick={() => setShowFornecedorForm(false)}
-                                className="text-2xl text-gray-400 hover:text-white"
+                                onClick={() => {
+                                    setShowFornecedorForm(false);
+                                    resetFornecedor();
+                                }}
+                                className="text-2xl text-[#A3A3A3] transition-colors hover:text-[#A3E635]"
                             >
                                 ×
                             </button>
+
                         </div>
+
+                        {/* Formulário */}
                         <form
-                            onSubmit={(e) => {
+                            onSubmit={async (e) => {
                                 e.preventDefault();
+
                                 if (editingIndex !== null) {
-                                    editFornecedor(
+                                    await editFornecedor(
                                         editingIndex,
                                         newFornecedor
                                     );
-                                    toast.success(
-                                        "Fornecedor atualizado com sucesso!"
-                                    );
+                                } else {
+                                    await addNewFornecedor();
                                 }
-                                else {
-                                    addNewFornecedor();
-                                    toast.success(
-                                        "Fornecedor cadastrado com sucesso!"
-                                    );
-                                }
-                                setEditingIndex(null);
-                                setShowFornecedorForm(false);
                             }}
                         >
+
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div className="sm:col-span-2">
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Nome do fornecedor
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.nome}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                nome: e.target.value
-                                            })
-                                        }
-                                        placeholder="Nome do fornecedor"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        CNPJ
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.cnpj}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                cnpj: formatarCPFCNPJ(
-                                                    e.target.value
-                                                )
-                                            })
-                                        }
-                                        placeholder="Ex: 12.345.678/0001-00"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Email
-                                    </label>
-                                    <Inputs
-                                        type="email"
-                                        value={newFornecedor.email}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                email: e.target.value
-                                            })
-                                        }
-                                        placeholder="Ex: contato@empresa.com"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Telefone
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.telefone}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                telefone: formatarTelefone(
-                                                    e.target.value
-                                                )
-                                            })
-                                        }
-                                        placeholder="Ex: (00) 00000-0000"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Rua
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.endereco.rua}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                endereco: {
-                                                    ...newFornecedor.endereco,
-                                                    rua: e.target.value
-                                                }
-                                            })
-                                        }
-                                        placeholder="Rua"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Bairro
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.endereco.bairro}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                endereco: {
-                                                    ...newFornecedor.endereco,
-                                                    bairro: e.target.value
-                                                }
-                                            })
-                                        }
-                                        placeholder="Bairro"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Número
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.endereco.numero}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                endereco: {
-                                                    ...newFornecedor.endereco,
-                                                    numero: e.target.value
-                                                }
-                                            })
-                                        }
-                                        placeholder="Número"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Estado
-                                    </label>
-                                    <Inputs
-                                        type="text"
-                                        value={newFornecedor.endereco.estado}
-                                        onChange={(e) =>
-                                            setNewFornecedor({
-                                                ...newFornecedor,
-                                                endereco: {
-                                                    ...newFornecedor.endereco,
-                                                    estado: e.target.value
-                                                }
-                                            })
-                                        }
-                                        placeholder="Estado"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-6 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setShowFornecedorForm(false)
+
+                                <Inputs
+                                    label="Nome do fornecedor"
+                                    className="sm:col-span-2"
+                                    value={newFornecedor.nome}
+                                    onChange={(e) =>
+                                        setNewFornecedor({
+                                            ...newFornecedor,
+                                            nome: e.target.value
+                                        })
                                     }
-                                    className="rounded-lg bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
+                                    placeholder="Nome do fornecedor"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="CNPJ"
+                                    value={newFornecedor.cnpj}
+                                    onChange={(e) =>
+                                        setNewFornecedor({
+                                            ...newFornecedor,
+                                            cnpj: formatarCPFCNPJ(e.target.value)
+                                        })
+                                    }
+                                    placeholder="Ex: 12.345.678/0001-00"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Email"
+                                    type="email"
+                                    value={newFornecedor.email}
+                                    onChange={(e) =>
+                                        setNewFornecedor({
+                                            ...newFornecedor,
+                                            email: e.target.value
+                                        })
+                                    }
+                                    placeholder="Ex: contato@empresa.com"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Telefone"
+                                    value={newFornecedor.telefone}
+                                    onChange={(e) =>
+                                        setNewFornecedor({
+                                            ...newFornecedor,
+                                            telefone: formatarTelefone(e.target.value)
+                                        })
+                                    }
+                                    placeholder="Ex: (00) 00000-0000"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Rua"
+                                    value={newFornecedor.endereco.rua}
+                                    onChange={setEndereco('rua')}
+                                    placeholder="Rua"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Bairro"
+                                    value={newFornecedor.endereco.bairro}
+                                    onChange={setEndereco('bairro')}
+                                    placeholder="Bairro"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Número"
+                                    value={newFornecedor.endereco.numero}
+                                    onChange={setEndereco('numero')}
+                                    placeholder="Número"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Estado"
+                                    value={newFornecedor.endereco.estado}
+                                    onChange={setEndereco('estado')}
+                                    placeholder="Estado"
+                                    required
+                                />
+
+                            </div>
+
+                            {/* Botões */}
+                            <div className="mt-6 flex justify-end gap-3 border-t border-[#343434] pt-5">
+
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    className="border border-[#404040] bg-[#292929] px-5 text-[#F5F5F5] transition-colors hover:bg-[#343434]"
+                                    onClick={() => {
+                                        setShowFornecedorForm(false);
+                                        resetFornecedor();
+                                    }}
                                 >
                                     Cancelar
-                                </button>
+                                </Button>
+
                                 <Button
                                     type="submit"
-                                    className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
+                                    className="bg-[#A3E635] px-5 text-[#111111] transition-colors hover:bg-[#BEF264]"
                                 >
                                     {editingIndex !== null
                                         ? "Salvar alterações"
                                         : "Cadastrar fornecedor"}
                                 </Button>
+
                             </div>
+
                         </form>
+
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

@@ -2,16 +2,7 @@ import { useState } from 'react';
 
 import { evolucaoVendas } from '../../data/dashboardData';
 
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export function EvolucaoVendas() {
 
@@ -20,11 +11,9 @@ export function EvolucaoVendas() {
     const [periodo1, setPeriodo1] = useState('2026-01');
     const [periodo2, setPeriodo2] = useState('2026-02');
 
-    // Busca os dados dos períodos selecionados
     const dadosPeriodo1 = evolucaoVendas[visualizacao][periodo1] ?? [];
     const dadosPeriodo2 = evolucaoVendas[visualizacao][periodo2] ?? [];
 
-    // Combina os dados para alimentar o gráfico
     const dados = dadosPeriodo1.map((item) => ({
         periodo: item.periodo,
         periodo1: item.vendas,
@@ -41,24 +30,22 @@ export function EvolucaoVendas() {
         });
 
     return (
-        <div className="w-full min-w-0 rounded-xl border border-gray-800 bg-[#0d0920] p-5">
+        <div className="w-full min-w-0 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
 
-            {/* Cabeçalho */}
             <div className="mb-5">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-[#F5F5F5]">
                     Evolução de vendas
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-[#A3A3A3]">
                     Compare o desempenho de vendas entre períodos.
                 </p>
             </div>
 
-            {/* Filtros */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
                 <div>
-                    <label className="mb-2 block text-sm text-gray-400">
+                    <label className="mb-2 block text-sm text-[#A3A3A3]">
                         Visualização
                     </label>
 
@@ -69,7 +56,6 @@ export function EvolucaoVendas() {
 
                             setVisualizacao(novaVisualizacao);
 
-                            // Atualiza os períodos conforme a visualização
                             if (novaVisualizacao === 'mensal') {
                                 setPeriodo1('2026-01');
                                 setPeriodo2('2026-02');
@@ -78,7 +64,7 @@ export function EvolucaoVendas() {
                                 setPeriodo2('2026');
                             }
                         }}
-                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
                     >
                         <option value="mensal">Mensal</option>
                         <option value="anual">Anual</option>
@@ -86,14 +72,14 @@ export function EvolucaoVendas() {
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm text-gray-400">
+                    <label className="mb-2 block text-sm text-[#A3A3A3]">
                         Primeiro período
                     </label>
 
                     <select
                         value={periodo1}
                         onChange={(e) => setPeriodo1(e.target.value)}
-                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
                     >
                         {Object.keys(evolucaoVendas[visualizacao]).map((periodo) => (
                             <option key={periodo} value={periodo}>
@@ -109,14 +95,14 @@ export function EvolucaoVendas() {
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm text-gray-400">
+                    <label className="mb-2 block text-sm text-[#A3A3A3]">
                         Segundo período
                     </label>
 
                     <select
                         value={periodo2}
                         onChange={(e) => setPeriodo2(e.target.value)}
-                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
+                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
                     >
                         {Object.keys(evolucaoVendas[visualizacao]).map((periodo) => (
                             <option key={periodo} value={periodo}>
@@ -133,7 +119,6 @@ export function EvolucaoVendas() {
 
             </div>
 
-            {/* Gráfico */}
             <div className="h-[320px] w-full">
 
                 <ResponsiveContainer width="100%" height="100%">
@@ -148,40 +133,44 @@ export function EvolucaoVendas() {
                     >
                         <CartesianGrid
                             strokeDasharray="3 3"
-                            stroke="#29213f"
+                            stroke="#343434"
                         />
 
                         <XAxis
                             dataKey="periodo"
-                            stroke="#9CA3AF"
+                            stroke="#A3A3A3"
                             tickLine={false}
                         />
 
                         <YAxis
-                            stroke="#9CA3AF"
+                            stroke="#A3A3A3"
                             tickLine={false}
                             tickFormatter={formatarMoeda}
                         />
 
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#15102b',
-                                border: '1px solid #2a2638',
+                                backgroundColor: '#222222',
+                                border: '1px solid #404040',
                                 borderRadius: '8px',
-                                color: '#fff',
+                                color: '#F5F5F5',
                             }}
                             formatter={(value) => formatarMoeda(value)}
                         />
 
-                        <Legend />
+                        <Legend
+                            wrapperStyle={{
+                                color: '#F5F5F5',
+                            }}
+                        />
 
                         <Line
                             type="monotone"
                             dataKey="periodo1"
                             name="Primeiro período"
-                            stroke="#4EDB4E"
+                            stroke="#A3E635"
                             strokeWidth={3}
-                            dot={{ r: 4 }}
+                            dot={{ r: 4, fill: '#A3E635' }}
                             activeDot={{ r: 7 }}
                         />
 
@@ -189,9 +178,9 @@ export function EvolucaoVendas() {
                             type="monotone"
                             dataKey="periodo2"
                             name="Segundo período"
-                            stroke="#4389D9"
+                            stroke="#65A30D"
                             strokeWidth={3}
-                            dot={{ r: 4 }}
+                            dot={{ r: 4, fill: '#65A30D' }}
                             activeDot={{ r: 7 }}
                         />
 

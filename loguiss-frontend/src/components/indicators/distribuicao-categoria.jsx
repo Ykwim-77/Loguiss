@@ -1,16 +1,8 @@
-import {
-    Pie,
-    PieChart,
-    Sector,
-    Tooltip,
-    ResponsiveContainer,
-} from 'recharts';
-
-import { useActiveTooltipDataPoints, useIsTooltipActive } from 'recharts';
+import { Pie, PieChart, Sector, Tooltip, ResponsiveContainer, useActiveTooltipDataPoints, useIsTooltipActive } from 'recharts';
 
 import { produtos } from '../../data/dashboardData';
 
-const COLORS = ['#4EDB4E', '#4389D9', '#E5A23B', '#A855F7'];
+const COLORS = ['#A3E635', '#84CC16', '#BEF264', '#65A30D'];
 
 const RADIAN = Math.PI / 180;
 
@@ -40,7 +32,7 @@ const renderCustomizedLabel = ({
         <text
             x={x}
             y={y}
-            fill="#ffffff"
+            fill="#111111"
             textAnchor="middle"
             dominantBaseline="central"
             fontSize={13}
@@ -91,14 +83,13 @@ export function DistribuicaoCategoria() {
     );
 
     return (
-        <div className="mb-5 h-[380px] w-125 rounded-xl border border-gray-800 bg-[#0d0920] p-5">
-
+        <div className="mb-5 h-[380px] w-125 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
             <div className="mb-4">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-[#F5F5F5]">
                     Distribuição por categoria
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-[#A3A3A3]">
                     Quantidade de produtos em cada categoria
                 </p>
             </div>
@@ -120,10 +111,13 @@ export function DistribuicaoCategoria() {
 
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#15102b',
-                                border: '1px solid #2a2638',
+                                backgroundColor: '#222222',
+                                border: '1px solid #404040',
                                 borderRadius: '8px',
-                                color: '#ffffff',
+                                color: '#F5F5F5',
+                            }}
+                            itemStyle={{
+                                color: '#A3E635',
                             }}
                             formatter={(value, name) => [
                                 `${value} produtos`,
@@ -133,7 +127,6 @@ export function DistribuicaoCategoria() {
                     </PieChart>
                 </ResponsiveContainer>
             </div>
-
         </div>
     );
 }

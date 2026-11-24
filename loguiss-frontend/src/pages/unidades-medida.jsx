@@ -1,12 +1,13 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Search, Combine } from 'lucide-react';
 
 import { SideBar } from '../components/sidebar';
-import { Button } from '../components/button'
+import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
-import { Card } from '../components/card';
+import { EntityCard } from '../components/card';
 
 function UnidadesMedida() {
 
@@ -15,6 +16,7 @@ function UnidadesMedida() {
     const [editingIndex, setEditingIndex] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [appliedSearch, setAppliedSearch] = useState("");
+
     const filteredUnidades = units
         .map((unidade, index) => ({ unidade, index }))
         .filter(({ unidade }) => {
@@ -69,21 +71,25 @@ function UnidadesMedida() {
 
     return (
 
-        <div className="min-h-screen bg-[#050212] text-white">
+        <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
+
             <main className="ml-72 min-h-screen p-5">
-                <div className="flex items-center justify-between mb-3">
+
+                <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2 mt-2">
+                        <h1 className="mb-2 mt-2 text-3xl font-bold text-[var(--text)]">
                             Unidades de Medida
                         </h1>
-                        <p className="text-gray-400">
+
+                        <p className="text-[var(--text-secondary)]">
                             Esta é a página de unidades de medida. Aqui você pode gerenciar as unidades cadastradas no sistema.
                         </p>
                     </div>
+
                     <Button
                         type="button"
-                        className="bg-[#4EDB4E] hover:bg-[#3CB43C] p-3 w-auto mt-2"
+                        className="mt-2 w-auto bg-[#A3E635] p-3 text-[#111111] hover:bg-[#BEF264]"
                         onClick={() => {
                             setEditingIndex(null);
                             setNewUnit({
@@ -98,6 +104,7 @@ function UnidadesMedida() {
                         Adicionar nova unidade de medida
                     </Button>
                 </div>
+
                 <Inputs
                     type="text"
                     placeholder="Pesquisar..."
@@ -109,15 +116,19 @@ function UnidadesMedida() {
                             setAppliedSearch(searchTerm.trim());
                         }
                     }}
-                    className="mt-5 w-1/2 rounded-lg border bg-[#15102b] p-3 focus:border-[#4EDB4E]"
+                    className="mt-5 w-1/2"
                     icon={Search}
                 />
+
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredUnidades.length === 0 && (
+                        <p className="text-gray-400">Nenhuma unidade de medida encontrada.</p>
+                    )}
                     {filteredUnidades.map(({ unidade, index }) => (
-                        <Card
+                        <EntityCard
                             key={index}
                             desc={unidade.desc}
-                            icon={<Combine className="h-6 w-6 mt-2 text-gray-400" />}
+                            icon={<Combine className="mt-2 h-6 w-6 text-[var(--text-secondary)]" />}
                             onEdit={() => {
                                 setEditingIndex(index);
                                 setNewUnit(unidade);
@@ -130,41 +141,49 @@ function UnidadesMedida() {
                                 }
                             }}
                         >
-                            <p className="mt-1 text-gray-400">
+                            <p className="mt-1 text-[var(--text-secondary)]">
                                 Gramatura: {unidade.gramatura}
                             </p>
-                            <p className="mt-1 text-gray-400">
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
                                 Unidade: {unidade.unidade}
                             </p>
-                            <p className="mt-1 text-gray-400">
-                                Fracíonavel: {unidade.fgFracionavel ? "Sim" : "Não"}
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
+                                Fracionável: {unidade.fgFracionavel ? "Sim" : "Não"}
                             </p>
-                        </Card>
+                        </EntityCard>
                     ))}
                 </div>
             </main>
+
             {showUnitForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-2xl rounded-lg bg-[#0d0920] p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-2xl rounded-2xl border border-[#343434] bg-[#1B1B1B] p-6 shadow-2xl">
+
                         <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold">
+                                <h2 className="text-2xl font-bold text-[#F5F5F5]">
                                     {editingIndex !== null
                                         ? "Editar unidade de medida"
                                         : "Adicionar unidade de medida"}
                                 </h2>
-                                <p className="mt-1 text-sm text-gray-400">
+
+                                <p className="mt-1 text-sm text-[#A3A3A3]">
                                     Preencha os dados da nova unidade de medida.
                                 </p>
                             </div>
+
                             <button
                                 type="button"
                                 onClick={() => setShowUnitForm(false)}
-                                className="text-2xl text-gray-400 hover:text-white"
+                                aria-label="Fechar"
+                                className="flex h-9 w-9 items-center justify-center rounded-lg text-2xl text-[#A3A3A3] transition-colors hover:bg-[#292929] hover:text-[#A3E635]"
                             >
                                 ×
                             </button>
                         </div>
+
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -172,74 +191,49 @@ function UnidadesMedida() {
                             }}
                         >
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div className="sm:col-span-2">
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Descrição
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newUnit.desc}
-                                        onChange={(e) =>
-                                            setNewUnit({
-                                                ...newUnit,
-                                                desc: e.target.value
-                                            })
-                                        }
-                                        placeholder="Nome da unidade de medida"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
+                                <Inputs
+                                    label="Descrição"
+                                    className="sm:col-span-2"
+                                    value={newUnit.desc}
+                                    onChange={(e) =>
+                                        setNewUnit({ ...newUnit, desc: e.target.value })
+                                    }
+                                    placeholder="Nome da unidade de medida"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Gramatura"
+                                    value={newUnit.gramatura}
+                                    onChange={(e) =>
+                                        setNewUnit({ ...newUnit, gramatura: e.target.value })
+                                    }
+                                    placeholder="Ex: 500g"
+                                    required
+                                />
+
+                                <Inputs
+                                    label="Unidade"
+                                    value={newUnit.unidade}
+                                    onChange={(e) =>
+                                        setNewUnit({ ...newUnit, unidade: e.target.value })
+                                    }
+                                    placeholder="Ex: UN, KG, L"
+                                    required
+                                />
+
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Gramatura
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newUnit.gramatura}
-                                        onChange={(e) =>
-                                            setNewUnit({
-                                                ...newUnit,
-                                                gramatura: e.target.value
-                                            })
-                                        }
-                                        placeholder="Ex: 500g"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Unidade
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newUnit.unidade}
-                                        onChange={(e) =>
-                                            setNewUnit({
-                                                ...newUnit,
-                                                unidade: e.target.value
-                                            })
-                                        }
-                                        placeholder="Ex: UN, KG, L"
-                                        className="w-full rounded-lg border border-gray-700 bg-[#15102b] p-3 text-white outline-none focus:border-[#4EDB4E]"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg  p-3">
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#343434] bg-[#292929]/50 p-3 transition-colors hover:border-[#A3E635]/40">
                                         <input
                                             type="checkbox"
                                             checked={newUnit.fgFracionavel}
                                             onChange={(e) =>
-                                                setNewUnit({
-                                                    ...newUnit,
-                                                    fgFracionavel: e.target.checked,
-                                                })
+                                                setNewUnit({ ...newUnit, fgFracionavel: e.target.checked })
                                             }
-                                            className="h-5 w-5 accent-[#4EDB4E]"
+                                            className="h-5 w-5 accent-[#A3E635]"
                                         />
-                                        <span>
+
+                                        <span className="text-sm text-[#F5F5F5]">
                                             {newUnit.fgFracionavel
                                                 ? "Unidade fracionável"
                                                 : "Unidade não fracionável"}
@@ -247,17 +241,19 @@ function UnidadesMedida() {
                                     </label>
                                 </div>
                             </div>
-                            <div className="mt-6 flex justify-end gap-3">
+
+                            <div className="mt-6 flex justify-end gap-3 border-t border-[#343434] pt-5">
                                 <button
                                     type="button"
                                     onClick={() => setShowUnitForm(false)}
-                                    className="rounded-lg bg-gray-700 px-5 py-3 font-bold text-white transition hover:bg-gray-600"
+                                    className="rounded-lg border border-[#404040] bg-[#292929] px-5 py-3 font-semibold text-[#F5F5F5] transition hover:bg-[#343434]"
                                 >
                                     Cancelar
                                 </button>
+
                                 <Button
                                     type="submit"
-                                    className="mt-0 w-auto bg-[#4EDB4E] px-5 py-3 hover:bg-[#3CB43C]"
+                                    className="mt-0 w-auto bg-[#A3E635] px-5 py-3 font-semibold text-[#111111] hover:bg-[#BEF264]"
                                 >
                                     {editingIndex !== null
                                         ? "Salvar alterações"
@@ -270,8 +266,7 @@ function UnidadesMedida() {
                 </div>
             )}
         </div>
-
-    )
+    );
 }
 
 export default UnidadesMedida;
