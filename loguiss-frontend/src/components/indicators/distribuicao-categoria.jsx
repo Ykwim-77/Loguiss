@@ -1,13 +1,4 @@
-
-import {
-    Pie,
-    PieChart,
-    Sector,
-    Tooltip,
-    ResponsiveContainer,
-    useActiveTooltipDataPoints,
-    useIsTooltipActive,
-} from 'recharts';
+import { Pie, PieChart, Sector, Tooltip, ResponsiveContainer, useActiveTooltipDataPoints, useIsTooltipActive } from 'recharts';
 
 import { produtos } from '../../data/dashboardData';
 

@@ -1,60 +1,70 @@
+import { useId } from 'react';
+import { cn } from '../utils/cn';
+
 export function Inputs({
-    type,
-    placeholder,
-    value,
-    onChange,
-    onKeyDown,
-    onBlur,
+    label,
+    type = 'text',
     icon: Icon,
     rightElement,
-    className = "",
-    required,
     options = [],
     error,
-    touched = false
+    touched = false,
+    className = '',
+    inputClassName = '',
+    id,
+    ...props
 }) {
+    const autoId = useId();
+    const campoId = id ?? autoId;
+    const erroId = `${campoId}-erro`;
     const mostrarErro = touched && Boolean(error);
 
+    const comum = {
+        id: campoId,
+        'aria-invalid': mostrarErro,
+        'aria-describedby': mostrarErro ? erroId : undefined,
+    };
+
     return (
-        <div className="w-full">
+        <div className={cn('w-full', className)}>
+            {label && (
+                <label htmlFor={campoId} className="mb-1 block text-sm font-medium text-texto">
+                    {label}
+                </label>
+            )}
+
             <div
-                className={`flex items-center gap-3 bg-gray rounded-lg p-3 border mb-1 ${
-                    mostrarErro ? "border-red-500" : "border-gray-200"
-                } ${className}`}
+                className={cn(
+                    'flex items-center gap-3 rounded-lg border bg-fundo p-3 focus-within:border-primaria has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-70',
+                    mostrarErro ? 'border-perigo' : 'border-borda'
+                )}
             >
-                {Icon && <Icon size={20} className="text-gray-400" />}
-                {type === "select" ? (
+                {Icon && <Icon size={20} className="text-texto-suave" />}
+
+                {type === 'select' ? (
                     <select
-                        className="w-full outline-none bg-[#15102b] focus:border-[#4EDB4E] text-white"
-                        value={value}
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        required={required}
-                        aria-invalid={mostrarErro}
+                        {...comum}
+                        {...props}
+                        className="w-full bg-transparent text-texto outline-none [&>option]:bg-superficie"
                     >
-                        {options.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
+                        {options.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                     </select>
                 ) : (
                     <input
+                        {...comum}
                         type={type}
-                        placeholder={placeholder}
-                        className="w-full outline-none bg-transparent text-white"
-                        onChange={onChange}
-                        onBlur={onBlur}
-                        onKeyDown={onKeyDown}
-                        value={value}
-                        required={required}
-                        aria-invalid={mostrarErro}
+                        {...props}
+                        className="w-full bg-transparent text-texto outline-none placeholder:text-texto-suave"
                     />
                 )}
+
                 {rightElement}
             </div>
+
             {mostrarErro && (
-                <p className="text-red-500 text-sm mb-3">
+                <p id={erroId} role="alert" className="mt-1 text-sm text-perigo-texto">
                     {error}
                 </p>
             )}

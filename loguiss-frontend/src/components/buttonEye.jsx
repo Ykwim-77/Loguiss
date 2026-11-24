@@ -1,17 +1,20 @@
 import { Eye, EyeClosed } from 'lucide-react';
+import { cn } from '../utils/cn';
 
 export function ButtonEye({
     isOpen = false,
+    onToggle,
     size = 20,
-    onClick,
     className = '',
     ...props
 }) {
     return (
         <button
             type="button"
-            onClick={onClick}
-            className={`text-gray-500 hover:text-gray-700 focus:outline-none ${className}`}
+            onClick={onToggle}
+            aria-label={isOpen ? 'Ocultar senha' : 'Mostrar senha'}
+            aria-pressed={isOpen}
+            className={cn('text-texto-suave transition-colors hover:text-texto focus:outline-none', className)}
             {...props}
         >
             {isOpen ? <EyeClosed size={size} /> : <Eye size={size} />}

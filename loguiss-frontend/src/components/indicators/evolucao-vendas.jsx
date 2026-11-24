@@ -1,18 +1,8 @@
-
 import { useState } from 'react';
 
 import { evolucaoVendas } from '../../data/dashboardData';
 
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export function EvolucaoVendas() {
 

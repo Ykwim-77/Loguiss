@@ -50,3 +50,12 @@ export function formatarTelefone(valor) {
 
     return valor;
 }
+
+export function formatarMoeda(valor) {
+    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// recebe "2026-11-22" e devolve "22/11/2026"
+export function formatarData(iso) {
+    return iso ? iso.split('-').reverse().join('/') : '';
+}

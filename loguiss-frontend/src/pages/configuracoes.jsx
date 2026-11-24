@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-    CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone,
-    CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw,
-} from 'lucide-react';
+import { CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone, CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw, Gift, Package, Crown, Clock3 } from 'lucide-react';
 
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
+import { CustomCard } from '../components/card';
 import { Secao } from '../components/secao';
 import { dadosDaEmpresa } from '../data/dashboardData';
+import { planos } from '../data/dashboardData';
 import { cn } from '../utils/cn';
 import { formatarCPFCNPJ, formatarTelefone, validarFormatoEmail } from '../utils/validacoes';
 
@@ -50,6 +49,16 @@ function Configuracoes() {
     const [tentouSalvar, setTentouSalvar] = useState(false);
     const [temaSelecionado, setTemaSelecionado] = useState('dark');
 
+    const [showPlansForm, setShowPlansForm] = useState(false);
+
+    const abrirCardPlanos = () => {
+            setShowPlansForm(true);
+        };
+
+    const fecharCardPlanos = () => {
+        setShowPlansForm(false);
+    };
+
     const salvo = JSON.stringify(empresa) === JSON.stringify(dadosSalvos);
     const erros = validarEmpresa(empresa);
 
@@ -84,7 +93,7 @@ function Configuracoes() {
     }
 
     return (
-        <div className="min-h-screen bg-[#111111] text-[#F5F5F5]">
+        <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
@@ -210,7 +219,7 @@ function Configuracoes() {
                         <Button
                             type="button"
                             className="mt-4 w-full bg-[#A3E635] text-[#111111] hover:bg-[#BEF264]"
-                            onClick={() => toast.info('A opção de upgrade estará disponível em breve.')}
+                            onClick={abrirCardPlanos}
                         >
                             Fazer upgrade
                         </Button>
@@ -261,6 +270,58 @@ function Configuracoes() {
                     </Secao>
                 </div>
             </main>
+            {showPlansForm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+                    <div className="w-full max-w-4xl rounded-xl border border-[#343434] bg-[#1B1B1B] p-6 shadow-2xl">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-[#F5F5F5]">
+                                Nossos planos
+                            </h2>
+
+                            <button
+                                type="button"
+                                onClick={fecharCardPlanos}
+                                className="text-2xl text-[#A3A3A3] hover:text-white"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <p className="mb-6 text-[#A3A3A3]">
+                            Entre em contato com nossa equipe para mais informações sobre os planos e recursos disponíveis escolhendo o que mais se adapta a sua realidade.
+                        </p>
+
+                       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                            {planos.map(({ id, nome, icone: Icone, selo, seloIcone: SeloIcone, descricao, rotuloPreco, preco, estilo }) => (
+                                <CustomCard
+                                    key={id}
+                                    className={cn('flex flex-col transition-all duration-300 hover:-translate-y-1', estilo.card)}
+                                >
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <div className={cn('flex h-11 w-11 items-center justify-center rounded-xl text-primaria', estilo.icone)}>
+                                            <Icone size={23} />
+                                        </div>
+                                        <span className={cn('flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold tracking-wider', estilo.selo)}>
+                                            {SeloIcone && <SeloIcone size={12} />}
+                                            {selo}
+                                        </span>
+                                    </div>
+
+                                    <h3 className="mb-2 text-xl font-bold text-texto">{nome}</h3>
+                                    <p className="mb-5 text-sm leading-relaxed text-texto-suave">{descricao}</p>
+
+                                    <div className="mt-auto border-t border-borda pt-4">
+                                        <p className="text-xs font-medium uppercase tracking-wider text-texto-suave">{rotuloPreco}</p>
+                                        <p className="mt-1 text-2xl font-extrabold text-primaria">
+                                            {preco}<span className="text-sm font-medium text-texto-suave">/mês</span>
+                                        </p>
+                                    </div>
+                                </CustomCard>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -9,6 +9,9 @@
     "typescript-eslint": "^8.67.0"
   },
   "dependencies": {
-    "recharts": "^3.10.1"
+    "clsx": "^2.1.1",
+    "react-toastify": "^11.2.0",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.7.1"
   }
 }

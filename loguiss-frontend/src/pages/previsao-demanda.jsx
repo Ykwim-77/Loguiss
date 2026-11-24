@@ -1,7 +1,4 @@
 import { SideBar } from '../components/sidebar';
-import { Card} from '../components/card';
-import { Inputs} from '../components/inputs';
-import { CreditCard, BriefcaseBusiness } from 'lucide-react';
 
 function PrevisaoDemanda() {
 

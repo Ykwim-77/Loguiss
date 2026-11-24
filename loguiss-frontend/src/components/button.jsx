@@ -1,10 +1,10 @@
 import { cn } from '../utils/cn';
 
 const variantes = {
-    primary: 'bg-[#4EDB4E] hover:bg-[#3CB43C]',
-    secondary: 'bg-gray-700 hover:bg-gray-600',
-    danger: 'bg-red-600 hover:bg-red-700',
-    link: 'bg-transparent font-normal text-gray-400 hover:text-green-500 hover:underline',
+    primary: 'bg-primaria text-sobre-primaria hover:bg-primaria-hover',
+    secondary: 'border border-borda bg-transparent text-texto hover:bg-elevada',
+    danger: 'bg-perigo text-white hover:bg-perigo-hover',
+    link: 'bg-transparent font-normal text-texto-suave hover:text-primaria hover:underline',
 };
 
 const tamanhos = {
@@ -29,7 +29,7 @@ export function Button({
             disabled={disabled || loading}
             aria-busy={loading}
             className={cn(
-                'cursor-pointer rounded-lg font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                'cursor-pointer rounded-lg font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaria disabled:cursor-not-allowed disabled:opacity-50',
                 variantes[variant],
                 tamanhos[size],
                 className

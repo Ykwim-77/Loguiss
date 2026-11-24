@@ -1,14 +1,5 @@
 import { useState } from 'react';
-
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 import { ChevronDown } from 'lucide-react';
 import { Button } from '../button';
