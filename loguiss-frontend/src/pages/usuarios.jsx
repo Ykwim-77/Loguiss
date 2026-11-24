@@ -78,6 +78,7 @@ function Usuarios() {
         });
     };
 
+    
     const editUsuario = (index, updatedUsuario) => {
         setUsuarios((usuariosAtuais) => {
             const usuariosAtualizados = [...usuariosAtuais];
@@ -172,7 +173,7 @@ function Usuarios() {
                                 CPF: {usuario.cpf}
                             </p>
                             <p className="mt-1 text-gray-400">
-                                Tipo de usuário: {usuario.tipo_usuario}
+                                Tipo de usuário: {swi}
                             </p>
                         </Card>
                     ))}

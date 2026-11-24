@@ -45,44 +45,66 @@ function Clientes() {
         cliente_api()
     }, [])
 
-    const addNewCliente = () => {
+    const addNewCliente = async () => {
+        try {
+            await api.post('/cliente/create_cliente', {
+                email: newCliente.email,
+                nome_cliente: newCliente.nome,
+                telefone: newCliente.telefone,
+                cpf_cnpj: newCliente.cpf
+            });
 
-        setClientes((clientesAtuais) => [
-            ...clientesAtuais,
-            newCliente
-        ]);
+            await cliente_api();
 
-        setShowClientesForm(false);
+            setShowClientesForm(false);
 
-        setNewCliente({
-            nome: "",
-            email: "",
-            telefone: "",
-            cpf: "", //verificar como fazer pra ser ou CPF ou CNPJ
-            dt_nasc: "",
-            endereco: {
-                rua: "",
-                bairro: "",
-                numero: "",
-                estado: ""
-            }
-        });
+            setNewCliente({
+                nome: "",
+                email: "",
+                telefone: "",
+                cpf: "",
+                dt_nasc: "",
+                endereco: {
+                    rua: "",
+                    bairro: "",
+                    numero: "",
+                    estado: ""
+                }
+            });
+
+            toast.success("Cliente cadastrado com sucesso!");
+
+        } catch (error) {
+            console.error("Erro ao cadastrar cliente:", error);
+            toast.error("Erro ao cadastrar cliente!");
+        }
     };
 
-    const editCliente = (index, updatedCliente) => {
-        setClientes((clientesAtuais) => {
-            const clientesAtualizados = [...clientesAtuais];
-            clientesAtualizados[index] = updatedCliente;
-            return clientesAtualizados;
-        });
+    const editCliente = async (id, updatedCliente) => {
+        try {
+            await api.patch(`/cliente/edit_cliente/${id}`, {
+                nome_cliente: updatedCliente.nome,
+                email: updatedCliente.email,
+                telefone: updatedCliente.telefone,
+                cpf_cnpj: updatedCliente.cpf,
+            });
+
+            await cliente_api();
+
+            setShowClientesForm(false);
+
+            toast.success("Cliente atualizado com sucesso!");
+
+        } catch (error) {
+            console.error("Erro ao atualizar cliente:", error);
+            toast.error("Erro ao atualizar cliente!");
+        }
     };
 
-    const deleteCliente = (index) => {
-        setClientes((clientesAtuais) => {
-            const clientesAtualizados = [...clientesAtuais];
-            clientesAtualizados.splice(index, 1);
-            return clientesAtualizados;
-        });
+    const deleteCliente = async (index) => {
+        const delCliente = await api.delete(`/cliente/delete_cliente/${index}`)
+
+        await cliente_api();
     };
 
     return (
@@ -140,19 +162,19 @@ function Clientes() {
                     />
                 </div>
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredClientes.map(({ cliente, index }) => (
+                    {filteredClientes.map(({ cliente}) => (
                         <Card
-                            key={index}
+                            key={cliente.id_cliente}
                             desc={cliente.nome}
                             icon={<User className="h-6 w-6 mt-2 text-gray-400" />}
                             onEdit={() => {
-                                setEditingIndex(index);
+                                setEditingIndex(cliente.id_cliente);
                                 setNewCliente(cliente);
                                 setShowClientesForm(true);
                             }}
                             onDelete={() => {
                                 if (window.confirm("Deseja excluir este cliente?")) {
-                                    deleteCliente(index);
+                                    deleteCliente(cliente.id_cliente);
                                     toast.success("Cliente excluído com sucesso!");
                                 }
                             }}
@@ -195,15 +217,14 @@ function Clientes() {
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
+
                                 if (editingIndex !== null) {
                                     editCliente(editingIndex, newCliente);
-                                    toast.success("Cliente atualizado com sucesso!");
                                 } else {
                                     addNewCliente();
-                                    toast.success("Cliente cadastrado com sucesso!");
                                 }
+
                                 setEditingIndex(null);
-                                setShowClientesForm(false);
                             }}
                         >
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -11,6 +11,17 @@ export async function create_cliente_service(req, res) {
     if(!email || !nome_cliente || !telefone || !cpf_cnpj){
         return res.status(400).json({MSG: "Alguns dados faltantes, favor conferir!"})
     }
+    const existe_dado = await prisma.cliente.findFirst({
+        where:{
+            OR:[
+                {email: email},
+                {cpf: cpf_cnpj}
+            ]
+        }
+    })
+    if(existe_dado){
+        return res.status(400).json({MSG: "CPF ou Email já cadastrado em outro cliente!"})
+    }
     
 
     try {

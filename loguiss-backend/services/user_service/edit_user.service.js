@@ -12,6 +12,11 @@ export default async function edit_user_service(req, res) {
     } = req.body
     const id_user = req.params
     try {
+
+        if(senha != confirmar_senha){
+            return res.status(400).json({MSG: "Senhas não são iguais! favor verificar!"})
+        }
+
         const email_existe = await prisma.user.findUnique({
             where:{
                 email: email

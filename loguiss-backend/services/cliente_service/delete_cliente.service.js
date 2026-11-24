@@ -16,15 +16,15 @@ export default async function delete_cliente_service(req, res) {
         if(!cliente_existente){
             return res.status(404).json({MSG: "Cliente não existe!"})
         }
-        const cliente = prisma.$transaction(async (pris) =>{
-
-            const cliente_delete = await pris.cliente.delete({
-                where:{
-                    id_cliente: id_cliente
-                }
-            })
-
+        const cliente_delete = await prisma.cliente.update({
+            where:{
+                id_cliente: id_cliente
+            },
+            data:{
+                flag_ativo: "F"
+            }
         })
+
         return res.status(200).json({MSG: "Cliente deletado com sucesso!", cliente: cliente_existente})
 
 

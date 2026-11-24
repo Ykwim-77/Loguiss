@@ -6,7 +6,7 @@ const router_cliente = express.Router();
 router_cliente.post('/create_cliente', (req, res)=> {
     controller.create_cliente(req, res);   
 })
-router_cliente.patch('/edit_cliente', (req, res) =>{
+router_cliente.patch('/edit_cliente/:id_cliente', (req, res) =>{
     controller.edit_cliente(req, res);
 })
 router_cliente.get('/list_clientes', (req, res) =>{

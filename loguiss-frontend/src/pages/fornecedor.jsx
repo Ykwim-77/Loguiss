@@ -49,53 +49,70 @@ function Fornecedor() {
     }, [])
 
     const addNewFornecedor = async () => {
+        try {
+            await api.post('/fornecedor/create_fornecedor', {
+                cnpj: newFornecedor.cnpj,
+                nome: newFornecedor.nome,
+                rua: newFornecedor.endereco.rua,
+                bairro: newFornecedor.endereco.bairro,
+                numero: newFornecedor.endereco.numero,
+                estado: newFornecedor.endereco.estado,
+                email: newFornecedor.email,
+                telefone: newFornecedor.telefone
+            });
 
-        const create_fornecedor = await api.post('/fornecedor/create_fornecedor', {
-            cnpj: newFornecedor.cnpj,
-            nome: newFornecedor.nome,
-            rua: newFornecedor.endereco.rua,
-            bairro: newFornecedor.endereco.bairro,
-            numero: newFornecedor.endereco.numero,
-            estado: newFornecedor.endereco.estado,
-            email: newFornecedor.email,
-            telefone: newFornecedor.telefone
-        })
-        fornecedores_api();
+            await fornecedores_api();
 
-        setShowFornecedorForm(false);
+            setShowFornecedorForm(false);
 
-        setNewFornecedor({
-            cnpj: "",
-            nome: "",
-            endereco: {
-                rua: "",
-                bairro: "",
-                numero: "",
-                estado: ""
-            },
-            email: "",
-            telefone: ""
-        });
+            setNewFornecedor({
+                cnpj: "",
+                nome: "",
+                endereco: {
+                    rua: "",
+                    bairro: "",
+                    numero: "",
+                    estado: ""
+                },
+                email: "",
+                telefone: ""
+            });
+
+            toast.success("Fornecedor cadastrado com sucesso!");
+
+        } catch (error) {
+            console.error("Erro ao cadastrar fornecedor:", error);
+            toast.error("Erro ao cadastrar fornecedor!");
+        }
     };
 
-    const editFornecedor = (index, updatedFornecedor) => {
-        setFornecedores((fornecedoresAtuais) => {
-            const fornecedoresAtualizados = [...fornecedoresAtuais];
+    const editFornecedor = async (id, updatedFornecedor) => {
+        try {
+            await api.patch(`/fornecedor/edit_fornecedor/${id}`, {
+                cnpj: updatedFornecedor.cnpj,
+                nome: updatedFornecedor.nome,
+                rua: updatedFornecedor.endereco.rua,
+                bairro: updatedFornecedor.endereco.bairro,
+                numero: updatedFornecedor.endereco.numero,
+                estado: updatedFornecedor.endereco.estado,
+                email: updatedFornecedor.email,
+                telefone: updatedFornecedor.telefone
+            });
 
-            fornecedoresAtualizados[index] = updatedFornecedor;
-
-            return fornecedoresAtualizados;
-        });
+            await fornecedores_api();
+            setShowFornecedorForm(false);
+            toast.success("Fornecedor atualizado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao atualizar fornecedor:", error);
+            toast.error("Erro ao atualizar fornecedor!");
+        }
     };
 
-    const deleteFornecedor = (index) => {
-        setFornecedores((fornecedoresAtuais) => {
-            const fornecedoresAtualizados = [...fornecedoresAtuais];
+    const deleteFornecedor = async (index) => {
+        const delFornecedor = await api.delete(`/fornecedor/delete_fornecedor/${index}`)
 
-            fornecedoresAtualizados.splice(index, 1);
-
-            return fornecedoresAtualizados;
-        });
+        await fornecedores_api();
+        
     };
 
     return (
@@ -152,21 +169,21 @@ function Fornecedor() {
                     />
                 </div>
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredFornecedores.map(({ fornecedor, index }) => (
+                    {filteredFornecedores.map(({ fornecedor}) => (
                         <Card
-                            key={index}
+                            key={fornecedor.id_fornecedor}
                             desc={fornecedor.nome}
                             icon={
                                 <Building2 className="h-6 w-6 mt-2 text-gray-400" />
                             }
                             onEdit={() => {
-                                setEditingIndex(index);
+                                setEditingIndex(fornecedor.id_fornecedor);
                                 setNewFornecedor(fornecedor);
                                 setShowFornecedorForm(true);
                             }}
                             onDelete={() => {
                                 if (window.confirm("Deseja excluir este fornecedor?")) {
-                                    deleteFornecedor(index);
+                                    deleteFornecedor(fornecedor.id_fornecedor);
                                     toast.success(
                                         "Fornecedor excluído com sucesso!"
                                     );
