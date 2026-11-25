@@ -31,6 +31,8 @@ model verificacao_user {
 model unidade_medida {
   id_unidade   Int               @id @default(autoincrement())
   descrunidade String
+  gramatura    String?
+  is_fracionado String?
   nomenclatura String
   created_at   DateTime?         @default(now())
   flag_ativo   String?           @default("T")
@@ -193,4 +195,13 @@ model cliente {
   endereco    endereco? @relation(fields: [id_endereco], references: [id_endereco])
 
   movimentacoes movimentacao_estoque[]
+}
+model empresa {
+  id_empresa        Int      @id @default(autoincrement())
+  nome      String
+  cnpj      String   @unique
+  telefone  String
+  email     String   @unique
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 }

@@ -95,7 +95,7 @@ function Usuarios() {
     // Adicionar usuário
     const addNewUsuario = async () => {
         try {
-            const response = await api.post('/user/cadastro_user', {
+            const response = await api.post('/user/create_user', {
                 nome: newUsuario.desc,
                 email: newUsuario.email,
                 senha: newUsuario.senha,
