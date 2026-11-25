@@ -5,8 +5,10 @@ import api from '../services/api.js'
 import { Gift, Package, Crown, Clock3 } from "lucide-react";
 
 const dados = await api.get('/dashboard/dash')
+const previsao = await api.get('/previsao/ultima')
 
 console.log(dados)
+console.log(previsao)
 
 export const produtos = dados.data.produtos
 
@@ -14,6 +16,8 @@ export const produtos = dados.data.produtos
 export const movimentacoes = dados.data.movimentacoes
 // Dados fictícios da evolução de vendas
 export const evolucaoVendas = dados.data.evolucaoVendas
+
+
 export const dadosDaEmpresa = {
     nome: 'Loguiss Tecnologia LTDA',
     cnpj: '42.318.907/0001-65',
@@ -66,3 +70,17 @@ export const planos = [
         },
     },
 ];
+
+export const dadosPrevisao = previsao.data.previsao
+
+export const dadosIA = previsao.data.dadosIA
+
+export const seriesIA = previsao.data.seriesIA
+
+export const dadosSaida = previsao.data.dadosSaida
+
+export const recomendacoesCompraPadrao = previsao.data.recomendacoesCompra
+
+export const movimentacoesPadrao = previsao.data.movimentacoes
+
+export const alertasPadrao = previsao.data.alertas

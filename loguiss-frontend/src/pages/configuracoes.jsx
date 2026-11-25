@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone, CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw, Gift, Package, Crown, Clock3 } from 'lucide-react';
+import { CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone, CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw } from 'lucide-react';
 
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import { CustomCard } from '../components/card';
 import { Secao } from '../components/secao';
-import { dadosDaEmpresa } from '../data/dashboardData.js';
 import { planos } from '../data/dashboardData';
 import { cn } from '../utils/cn';
 import { formatarCPFCNPJ, formatarTelefone, validarFormatoEmail } from '../utils/validacoes';
+
+import api from '../services/api';
 
 const temas = [
     { id: 'dark', nome: 'Modo escuro', icone: Moon, cor: '#111111' },
@@ -19,6 +20,8 @@ const temas = [
     { id: 'midnight-dark', nome: 'Midnight dark', icone: MoonStar, cor: '#07080D' },
     { id: 'midnight-blue', nome: 'Midnight blue', icone: Waves, cor: '#071426' },
 ];
+
+const EMPRESA_VAZIA = { nome: '', cnpj: '', telefone: '', email: '' };
 
 const TOTAL_DIAS_TESTE = 14;
 const FIM_TESTE = new Date('2026-11-27T23:59:59');
@@ -44,12 +47,45 @@ function validarEmpresa(empresa) {
 }
 
 function Configuracoes() {
-    const [empresa, setEmpresa] = useState(dadosDaEmpresa);
-    const [dadosSalvos, setDadosSalvos] = useState(dadosDaEmpresa);
+    const [empresa, setEmpresa] = useState(EMPRESA_VAZIA);
+    const [dadosSalvos, setDadosSalvos] = useState(EMPRESA_VAZIA);
+    const [idEmpresa, setIdEmpresa] = useState(null);
+    const [saving, setSaving] = useState(false);
     const [tentouSalvar, setTentouSalvar] = useState(false);
     const [temaSelecionado, setTemaSelecionado] = useState('dark');
 
     const [showPlansForm, setShowPlansForm] = useState(false);
+
+    useEffect(() => {
+        const carregarEmpresa = async () => {
+            try {
+                const response = await api.get('/empresa/list_empresa');
+
+                // o SaaS tem uma empresa por cliente, então usa a primeira da lista
+                const [primeira] = response.data.empresas ?? [];
+
+                if (!primeira) return;
+
+                const carregada = {
+                    nome: primeira.nome ?? '',
+                    cnpj: formatarCPFCNPJ(primeira.cnpj ?? ''),
+                    telefone: formatarTelefone(primeira.telefone ?? ''),
+                    email: primeira.email ?? '',
+                };
+
+                setIdEmpresa(primeira.id_empresa);
+                setEmpresa(carregada);
+                setDadosSalvos(carregada);
+            } catch (error) {
+                toast.error(
+                    error.response?.data?.MSG ||
+                    'Erro ao carregar dados da empresa!'
+                );
+            }
+        };
+
+        carregarEmpresa();
+    }, []);
 
     const abrirCardPlanos = () => {
             setShowPlansForm(true);
@@ -73,7 +109,7 @@ function Configuracoes() {
         setEmpresa((atual) => ({ ...atual, [id]: valor }));
     };
 
-    function salvarAlteracoes(event) {
+    async function salvarAlteracoes(event) {
         event.preventDefault();
         setTentouSalvar(true);
 
@@ -82,9 +118,34 @@ function Configuracoes() {
             return;
         }
 
-        setDadosSalvos(empresa);
-        setTentouSalvar(false);
-        toast.success('Informações da empresa salvas.');
+        if (!idEmpresa) {
+            toast.error('Empresa não carregada.');
+            return;
+        }
+
+        try {
+            setSaving(true);
+
+            const response = await api.patch(`/empresa/edit_empresa/${idEmpresa}`, {
+                nome: empresa.nome.trim(),
+                cnpj: soDigitos(empresa.cnpj),
+                telefone: soDigitos(empresa.telefone),
+                email: empresa.email.trim(),
+            });
+
+            setDadosSalvos(empresa);
+            setTentouSalvar(false);
+            toast.success(
+                response.data.MSG || 'Informações da empresa salvas.'
+            );
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao salvar empresa!'
+            );
+        } finally {
+            setSaving(false);
+        }
     }
 
     function descartarAlteracoes() {
@@ -149,7 +210,7 @@ function Configuracoes() {
                                         type="submit"
                                         size="sm"
                                         className="flex items-center gap-2 bg-[#A3E635] text-[#111111] hover:bg-[#BEF264]"
-                                        disabled={salvo}
+                                        disabled={salvo || saving}
                                     >
                                         <Save size={15} />
                                         Salvar alterações

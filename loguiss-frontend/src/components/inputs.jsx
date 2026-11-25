@@ -10,7 +10,6 @@ export function Inputs({
     error,
     touched = false,
     className = '',
-    inputClassName = '',
     id,
     ...props
 }) {

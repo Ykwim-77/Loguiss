@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { Search, Combine } from 'lucide-react';
@@ -8,69 +8,143 @@ import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import { EntityCard } from '../components/card';
+import api from '../services/api';
 
 function UnidadesMedida() {
-
     const [showUnitForm, setShowUnitForm] = useState(false);
     const [units, setUnits] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
+    const [searchTerm, setSearchTerm] = useState('');
+    const [appliedSearch, setAppliedSearch] = useState('');
 
-    const filteredUnidades = units
-        .map((unidade, index) => ({ unidade, index }))
-        .filter(({ unidade }) => {
-            const texto = (unidade.desc ?? unidade.descricao ?? unidade.nome ?? "").toLowerCase();
-            return texto.includes(appliedSearch.toLowerCase());
-        });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     const [newUnit, setNewUnit] = useState({
-        desc: "",
-        gramatura: "",
-        unidade: "",
+        desc: '',
+        gramatura: '',
+        unidade: '',
         fgFracionavel: false
     });
 
-    const addNewUnit = () => {
-        if (editingIndex !== null) {
-            editUnit(editingIndex, newUnit);
-            toast.success("Unidade de medida atualizada com sucesso!");
-        } else {
-            setUnits((unidadesAtuais) => [
-                ...unidadesAtuais,
-                newUnit,
-            ]);
-            toast.success("Unidade de medida cadastrada com sucesso!");
-        }
+    // LISTAR UNIDADES
+    async function unit_api() {
+        try {
+            setLoading(true);
 
-        setShowUnitForm(false);
-        setEditingIndex(null);
+            const response = await api.get('/unidade_medida/list_unidade_medida');
+
+            const unidades = response.data.unidades ?? [];
+
+            setUnits(unidades.map((unidade) => ({
+                ...unidade,
+                desc: unidade.descrunidade,
+                unidade: unidade.nomenclatura,
+                fgFracionavel: unidade.is_fracionado === 'T'
+            })));
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao carregar unidades de medida!'
+            );
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        unit_api();
+    }, []);
+
+    // FILTRAR UNIDADES
+    const filteredUnidades = units.filter((unidade) => {
+        const texto = (unidade.desc ?? '').toLowerCase();
+
+        return texto.includes(appliedSearch.toLowerCase());
+    });
+
+    // LIMPAR FORMULÁRIO
+    function resetForm() {
         setNewUnit({
-            desc: "",
-            gramatura: "",
-            unidade: "",
+            desc: '',
+            gramatura: '',
+            unidade: '',
             fgFracionavel: false
         });
-    };
 
-    const editUnit = (index, updatedUnit) => {
-        setUnits((unidadesAtuais) => {
-            const unidadesAtualizadas = [...unidadesAtuais];
-            unidadesAtualizadas[index] = updatedUnit;
-            return unidadesAtualizadas;
-        });
-    };
+        setEditingIndex(null);
+    }
 
-    const deleteUnit = (index) => {
-        setUnits((unidadesAtuais) => {
-            const unidadesAtualizadas = [...unidadesAtuais];
-            unidadesAtualizadas.splice(index, 1);
-            return unidadesAtualizadas;
-        });
-    };
+    // CADASTRAR OU EDITAR
+    async function addNewUnit() {
+        try {
+            setSaving(true);
+
+            const dados = {
+                descrunidade: newUnit.desc.trim(),
+                gramatura: newUnit.gramatura.trim() || null,
+                nomenclatura: newUnit.unidade.trim(),
+                is_fracionado: newUnit.fgFracionavel ? 'T' : 'F'
+            };
+
+            if (editingIndex !== null) {
+                const response = await api.patch(
+                    `/unidade_medida/edit_unidade_medida/${editingIndex}`,
+                    dados
+                );
+
+                toast.success(
+                    response.data.MSG || 'Unidade atualizada com sucesso!'
+                );
+            } else {
+                const response = await api.post(
+                    '/unidade_medida/create_unidade_medida',
+                    dados
+                );
+
+                toast.success(
+                    response.data.MSG || 'Unidade cadastrada com sucesso!'
+                );
+            }
+
+            setShowUnitForm(false);
+            resetForm();
+
+            await unit_api();
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao salvar unidade de medida!'
+            );
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    // DESATIVAR UNIDADE
+    async function deleteUnit(id) {
+        try {
+            const response = await api.delete(
+                `/unidade_medida/delete_unidade_medida/${id}`
+            );
+
+            toast.success(
+                response.data.MSG || 'Unidade desativada com sucesso!'
+            );
+
+            await unit_api();
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao desativar unidade de medida!'
+            );
+        }
+    }
 
     return (
-
         <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
 
@@ -91,13 +165,7 @@ function UnidadesMedida() {
                         type="button"
                         className="mt-2 w-auto bg-[#A3E635] p-3 text-[#111111] hover:bg-[#BEF264]"
                         onClick={() => {
-                            setEditingIndex(null);
-                            setNewUnit({
-                                desc: "",
-                                gramatura: "",
-                                unidade: "",
-                                fgFracionavel: false,
-                            });
+                            resetForm();
                             setShowUnitForm(true);
                         }}
                     >
@@ -111,7 +179,7 @@ function UnidadesMedida() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === 'Enter') {
                             e.preventDefault();
                             setAppliedSearch(searchTerm.trim());
                         }
@@ -121,36 +189,54 @@ function UnidadesMedida() {
                 />
 
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredUnidades.length === 0 && (
-                        <p className="text-gray-400">Nenhuma unidade de medida encontrada.</p>
+
+                    {loading && (
+                        <p className="text-gray-400">
+                            Carregando unidades de medida...
+                        </p>
                     )}
-                    {filteredUnidades.map(({ unidade, index }) => (
+
+                    {!loading && filteredUnidades.length === 0 && (
+                        <p className="text-gray-400">
+                            Nenhuma unidade de medida encontrada.
+                        </p>
+                    )}
+
+                    {!loading && filteredUnidades.map((unidade) => (
                         <EntityCard
-                            key={index}
-                            desc={unidade.desc}
-                            icon={<Combine className="mt-2 h-6 w-6 text-[var(--text-secondary)]" />}
+                            key={unidade.id_unidade}
+                            titulo={unidade.desc}
+                            icon={
+                                <Combine className="mt-2 h-6 w-6 text-[var(--text-secondary)]" />
+                            }
                             onEdit={() => {
-                                setEditingIndex(index);
-                                setNewUnit(unidade);
+                                setEditingIndex(unidade.id_unidade);
+
+                                setNewUnit({
+                                    desc: unidade.descrunidade,
+                                    gramatura: unidade.gramatura ?? '',
+                                    unidade: unidade.nomenclatura,
+                                    fgFracionavel: unidade.is_fracionado === 'T'
+                                });
+
                                 setShowUnitForm(true);
                             }}
                             onDelete={() => {
-                                if (window.confirm("Deseja excluir esta unidade de medida?")) {
-                                    deleteUnit(index);
-                                    toast.success("Unidade de medida excluída com sucesso!");
+                                if (window.confirm('Deseja desativar esta unidade de medida?')) {
+                                    deleteUnit(unidade.id_unidade);
                                 }
                             }}
                         >
                             <p className="mt-1 text-[var(--text-secondary)]">
-                                Gramatura: {unidade.gramatura}
+                                Gramatura: {unidade.gramatura || 'Não informada'}
                             </p>
 
                             <p className="mt-1 text-[var(--text-secondary)]">
-                                Unidade: {unidade.unidade}
+                                Unidade: {unidade.nomenclatura}
                             </p>
 
                             <p className="mt-1 text-[var(--text-secondary)]">
-                                Fracionável: {unidade.fgFracionavel ? "Sim" : "Não"}
+                                Fracionável: {unidade.is_fracionado === 'T' ? 'Sim' : 'Não'}
                             </p>
                         </EntityCard>
                     ))}
@@ -165,12 +251,12 @@ function UnidadesMedida() {
                             <div>
                                 <h2 className="text-2xl font-bold text-[#F5F5F5]">
                                     {editingIndex !== null
-                                        ? "Editar unidade de medida"
-                                        : "Adicionar unidade de medida"}
+                                        ? 'Editar unidade de medida'
+                                        : 'Adicionar unidade de medida'}
                                 </h2>
 
                                 <p className="mt-1 text-sm text-[#A3A3A3]">
-                                    Preencha os dados da nova unidade de medida.
+                                    Preencha os dados da unidade de medida.
                                 </p>
                             </div>
 
@@ -196,7 +282,10 @@ function UnidadesMedida() {
                                     className="sm:col-span-2"
                                     value={newUnit.desc}
                                     onChange={(e) =>
-                                        setNewUnit({ ...newUnit, desc: e.target.value })
+                                        setNewUnit({
+                                            ...newUnit,
+                                            desc: e.target.value
+                                        })
                                     }
                                     placeholder="Nome da unidade de medida"
                                     required
@@ -206,17 +295,22 @@ function UnidadesMedida() {
                                     label="Gramatura"
                                     value={newUnit.gramatura}
                                     onChange={(e) =>
-                                        setNewUnit({ ...newUnit, gramatura: e.target.value })
+                                        setNewUnit({
+                                            ...newUnit,
+                                            gramatura: e.target.value
+                                        })
                                     }
                                     placeholder="Ex: 500g"
-                                    required
                                 />
 
                                 <Inputs
                                     label="Unidade"
                                     value={newUnit.unidade}
                                     onChange={(e) =>
-                                        setNewUnit({ ...newUnit, unidade: e.target.value })
+                                        setNewUnit({
+                                            ...newUnit,
+                                            unidade: e.target.value
+                                        })
                                     }
                                     placeholder="Ex: UN, KG, L"
                                     required
@@ -228,15 +322,18 @@ function UnidadesMedida() {
                                             type="checkbox"
                                             checked={newUnit.fgFracionavel}
                                             onChange={(e) =>
-                                                setNewUnit({ ...newUnit, fgFracionavel: e.target.checked })
+                                                setNewUnit({
+                                                    ...newUnit,
+                                                    fgFracionavel: e.target.checked
+                                                })
                                             }
                                             className="h-5 w-5 accent-[#A3E635]"
                                         />
 
                                         <span className="text-sm text-[#F5F5F5]">
                                             {newUnit.fgFracionavel
-                                                ? "Unidade fracionável"
-                                                : "Unidade não fracionável"}
+                                                ? 'Unidade fracionável'
+                                                : 'Unidade não fracionável'}
                                         </span>
                                     </label>
                                 </div>
@@ -245,6 +342,7 @@ function UnidadesMedida() {
                             <div className="mt-6 flex justify-end gap-3 border-t border-[#343434] pt-5">
                                 <button
                                     type="button"
+                                    disabled={saving}
                                     onClick={() => setShowUnitForm(false)}
                                     className="rounded-lg border border-[#404040] bg-[#292929] px-5 py-3 font-semibold text-[#F5F5F5] transition hover:bg-[#343434]"
                                 >
@@ -253,11 +351,14 @@ function UnidadesMedida() {
 
                                 <Button
                                     type="submit"
+                                    disabled={saving}
                                     className="mt-0 w-auto bg-[#A3E635] px-5 py-3 font-semibold text-[#111111] hover:bg-[#BEF264]"
                                 >
-                                    {editingIndex !== null
-                                        ? "Salvar alterações"
-                                        : "Cadastrar unidade"
+                                    {saving
+                                        ? 'Salvando...'
+                                        : editingIndex !== null
+                                            ? 'Salvar alterações'
+                                            : 'Cadastrar unidade'
                                     }
                                 </Button>
                             </div>

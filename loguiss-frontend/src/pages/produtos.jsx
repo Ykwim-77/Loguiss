@@ -14,6 +14,7 @@ import api from '../services/api';
 
 const produtoInicial = {
     id_produto: null,
+    id_tipo_produto: null,
     desc: "",
     id_categoria: null,
     categoria: "",
@@ -52,20 +53,21 @@ const produtoParaForm = (p) => {
     return {
         ...produtoInicial,
         id_produto: p.id_produto,
+        id_tipo_produto: p.id_tipo_produto,
         desc: p.descricao ?? "",
         categoria: categoria?.descricao ?? "",
         id_categoria: categoria?.id_categoria ?? null,
         fornecedor: fornecedor?.nome ?? "",
         id_fornecedor: fornecedor?.id_fornecedor ?? null,
-        minimo: p.minimo ?? "",
+        minimo: p.estoque?.minimo ?? "",
         valor: p.valor ?? "",
         quantidade_estoque: String(p.estoque?.quantidade ?? 0),
-        fgTipoProducao: Boolean(p.fgTipoProducao),
-        unidade: p.unidade ?? "",
+        fgTipoProducao: p.tipo_produto?.flag_tipo === 'P',
+        unidade: p.unidade?.nomenclatura ?? "",
         id_unidade_medida: p.id_unidade_medida ?? null,
-        dt_entrada: (p.dt_entrada ?? "").slice(0, 10),
-        prazo_saida: (p.prazo_saida ?? "").slice(0, 10),
-        dt_validade: (p.dt_validade ?? "").slice(0, 10),
+        dt_entrada: p.estoque?.dt_entrada?.slice(0, 10) ?? "",
+        prazo_saida: p.estoque?.prazo_saida?.slice(0, 10) ?? "",
+        dt_validade: p.estoque?.dt_validade?.slice(0, 10) ?? "",
     };
 };
 
@@ -96,6 +98,54 @@ function Produtos() {
             .toLowerCase()
             .includes(appliedSearch.toLowerCase())
     );
+
+
+    const montarPayloadProduto = () => {
+        const tipoSelecionado = tiposProduto.find(
+            (tipo) => tipo.flag_tipo === (newProduct.fgTipoProducao ? 'P' : 'N')
+        );
+
+        if (!tipoSelecionado) {
+            throw new Error('Tipo de produto não encontrado.');
+        }
+
+        return {
+            descricao: newProduct.desc.trim(),
+            id_tipo_produto: tipoSelecionado.id_tipo_produto,
+            id_unidade_medida: Number(newProduct.id_unidade_medida),
+            valor: Number(newProduct.valor),
+            flag_ativo: 'T',
+            id_categoria_user: Number(newProduct.id_categoria),
+
+            estoque: {
+                id_receita: 0,
+                id_fornecedor_user: Number(newProduct.id_fornecedor),
+                is_fracionado: 'F',
+                quantidade: Number(newProduct.quantidade_estoque),
+                dt_entrada: newProduct.dt_entrada,
+                minimo: Number(newProduct.minimo),
+                prazo_saida: newProduct.prazo_saida
+            },
+
+            receita: newProduct.fgTipoProducao
+                ? {
+                    descricao: newReceita.nome,
+                    margem_perda: Number(newReceita.margemPerda),
+                    quantidade_produzida: Number(newReceita.quantidadeProduzida),
+                    quantidade_perdida: Number(newReceita.quantidadePerdida)
+                }
+                : null,
+
+            ingredientes: newProduct.fgTipoProducao
+                ? newReceita.ingredientes.map((ingrediente) => ({
+                    id_produto: Number(ingrediente.id_produto),
+                    quantidade: Number(ingrediente.quantidade),
+                    unidade_medida_ingrediente: Number(ingrediente.id_unidade)
+                }))
+                : []
+        };
+    };
+
 
     useEffect(() => {
         const carregar = async () => {
@@ -198,7 +248,10 @@ function Produtos() {
         return "";
     };
 
-    const salvarProduto = (e) => {
+
+    const [saving, setSaving] = useState(false);
+
+    const salvarProduto = async (e) => {
         e.preventDefault();
 
         const erro = validarSelecoes();
@@ -208,8 +261,91 @@ function Produtos() {
             return;
         }
 
-        toast.error(
-            "A integração de cadastro e edição ainda precisa das rotas do backend."
+        if (!newProduct.desc.trim()) {
+            toast.error('Informe a descrição do produto.');
+            return;
+        }
+
+        if (!newProduct.valor || Number(newProduct.valor) < 0) {
+            toast.error('Informe um valor válido.');
+            return;
+        }
+
+        if (!newProduct.id_tipo_produto) {
+            toast.error('Selecione um tipo de produto válido.');
+            return;
+        }
+
+        try {
+            setSaving(true);
+
+            if (editingId !== null) {
+                await editarProduto();
+            } else {
+                const payload = montarPayloadProduto();
+
+                const response = await api.post(
+                    '/produto/create_produto',
+                    payload
+                );
+
+                toast.success(
+                    response.data.MSG || 'Produto cadastrado com sucesso!'
+                );
+            }
+
+            fecharForm();
+
+            const atualizacao = await api.get('/produto/list_produtos');
+
+            setProducts(atualizacao.data.produtos ?? []);
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao salvar produto!'
+            );
+        } finally {
+            setSaving(false);
+        }
+    };
+    const excluirProduto = async (id_produto) => {
+        try {
+            const response = await api.delete(
+                `/produto/delete_produto/${id_produto}`
+            );
+
+            toast.success(
+                response.data.MSG || 'Produto desativado com sucesso!'
+            );
+
+            setProducts((prev) =>
+                prev.filter((produto) => produto.id_produto !== id_produto)
+            );
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.MSG ||
+                'Erro ao desativar produto!'
+            );
+        }
+    };
+    const editarProduto = async () => {
+        const payload = {
+            descricao: newProduct.desc.trim(),
+            id_tipo_produto: Number(newProduct.id_tipo_produto),
+            id_unidade_medida: Number(newProduct.id_unidade_medida),
+            valor: Number(newProduct.valor),
+            flag_ativo: 'T',
+        };
+
+        const response = await api.put(
+            `/produto/edit_produto/${editingId}`,
+            payload
+        );
+
+        toast.success(
+            response.data.MSG || 'Produto atualizado com sucesso!'
         );
     };
 
@@ -269,11 +405,7 @@ function Produtos() {
                             titulo={produto.descricao}
                             icone={Package}
                             onEdit={() => abrirEdicao(produto)}
-                            onDelete={() => {
-                                toast.error(
-                                    "A rota de exclusão de produtos ainda não foi integrada."
-                                );
-                            }}
+                            onDelete={() => excluirProduto(produto.id_produto)}
                         >
                             <p className="mt-2 text-gray-400">
                                 Categoria: {produto.categorias?.[0]?.categoria?.descricao ?? "Sem categoria"}
@@ -686,11 +818,14 @@ function Produtos() {
 
                                 <Button
                                     type="submit"
+                                    disabled={saving}
                                     className="bg-[#A3E635] px-5 font-semibold text-[#111111] hover:bg-[#BEF264]"
                                 >
-                                    {editingId !== null
-                                        ? "Salvar alterações"
-                                        : "Cadastrar produto"}
+                                    {saving
+                                        ? "Salvando..."
+                                        : editingId !== null
+                                            ? "Salvar alterações"
+                                            : "Cadastrar produto"}
                                 </Button>
                             </div>
                         </form>

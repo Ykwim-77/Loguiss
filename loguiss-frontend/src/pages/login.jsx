@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 import { validarFormatoEmail, validarSenha } from '../utils/validacoes';
 import { Button } from '../components/button';
@@ -48,10 +48,6 @@ function Login() {
             }
         }
     }
-
-    const erro_email = (email_tocado || enviar_formulario)
-        ? validarFormatoEmail(email)
-        : '';
 
     const erro_senha = (senha_tocada || enviar_formulario)
         ? validarSenha(senha)

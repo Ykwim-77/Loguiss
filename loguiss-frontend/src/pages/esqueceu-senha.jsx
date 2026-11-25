@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { toast } from 'sonner';
 
 import api from '../services/api';
@@ -62,11 +62,6 @@ function EsqueceuSenha() {
             setLoading(false);
         }
     }
-
-    const erro_email =
-        (email_tocado || enviar_formulario)
-            ? validarFormatoEmail(email)
-            : '';
 
     return (
         <main className="min-h-screen bg-[#111111] flex items-center justify-center p-4">

@@ -21,7 +21,6 @@ function Usuarios() {
     const [editingIndex, setEditingIndex] = useState(null);
 
     const [visualizar_senha, setVisualizarSenha] = useState(false);
-    const [visualizar_confirmar_senha, setVisualizarConfirmarSenha] = useState(false);
 
     const [newUsuario, setNewUsuario] = useState({
         desc: "",
@@ -95,7 +94,7 @@ function Usuarios() {
     // Adicionar usuário
     const addNewUsuario = async () => {
         try {
-            const response = await api.post('/user/cadastro_user', {
+            const response = await api.post('/user/create_user', {
                 nome: newUsuario.desc,
                 email: newUsuario.email,
                 senha: newUsuario.senha,

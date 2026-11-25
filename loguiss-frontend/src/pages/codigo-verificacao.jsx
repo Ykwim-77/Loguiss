@@ -1,8 +1,3 @@
-
-import { useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
-
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import api from '../services/api.js';
@@ -163,7 +158,6 @@ function CodigoVerificacao() {
                                 onKeyDown={(e) => handleKeyDown(e, index)}
                                 ref={(el) => (inputRefs.current[index] = el)}
                                 autoComplete="off"
-                                inputClassName="h-10 w-full text-center text-sm font-bold text-green-500"
                             />
                         ))}
 

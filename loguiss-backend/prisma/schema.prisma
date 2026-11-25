@@ -31,6 +31,8 @@ model verificacao_user {
 model unidade_medida {
   id_unidade   Int               @id @default(autoincrement())
   descrunidade String
+  gramatura    String?
+  is_fracionado String?
   nomenclatura String
   created_at   DateTime?         @default(now())
   flag_ativo   String?           @default("T")
@@ -84,6 +86,8 @@ model produto {
   unidade_medida    unidade_medida         @relation(fields: [id_unidade_medida], references: [id_unidade])
   categorias        produto_categoria[]
   receitas          receita_produto[]
+  previsoes         previsao_produto[]
+  alertas           alerta[]
 }
 
 model estoque {
@@ -193,4 +197,98 @@ model cliente {
   endereco    endereco? @relation(fields: [id_endereco], references: [id_endereco])
 
   movimentacoes movimentacao_estoque[]
+}
+model empresa {
+  id_empresa        Int      @id @default(autoincrement())
+  nome      String
+  cidade    String?
+  uf        String?
+  segmento  String?
+  cnpj      String   @unique
+  telefone  String
+  email     String   @unique
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
+model configuracao_ia {
+  id_configuracao_ia          Int      @id @default(autoincrement())
+  horizonte_dias              Int      @default(14) // tempo de previsão: quantos dias à frente a IA prevê (5, 10, 14 ou 30)
+  intervalo_minutos           Int      @default(1440) // de quantos em quantos minutos a IA é consultada sozinha
+  agendamento_ativo           Boolean  @default(false) // liga/desliga a consulta automática
+  prazo_reposicao_padrao_dias Int      @default(3) // usado quando o produto não tem entradas com prazo_chegada
+  created_at                  DateTime @default(now())
+  updated_at                  DateTime @updatedAt
+}
+
+// Uma linha por consulta feita à IA
+model previsao {
+  id_previsao    Int      @id @default(autoincrement())
+  horizonte_dias Int
+  modelo         String
+  localizacao    String?
+  segmento       String?
+  contexto       Json? // eventos e sazonalidade que a IA pesquisou
+  dados_enviados Json? // o que foi enviado para a IA (útil para defender no TCC)
+  resposta_bruta Json? // o que a IA respondeu
+  created_at     DateTime @default(now())
+
+  produtos previsao_produto[]
+  alertas  alerta[]
+
+  @@index([created_at])
+}
+
+// Resultado e recomendação de compra de cada produto
+model previsao_produto {
+  id_previsao_produto  Int     @id @default(autoincrement())
+  id_previsao          Int
+  id_produto           Int
+  estoque_na_data      Float
+  estoque_seguro       Float
+  prazo_reposicao_dias Int
+  media_dia            Float
+  total_previsto       Float
+  confianca            Float?
+  justificativa        String?
+  cobertura_dias       Float? // null quando não há consumo previsto
+  dias_para_comprar    Int? // null quando não há consumo previsto
+  urgente              Boolean
+  comprar_qtd          Float
+
+  previsao previsao           @relation(fields: [id_previsao], references: [id_previsao], onDelete: Cascade)
+  produto  produto            @relation(fields: [id_produto], references: [id_produto])
+  periodos previsao_periodo[]
+
+  @@unique([id_previsao, id_produto])
+  @@index([id_produto])
+}
+
+// Série diária prevista (alimenta o gráfico)
+model previsao_periodo {
+  id_previsao_periodo Int      @id @default(autoincrement())
+  id_previsao_produto Int
+  data                DateTime @db.Date
+  quantidade          Float
+
+  previsao_produto previsao_produto @relation(fields: [id_previsao_produto], references: [id_previsao_produto], onDelete: Cascade)
+
+  @@unique([id_previsao_produto, data])
+}
+
+// Alertas mostrados ao usuário. severidade: "urgente" | "atencao" | "informativo"
+model alerta {
+  id_alerta   Int      @id @default(autoincrement())
+  id_previsao Int?
+  id_produto  Int
+  severidade  String
+  titulo      String
+  descricao   String
+  lido        Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  previsao previsao? @relation(fields: [id_previsao], references: [id_previsao], onDelete: SetNull)
+  produto  produto   @relation(fields: [id_produto], references: [id_produto])
+
+  @@index([created_at])
 }
