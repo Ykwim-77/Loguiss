@@ -1,26 +1,25 @@
+import { CalendarClock, ChartColumn, Package, TriangleAlert } from 'lucide-react';
+
+import { StatCard } from '../components/card';
+import { AlertasIA } from '../components/indicators/alertas-ia';
+import { HistoricoMovimentacoes } from '../components/indicators/historico-movimentacoes';
+import { PrevisaoDemandasIA } from '../components/indicators/previsao-demandas-ia';
+import { PrevisaoSaida } from '../components/indicators/previsao-venda';
+import { RecomendacoesCompra } from '../components/indicators/recomendacao-compra';
 import { SideBar } from '../components/sidebar';
-import { StatCard } from '../components/card'; 
-import { PrevisaoDemandasIA } from '../components/indicators/previsao-demandas-ia'
-import { PrevisaoSaida } from '../components/indicators/previsao-venda'
-import { RecomendacoesCompra } from '../components/indicators/recomendacao-compra'
-import { HistoricoMovimentacoes } from '../components/indicators/historico-movimentacoes'
-import { AlertasIA } from '../components/indicators/alertas-ia'
-import { Package, TriangleAlert, CalendarClock, ChartColumn } from 'lucide-react'
 
 function PrevisaoDemanda() {
-
     return (
-        <div className="min-h-screen bg-[#111111] text-[#F5F5F5]">
+        <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
             <main className="ml-72 min-h-screen p-5">
-                    <div>
-                        <h1 className="text-3xl font-bold mb-2 mt-2">
-                            Previsão de Demandas
-                        </h1>
-                        <p className="text-gray-400">
-                            Esta é a página de previsão de demandas. Aqui você pode analisar todas as previsões geradas automaticamente pelo sistema.
-                        </p>
-                    </div>
+                <div>
+                    <h1 className="text-3xl font-bold mb-2 mt-2">Previsão de Demandas</h1>
+                    <p className="text-gray-400">
+                        Esta é a página de previsão de demandas. Aqui você pode analisar todas as
+                        previsões geradas automaticamente pelo sistema.
+                    </p>
+                </div>
                 <div className="mt-5 grid grid-cols-4 gap-3">
                     <StatCard
                         titulo="Produtos Monitorados"
@@ -50,7 +49,7 @@ function PrevisaoDemanda() {
                     />
                 </div>
                 <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 mb-3">
-                    <PrevisaoDemandasIA 
+                    <PrevisaoDemandasIA
                         titulo="Projeção de estoque"
                         descricao="Saldo estimado a partir do consumo médio diário"
                     />
@@ -58,12 +57,12 @@ function PrevisaoDemanda() {
                 </div>
                 <RecomendacoesCompra />
                 <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 mt-1">
-                    <HistoricoMovimentacoes/>
+                    <HistoricoMovimentacoes />
                     <AlertasIA />
                 </div>
             </main>
         </div>
-    )
+    );
 }
 
 export default PrevisaoDemanda;

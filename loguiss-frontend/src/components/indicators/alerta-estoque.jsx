@@ -1,13 +1,11 @@
 export function AlertaEstoque({ produtos }) {
     const produtosComEstoqueBaixo = produtos.filter(
-        (produto) => produto.estoqueAtual <= produto.estoqueMinimo
+        (produto) => produto.estoqueAtual <= produto.estoqueMinimo,
     );
 
     return (
         <div className="mb-5 rounded-xl border border-borda bg-superficie p-5">
-            <h2 className="mb-4 text-xl font-bold text-texto">
-                Alertas de estoque baixo
-            </h2>
+            <h2 className="mb-4 text-xl font-bold text-texto">Alertas de estoque baixo</h2>
             {produtosComEstoqueBaixo.length === 0 ? (
                 <p className="text-sm text-texto-suave">Nenhum produto com estoque baixo.</p>
             ) : (

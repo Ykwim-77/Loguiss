@@ -1,14 +1,12 @@
-
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import api from '../services/api';
-
-import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
 import { ButtonEye } from '../components/buttonEye';
 import { Inputs } from '../components/inputs';
-import { formatarCPFCNPJ, formatarMoeda, formatarData } from '../utils/validacoes';
+import { SideBar } from '../components/sidebar';
+import api from '../services/api';
+import { formatarCPFCNPJ, formatarData, formatarMoeda } from '../utils/validacoes';
 
 const movimentacaoInicial = {
     id: null,
@@ -33,12 +31,12 @@ function MovimentacaoSaida() {
     const [newMovimentacao, setNewMovimentacao] = useState(movimentacaoInicial);
 
     const [products, setProducts] = useState([]);
-    const [produto, setProduto] = useState("");
+    const [produto, setProduto] = useState('');
     const [idProduto, setIdProduto] = useState(null);
     const [mostrarProdutos, setMostrarProdutos] = useState(false);
 
     const [clientes, setClientes] = useState([]);
-    const [cliente, setCliente] = useState("");
+    const [cliente, setCliente] = useState('');
     const [idCliente, setIdCliente] = useState(null);
     const [mostrarClientes, setMostrarClientes] = useState(false);
 
@@ -53,12 +51,12 @@ function MovimentacaoSaida() {
 
     // Filtrar produtos
     const produtosFiltrados = products.filter((p) =>
-        (p.descricao ?? "").toLowerCase().includes(produto.toLowerCase())
+        (p.descricao ?? '').toLowerCase().includes(produto.toLowerCase()),
     );
 
     // Filtrar clientes
     const clientesFiltrados = clientes.filter((c) =>
-        (c.nome ?? "").toLowerCase().includes(cliente.toLowerCase())
+        (c.nome ?? '').toLowerCase().includes(cliente.toLowerCase()),
     );
 
     // Atualizar dados do cliente
@@ -91,8 +89,8 @@ function MovimentacaoSaida() {
             cliente: { ...movimentacaoInicial.cliente },
         });
 
-        setProduto("");
-        setCliente("");
+        setProduto('');
+        setCliente('');
         setIdProduto(null);
         setIdCliente(null);
         setMostrarProdutos(false);
@@ -119,22 +117,22 @@ function MovimentacaoSaida() {
             id: movimentacao.id_movimentacao,
             data_movimento: movimentacao.data_movimento
                 ? movimentacao.data_movimento.slice(0, 10)
-                : "",
-            valor_unitario: movimentacao.valor_unitario || "",
+                : '',
+            valor_unitario: movimentacao.valor_unitario || '',
             produto: {
-                desc: movimentacao.produto?.descricao || "",
-                quantidade: movimentacao.quantidade || "",
-                fornecedor: "",
-                valor: movimentacao.valor_unitario || "",
+                desc: movimentacao.produto?.descricao || '',
+                quantidade: movimentacao.quantidade || '',
+                fornecedor: '',
+                valor: movimentacao.valor_unitario || '',
             },
             cliente: {
-                desc: movimentacao.cliente?.nome || "",
-                cpf: formatarCPFCNPJ(movimentacao.cliente?.cpf || ""),
+                desc: movimentacao.cliente?.nome || '',
+                cpf: formatarCPFCNPJ(movimentacao.cliente?.cpf || ''),
             },
         });
 
-        setProduto(movimentacao.produto?.descricao || "");
-        setCliente(movimentacao.cliente?.nome || "");
+        setProduto(movimentacao.produto?.descricao || '');
+        setCliente(movimentacao.cliente?.nome || '');
 
         setIdProduto(movimentacao.id_produto);
         setIdCliente(movimentacao.id_cliente);
@@ -149,37 +147,33 @@ function MovimentacaoSaida() {
             const response = await api.get('/movi/list_movi/S');
             setMovimentacoes(response.data.movimentacoes ?? []);
         } catch (error) {
-            console.error("Erro ao buscar movimentações:", error);
-            toast.error("Erro ao carregar movimentações.");
+            console.error('Erro ao buscar movimentações:', error);
+            toast.error('Erro ao carregar movimentações.');
         }
     };
 
     // Buscar produtos
     const buscarProdutos = async () => {
         try {
-            const resposta = await api.get("/produto/list_produtos");
+            const resposta = await api.get('/produto/list_produtos');
             setProducts(resposta.data.produtos ?? []);
         } catch (error) {
-            console.error("Erro ao buscar produtos:", error);
-            toast.error("Erro ao carregar produtos.");
+            console.error('Erro ao buscar produtos:', error);
+            toast.error('Erro ao carregar produtos.');
         }
     };
 
     // Buscar clientes
     const buscarClientes = async () => {
         try {
-            const response = await api.get("/cliente/list_clientes");
+            const response = await api.get('/cliente/list_clientes');
 
-            const lista =
-                response.data.clientes ??
-                response.data.Clientes ??
-                response.data;
+            const lista = response.data.clientes ?? response.data.Clientes ?? response.data;
 
             setClientes(Array.isArray(lista) ? lista : []);
-
         } catch (error) {
-            console.error("Erro ao buscar clientes:", error);
-            toast.error("Erro ao carregar clientes.");
+            console.error('Erro ao buscar clientes:', error);
+            toast.error('Erro ao carregar clientes.');
         }
     };
 
@@ -195,12 +189,12 @@ function MovimentacaoSaida() {
         event.preventDefault();
 
         if (!idCliente) {
-            toast.error("Selecione um cliente da lista.");
+            toast.error('Selecione um cliente da lista.');
             return;
         }
 
         if (!idProduto) {
-            toast.error("Selecione um produto da lista.");
+            toast.error('Selecione um produto da lista.');
             return;
         }
 
@@ -210,7 +204,7 @@ function MovimentacaoSaida() {
                 id_produto: idProduto,
                 id_cliente: idCliente,
                 quantidade: Number(newMovimentacao.produto.quantidade),
-                tipo: "S",
+                tipo: 'S',
                 valor_unitario: Number(newMovimentacao.produto.valor),
                 cpf: newMovimentacao.cliente.cpf,
             });
@@ -219,17 +213,10 @@ function MovimentacaoSaida() {
 
             toast.success('Movimentação cadastrada com sucesso!');
             fecharFormulario();
-
         } catch (error) {
-            console.error(
-                "Erro ao cadastrar movimentação:",
-                error.response?.data || error
-            );
+            console.error('Erro ao cadastrar movimentação:', error.response?.data || error);
 
-            toast.error(
-                error.response?.data?.MSG ||
-                'Erro ao cadastrar movimentação!'
-            );
+            toast.error(error.response?.data?.MSG || 'Erro ao cadastrar movimentação!');
         }
     };
 
@@ -238,7 +225,6 @@ function MovimentacaoSaida() {
             <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
-
                 {/* Cabeçalho */}
                 <div className="mb-3 flex items-center justify-between">
                     <div>
@@ -253,7 +239,7 @@ function MovimentacaoSaida() {
 
                     <Button
                         type="button"
-                        className="mt-2 w-auto bg-[#A3E635] p-3 text-[#111111] transition-colors hover:bg-[#BEF264]"
+                        className="mt-2 w-auto p-3"
                         onClick={abrirFormularioNovo}
                     >
                         Adicionar movimentação
@@ -261,10 +247,9 @@ function MovimentacaoSaida() {
                 </div>
 
                 {/* Tabela de movimentações */}
-                <div className="mt-5 overflow-hidden rounded-xl border border-[#343434]">
-
+                <div className="mt-5 overflow-hidden rounded-xl border border-borda">
                     {/* Cabeçalho da tabela */}
-                    <div className="grid grid-cols-[110px_250px_110px_130px_230px_1fr_80px] justify-items-start gap-1 border-b border-[#343434] bg-[#1B1B1B] p-1 text-[#F5F5F5]">
+                    <div className="grid grid-cols-[110px_250px_110px_130px_230px_1fr_80px] justify-items-start gap-1 border-b border-borda bg-superficie p-1 text-texto">
                         <div className="px-4 py-2 font-semibold">Id</div>
                         <div className="px-4 py-2 font-semibold">Produto</div>
                         <div className="px-4 py-2 font-semibold">Qtd.</div>
@@ -275,53 +260,55 @@ function MovimentacaoSaida() {
                     </div>
 
                     {/* Movimentações */}
-                    <div className="flex flex-col bg-[#151515]">
+                    <div className="flex flex-col bg-fundo">
                         {movimentacoes.length === 0 ? (
-                            <div className="px-4 py-8 text-center text-[#A3A3A3]">
+                            <div className="px-4 py-8 text-center text-texto-suave">
                                 Nenhuma movimentação encontrada.
                             </div>
                         ) : (
                             movimentacoes.map((movimentacao) => (
                                 <div
                                     key={movimentacao.id_movimentacao}
-                                    className="grid grid-cols-[110px_250px_110px_130px_230px_1fr_80px] justify-items-start gap-1 border-b border-[#343434] p-1 transition-colors last:border-b-0 hover:bg-[#1B1B1B]"
+                                    className="grid grid-cols-[110px_250px_110px_130px_230px_1fr_80px] justify-items-start gap-1 border-b border-borda p-1 transition-colors last:border-b-0 hover:bg-superficie"
                                 >
-                                    <div className="px-4 py-4 text-[#A3A3A3]">
+                                    <div className="px-4 py-4 text-texto-suave">
                                         {movimentacao.id_movimentacao}
                                     </div>
 
-                                    <div className="w-full min-w-0 truncate px-4 py-4 text-[#F5F5F5]">
+                                    <div className="w-full min-w-0 truncate px-4 py-4 text-texto">
                                         {movimentacao.produto?.descricao}
                                     </div>
 
                                     <div className="px-4 py-4">
-                                        <span className="rounded-lg border border-[#404040] bg-[#292929] px-3 py-1 text-[#F5F5F5]">
+                                        <span className="rounded-lg border border-borda bg-elevada px-3 py-1 text-texto">
                                             {movimentacao.quantidade}
                                         </span>
                                     </div>
 
-                                    <div className="px-4 py-4 font-medium text-[#A3E635]">
+                                    <div className="px-4 py-4 font-medium text-primaria">
                                         {formatarMoeda(
                                             Number(movimentacao.valor_unitario) *
-                                            Number(movimentacao.quantidade)
+                                                Number(movimentacao.quantidade),
                                         )}
                                     </div>
 
-                                    <div className="px-4 py-4 text-[#A3A3A3]">
+                                    <div className="px-4 py-4 text-texto-suave">
                                         {formatarData(movimentacao.data_movimento)}
                                     </div>
 
-                                    <div className="w-full min-w-0 truncate px-4 py-4 text-[#F5F5F5]">
+                                    <div className="w-full min-w-0 truncate px-4 py-4 text-texto">
                                         {movimentacao.cliente?.nome}
                                     </div>
 
-                                    <div className="w-full min-w-0 px-4 py-4 text-[#A3A3A3]">
+                                    <div className="w-full min-w-0 px-4 py-4 text-texto-suave">
                                         <ButtonEye
                                             isOpen={
                                                 showMovimentacaoForm &&
                                                 newMovimentacao?.id === movimentacao.id_movimentacao
                                             }
-                                            onClick={() => abrirFormularioVisualizacao(movimentacao)}
+                                            onClick={() =>
+                                                abrirFormularioVisualizacao(movimentacao)
+                                            }
                                             title="Visualizar movimentação"
                                         />
                                     </div>
@@ -335,29 +322,27 @@ function MovimentacaoSaida() {
             {/* Modal de cadastro e visualização */}
             {showMovimentacaoForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-
-                    <div className="w-full max-w-2xl rounded-2xl border border-[#343434] bg-[#1B1B1B] p-6 shadow-2xl">
-
+                    <div className="w-full max-w-2xl rounded-2xl border border-borda bg-superficie p-6 shadow-2xl">
                         {/* Cabeçalho do modal */}
                         <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold text-[#F5F5F5]">
+                                <h2 className="text-2xl font-bold text-texto">
                                     {visualizarMovimentacao
-                                        ? "Visualizar movimentação"
-                                        : "Adicionar movimentação"}
+                                        ? 'Visualizar movimentação'
+                                        : 'Adicionar movimentação'}
                                 </h2>
 
-                                <p className="mt-1 text-sm text-[#A3A3A3]">
+                                <p className="mt-1 text-sm text-texto-suave">
                                     {visualizarMovimentacao
-                                        ? "Visualize os dados da movimentação."
-                                        : "Preencha os dados da movimentação."}
+                                        ? 'Visualize os dados da movimentação.'
+                                        : 'Preencha os dados da movimentação.'}
                                 </p>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={fecharFormulario}
-                                className="text-2xl text-[#A3A3A3] transition-colors hover:text-[#A3E635]"
+                                className="text-2xl text-texto-suave transition-colors hover:text-primaria"
                             >
                                 ×
                             </button>
@@ -367,7 +352,6 @@ function MovimentacaoSaida() {
                         <form onSubmit={salvarMovimentacao}>
                             <fieldset disabled={visualizarMovimentacao}>
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
                                     {/* Data */}
                                     <Inputs
                                         label="Data da movimentação"
@@ -376,7 +360,7 @@ function MovimentacaoSaida() {
                                         onChange={(e) =>
                                             setNewMovimentacao({
                                                 ...newMovimentacao,
-                                                data_movimento: e.target.value
+                                                data_movimento: e.target.value,
                                             })
                                         }
                                         required
@@ -384,7 +368,7 @@ function MovimentacaoSaida() {
 
                                     {/* Cliente */}
                                     <div className="relative">
-                                        <label className="mb-1 block text-sm font-medium text-[#F5F5F5]">
+                                        <label className="mb-1 block text-sm font-medium text-texto">
                                             Cliente
                                         </label>
 
@@ -395,39 +379,41 @@ function MovimentacaoSaida() {
                                                 setCliente(event.target.value);
                                                 setIdCliente(null);
                                                 setMostrarClientes(true);
-                                                atualizarCliente("cpf", "");
+                                                atualizarCliente('cpf', '');
                                             }}
                                             onFocus={() => setMostrarClientes(true)}
                                             placeholder="Nome do cliente"
-                                            className="w-full rounded-lg border border-[#404040] bg-[#151515] p-3 text-[#F5F5F5] outline-none transition-colors placeholder:text-[#A3A3A3] focus:border-[#A3E635] disabled:cursor-not-allowed disabled:opacity-70"
+                                            className="w-full rounded-lg border border-borda bg-fundo p-3 text-texto outline-none transition-colors placeholder:text-texto-suave focus:border-primaria disabled:cursor-not-allowed disabled:opacity-70"
                                             required
                                         />
 
                                         {mostrarClientes && cliente && !visualizarMovimentacao && (
-                                            <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-[#404040] bg-[#151515] shadow-xl">
+                                            <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-borda bg-fundo shadow-xl">
                                                 {clientesFiltrados.map((c) => (
                                                     <div
                                                         key={c.id_cliente}
-                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        onMouseDown={(event) =>
+                                                            event.preventDefault()
+                                                        }
                                                         onClick={() => {
                                                             setCliente(c.nome);
                                                             setIdCliente(c.id_cliente);
 
                                                             atualizarCliente(
-                                                                "cpf",
-                                                                formatarCPFCNPJ(c.cpf)
+                                                                'cpf',
+                                                                formatarCPFCNPJ(c.cpf),
                                                             );
 
                                                             setMostrarClientes(false);
                                                         }}
-                                                        className="cursor-pointer border-b border-[#343434] px-4 py-3 text-[#F5F5F5] transition-colors last:border-0 hover:bg-[#292929]"
+                                                        className="cursor-pointer border-b border-borda px-4 py-3 text-texto transition-colors last:border-0 hover:bg-elevada"
                                                     >
                                                         {c.nome}
                                                     </div>
                                                 ))}
 
                                                 {clientesFiltrados.length === 0 && (
-                                                    <div className="p-3 text-sm text-[#A3A3A3]">
+                                                    <div className="p-3 text-sm text-texto-suave">
                                                         Nenhum cliente encontrado.
                                                     </div>
                                                 )}
@@ -437,7 +423,7 @@ function MovimentacaoSaida() {
 
                                     {/* Produto */}
                                     <div className="relative">
-                                        <label className="mb-1 block text-sm font-medium text-[#F5F5F5]">
+                                        <label className="mb-1 block text-sm font-medium text-texto">
                                             Produto
                                         </label>
 
@@ -451,16 +437,18 @@ function MovimentacaoSaida() {
                                                 setMostrarProdutos(true);
                                             }}
                                             onFocus={() => setMostrarProdutos(true)}
-                                            className="w-full rounded-lg border border-[#404040] bg-[#151515] p-3 text-[#F5F5F5] outline-none transition-colors placeholder:text-[#A3A3A3] focus:border-[#A3E635] disabled:cursor-not-allowed disabled:opacity-70"
+                                            className="w-full rounded-lg border border-borda bg-fundo p-3 text-texto outline-none transition-colors placeholder:text-texto-suave focus:border-primaria disabled:cursor-not-allowed disabled:opacity-70"
                                             required
                                         />
 
                                         {mostrarProdutos && produto && !visualizarMovimentacao && (
-                                            <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-[#404040] bg-[#151515] shadow-xl">
+                                            <div className="absolute left-0 top-full z-20 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-borda bg-fundo shadow-xl">
                                                 {produtosFiltrados.map((p) => (
                                                     <div
                                                         key={p.id_produto}
-                                                        onMouseDown={(event) => event.preventDefault()}
+                                                        onMouseDown={(event) =>
+                                                            event.preventDefault()
+                                                        }
                                                         onClick={() => {
                                                             setProduto(p.descricao);
                                                             setIdProduto(p.id_produto);
@@ -477,14 +465,14 @@ function MovimentacaoSaida() {
 
                                                             setMostrarProdutos(false);
                                                         }}
-                                                        className="cursor-pointer border-b border-[#343434] px-4 py-3 text-[#F5F5F5] transition-colors last:border-0 hover:bg-[#292929]"
+                                                        className="cursor-pointer border-b border-borda px-4 py-3 text-texto transition-colors last:border-0 hover:bg-elevada"
                                                     >
                                                         {p.descricao}
                                                     </div>
                                                 ))}
 
                                                 {produtosFiltrados.length === 0 && (
-                                                    <div className="p-3 text-sm text-[#A3A3A3]">
+                                                    <div className="p-3 text-sm text-texto-suave">
                                                         Nenhum produto encontrado.
                                                     </div>
                                                 )}
@@ -512,9 +500,7 @@ function MovimentacaoSaida() {
                                         min="0"
                                         step="0.01"
                                         value={newMovimentacao.produto.valor}
-                                        onChange={(e) =>
-                                            atualizarProduto('valor', e.target.value)
-                                        }
+                                        onChange={(e) => atualizarProduto('valor', e.target.value)}
                                         placeholder="R$ 0,00"
                                         required
                                     />
@@ -524,39 +510,33 @@ function MovimentacaoSaida() {
                                         label="CPF/CNPJ do cliente"
                                         value={newMovimentacao.cliente.cpf}
                                         onChange={(e) =>
-                                            atualizarCliente(
-                                                'cpf',
-                                                formatarCPFCNPJ(e.target.value)
-                                            )
+                                            atualizarCliente('cpf', formatarCPFCNPJ(e.target.value))
                                         }
                                         placeholder="CPF ou CNPJ"
                                         required
                                     />
-
                                 </div>
                             </fieldset>
 
                             {/* Botões do modal */}
-                            <div className="mt-6 flex justify-end gap-3 border-t border-[#343434] pt-5">
-
+                            <div className="mt-6 flex justify-end gap-3 border-t border-borda pt-5">
                                 <Button
                                     type="button"
                                     variant="secondary"
-                                    className="border border-[#404040] bg-[#292929] px-5 text-[#F5F5F5] transition-colors hover:bg-[#343434]"
+                                    className="px-5"
                                     onClick={fecharFormulario}
                                 >
-                                    {visualizarMovimentacao ? "Fechar" : "Cancelar"}
+                                    {visualizarMovimentacao ? 'Fechar' : 'Cancelar'}
                                 </Button>
 
                                 {!visualizarMovimentacao && (
                                     <Button
                                         type="submit"
-                                        className="bg-[#A3E635] px-5 text-[#111111] transition-colors hover:bg-[#BEF264]"
+                                        className="px-5"
                                     >
                                         Cadastrar movimentação
                                     </Button>
                                 )}
-
                             </div>
                         </form>
                     </div>

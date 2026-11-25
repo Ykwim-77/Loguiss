@@ -1,25 +1,27 @@
-import { Pie, PieChart, Sector, Tooltip, ResponsiveContainer, useActiveTooltipDataPoints, useIsTooltipActive } from 'recharts';
+import {
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Sector,
+    Tooltip,
+    useActiveTooltipDataPoints,
+    useIsTooltipActive,
+} from 'recharts';
 
 import { produtos } from '../../data/dashboardData';
+import { estiloTooltip } from '../../utils/graficos';
 
-const COLORS = ['#A3E635', '#84CC16', '#BEF264', '#65A30D'];
+const COLORS = [
+    'var(--primary)',
+    'var(--primary-hover)',
+    'color-mix(in srgb, var(--primary) 70%, var(--background))',
+    'color-mix(in srgb, var(--primary) 45%, var(--background))',
+];
 
 const RADIAN = Math.PI / 180;
 
-const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-}) => {
-    if (
-        cx == null ||
-        cy == null ||
-        innerRadius == null ||
-        outerRadius == null
-    ) {
+const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    if (cx == null || cy == null || innerRadius == null || outerRadius == null) {
         return null;
     }
 
@@ -32,7 +34,7 @@ const renderCustomizedLabel = ({
         <text
             x={x}
             y={y}
-            fill="#111111"
+            fill="var(--on-primary)"
             textAnchor="middle"
             dominantBaseline="central"
             fontSize={13}
@@ -47,11 +49,9 @@ const MyCustomPie = (props) => {
     const pontosAtivos = useActiveTooltipDataPoints();
     const tooltipAtivo = useIsTooltipActive();
 
-    const fatiaAtiva =
-        tooltipAtivo && props.payload === pontosAtivos?.[0];
+    const fatiaAtiva = tooltipAtivo && props.payload === pontosAtivos?.[0];
 
-    const fillOpacity =
-        tooltipAtivo && !fatiaAtiva ? 0.5 : 1;
+    const fillOpacity = tooltipAtivo && !fatiaAtiva ? 0.5 : 1;
 
     return (
         <Sector
@@ -79,17 +79,15 @@ export function DistribuicaoCategoria() {
             acumulador[categoria].value++;
 
             return acumulador;
-        }, {})
+        }, {}),
     );
 
     return (
-        <div className="mb-5 h-[380px] w-125 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
+        <div className="mb-5 h-[380px] w-125 rounded-xl border border-borda bg-superficie p-5">
             <div className="mb-4">
-                <h2 className="text-xl font-bold text-[#F5F5F5]">
-                    Distribuição por categoria
-                </h2>
+                <h2 className="text-xl font-bold text-texto">Distribuição por categoria</h2>
 
-                <p className="mt-1 text-sm text-[#A3A3A3]">
+                <p className="mt-1 text-sm text-texto-suave">
                     Quantidade de produtos em cada categoria
                 </p>
             </div>
@@ -110,19 +108,9 @@ export function DistribuicaoCategoria() {
                         />
 
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#222222',
-                                border: '1px solid #404040',
-                                borderRadius: '8px',
-                                color: '#F5F5F5',
-                            }}
-                            itemStyle={{
-                                color: '#A3E635',
-                            }}
-                            formatter={(value, name) => [
-                                `${value} produtos`,
-                                name,
-                            ]}
+                            {...estiloTooltip}
+                            itemStyle={{ color: 'var(--primary)' }}
+                            formatter={(value, name) => [`${value} produtos`, name]}
                         />
                     </PieChart>
                 </ResponsiveContainer>

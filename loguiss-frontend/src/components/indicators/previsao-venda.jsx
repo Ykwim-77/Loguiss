@@ -1,7 +1,8 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
-import { dadosSaida } from '../../data/dashboardData'
-
 import { Package } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+import { dadosSaida } from '../../data/dashboardData';
+import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
 export function PrevisaoSaida({
     titulo = 'Previsão de venda',
@@ -9,43 +10,34 @@ export function PrevisaoSaida({
     dias = 14,
     dados = dadosSaida,
 }) {
-
     return (
-        <div className="mt-4 w-full min-w-0 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
+        <div className="mt-4 w-full min-w-0 rounded-xl border border-borda bg-superficie p-5">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#A3E635]/10">
-                        <Package size={20} className="text-[#A3E635]" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primaria/10">
+                        <Package size={20} className="text-primaria" />
                     </div>
 
                     <div>
-                        <h2 className="text-base font-bold text-[#F5F5F5]">
-                            {titulo}
-                        </h2>
+                        <h2 className="text-base font-bold text-texto ">{titulo}</h2>
 
-                        <p className="text-xs text-[#A3A3A3]">
-                            {descricao}
-                        </p>
+                        <p className="text-xs text-texto-suave">{descricao}</p>
                     </div>
                 </div>
             </div>
 
             {/* Indicador de período */}
             <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-[#F5F5F5]">
-                    {dias}
-                </span>
+                <span className="text-3xl font-bold text-texto">{dias}</span>
 
-                <span className="text-xs text-[#A3A3A3]">
-                    dias no horizonte de estimativa
-                </span>
+                <span className="text-xs text-texto-suave">dias no horizonte de estimativa</span>
             </div>
 
             {/* Legenda */}
             <div className="mt-2 flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#A3E635]" />
+                <span className="h-2 w-2 rounded-full bg-primaria" />
 
-                <p className="text-xs text-[#A3A3A3]">
+                <p className="text-xs text-texto-suave">
                     Quantidade estimada individualmente por produto
                 </p>
             </div>
@@ -65,14 +57,14 @@ export function PrevisaoSaida({
                     >
                         <CartesianGrid
                             horizontal={false}
-                            stroke="#343434"
+                            stroke={corGrafico.grade}
                             strokeDasharray="3 5"
                         />
 
                         <XAxis
                             type="number"
-                            stroke="#737373"
-                            tick={{ fill: '#A3A3A3', fontSize: 11 }}
+                            stroke={corGrafico.eixo}
+                            tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
                             tickLine={false}
                             axisLine={false}
                         />
@@ -81,34 +73,22 @@ export function PrevisaoSaida({
                             type="category"
                             dataKey="nome"
                             width={105}
-                            stroke="#737373"
-                            tick={{
-                                fill: '#A3A3A3',
-                                fontSize: 10,
-                            }}
+                            stroke={corGrafico.eixo}
+                            tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
                             tickLine={false}
                             axisLine={false}
                             interval={0}
                         />
 
                         <Tooltip
-                            cursor={{ fill: '#FFFFFF08' }}
-                            contentStyle={{
-                                backgroundColor: '#222222',
-                                border: '1px solid #404040',
-                                borderRadius: '8px',
-                                color: '#F5F5F5',
-                                fontSize: '12px',
-                            }}
-                            formatter={(valor) => [
-                                `${valor} unidades`,
-                                'Saída estimada',
-                            ]}
+                            cursor={{ fill: 'var(--text)', fillOpacity: 0.05 }}
+                            contentStyle={{ ...estiloTooltip.contentStyle, fontSize: '12px' }}
+                            formatter={(valor) => [`${valor} unidades`, 'Saída estimada']}
                         />
 
                         <Bar
                             dataKey="quantidade"
-                            fill="#A3E635"
+                            fill={corGrafico.primaria}
                             radius={[0, 5, 5, 0]}
                             barSize={9}
                         />
@@ -117,14 +97,12 @@ export function PrevisaoSaida({
             </div>
 
             {/* Rodapé informativo */}
-            <div className="mt-4 border-t border-[#292929] pt-3">
-                <p className="text-xs leading-relaxed text-[#A3A3A3]">
-                    Estimativa por SKU baseada na média diária de saídas da amostra.
-                    A unidade de medida aparece ao consultar cada barra;
-                    não somamos unidades diferentes.
+            <div className="mt-4 border-t border-borda pt-3">
+                <p className="text-xs leading-relaxed text-texto-suave">
+                    Estimativa por SKU baseada na média diária de saídas da amostra. A unidade de
+                    medida aparece ao consultar cada barra; não somamos unidades diferentes.
                 </p>
             </div>
-
         </div>
     );
 }

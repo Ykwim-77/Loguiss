@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { Inputs } from './inputs';
+import { useEffect, useRef, useState } from 'react';
+
 import { cn } from '../utils/cn';
+import { Inputs } from './inputs';
 
 export function Combobox({
     label,
@@ -8,8 +9,8 @@ export function Combobox({
     opcoes = [],
     getLabel,
     getChave,
-    onChange,   // recebe o texto digitado
-    onSelect,   // recebe a opção escolhida
+    onChange, // recebe o texto digitado
+    onSelect, // recebe a opção escolhida
     placeholder,
     className = '',
     ...props

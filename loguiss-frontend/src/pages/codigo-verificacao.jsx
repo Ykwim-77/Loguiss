@@ -1,3 +1,7 @@
+import { useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import api from '../services/api.js';
@@ -35,10 +39,10 @@ function CodigoVerificacao() {
             : String(codigoParam || '');
 
         if (codigoStr.length !== 6) {
-            return "Informe os 6 dígitos do código de verificação";
+            return 'Informe os 6 dígitos do código de verificação';
         }
 
-        return "";
+        return '';
     }
 
     function handleKeyDown(e, index) {
@@ -78,7 +82,7 @@ function CodigoVerificacao() {
         }
 
         if (!token_email) {
-            toast.error("Sessão de recuperação não encontrada. Solicite um novo código.");
+            toast.error('Sessão de recuperação não encontrada. Solicite um novo código.');
             navigate('/esqueceu-senha');
             return;
         }
@@ -88,29 +92,19 @@ function CodigoVerificacao() {
 
             const resposta = await api.post('/login/verify_cod', {
                 token_email: token_email,
-                user_cod_verify: codigoDigitado
+                user_cod_verify: codigoDigitado,
             });
 
             // Guarda o token autorizado para redefinir a senha
-            localStorage.setItem("token", resposta.data.token);
+            localStorage.setItem('token', resposta.data.token);
 
-            toast.success(
-                resposta.data.MSG || "Código verificado com sucesso!"
-            );
+            toast.success(resposta.data.MSG || 'Código verificado com sucesso!');
 
             navigate('/redefinir-senha');
-
         } catch (error) {
-            console.error(
-                "Erro ao verificar código:",
-                error.response?.data || error
-            );
+            console.error('Erro ao verificar código:', error.response?.data || error);
 
-            toast.error(
-                error.response?.data?.MSG ||
-                "Não foi possível verificar o código."
-            );
-
+            toast.error(error.response?.data?.MSG || 'Não foi possível verificar o código.');
         } finally {
             setLoading(false);
         }
@@ -119,10 +113,9 @@ function CodigoVerificacao() {
     const mostrarErro = enviar_formulario;
 
     return (
-        <main className="min-h-screen bg-[#111111] flex items-center justify-center p-4">
+        <main className="min-h-screen bg-fundo flex items-center justify-center p-4">
             <div className="w-full max-w-[900px] flex flex-col lg:flex-row overflow-hidden rounded-2xl">
-
-                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-[#1B1B1B]">
+                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-superficie">
                     <img
                         src="/images/img-estoque.jpeg"
                         alt="Profissional utilizando o sistema Loguiss"
@@ -132,21 +125,19 @@ function CodigoVerificacao() {
 
                 <form
                     onSubmit={formularioEnviado}
-                    className="w-full lg:w-1/2 min-h-[440px] bg-[#1B1B1B] px-7 py-9 sm:px-10 flex flex-col justify-center"
+                    className="w-full lg:w-1/2 min-h-[440px] bg-superficie px-7 py-9 sm:px-10 flex flex-col justify-center"
                 >
-
                     <div className="text-center mb-7">
-                        <h1 className="text-2xl font-bold text-[#A3E635] mb-2">
+                        <h1 className="text-2xl font-bold text-primaria mb-2">
                             Código de verificação
                         </h1>
 
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-texto-suave">
                             Insira o código de verificação enviado para seu email.
                         </p>
                     </div>
 
-                    <div className="mb-4 flex justify-center gap-3 rounded-lg border border-gray-500 p-3">
-
+                    <div className="mb-4 flex justify-center gap-3 rounded-lg border border-borda p-3">
                         {codigo.map((digito, index) => (
                             <Inputs
                                 key={index}
@@ -160,11 +151,10 @@ function CodigoVerificacao() {
                                 autoComplete="off"
                             />
                         ))}
-
                     </div>
 
                     {mostrarErro && validarCodigo(codigo.join('')) && (
-                        <p className="text-red-500 text-sm mb-3">
+                        <p className="text-perigo-texto text-sm mb-3">
                             {validarCodigo(codigo.join(''))}
                         </p>
                     )}
@@ -172,19 +162,19 @@ function CodigoVerificacao() {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="bg-[#A3E635] hover:bg-[#BEF264] text-[#111111] font-bold w-full mb-5"
+                        className="w-full mb-5"
                     >
                         {loading ? 'Verificando...' : 'Verificar código'}
                     </Button>
 
                     <Button
                         type="button"
-                        className="bg-[#F5F5F5] hover:bg-[#292929] text-[#111111] font-bold w-full"
+                        variant="secondary"
+                        className="w-full"
                         onClick={() => navigate('/login')}
                     >
                         Voltar para o login
                     </Button>
-
                 </form>
             </div>
         </main>

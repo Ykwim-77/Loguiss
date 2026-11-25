@@ -4,13 +4,9 @@ export function adaptarProdutosDashboard(produtos) {
 
         nome: produto.descricao,
 
-        categoria:
-            produto.categorias?.[0]?.categoria?.descricao ??
-            "Sem categoria",
+        categoria: produto.categorias?.[0]?.categoria?.descricao ?? 'Sem categoria',
 
-        estoqueAtual: Number(
-            produto.estoque?.quantidade ?? 0
-        ),
+        estoqueAtual: Number(produto.estoque?.quantidade ?? 0),
 
         estoqueMinimo: Number(produto.minimo ?? 0),
 
@@ -19,8 +15,6 @@ export function adaptarProdutosDashboard(produtos) {
         // Dados que futuramente virão das movimentações
         saidas: Number(produto.totalSaidas ?? 0),
 
-        diasSemMovimentacao: Number(
-            produto.diasSemMovimentacao ?? 0
-        ),
+        diasSemMovimentacao: Number(produto.diasSemMovimentacao ?? 0),
     }));
 }

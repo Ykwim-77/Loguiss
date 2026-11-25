@@ -6,6 +6,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
+        "format": "prettier --write \"**/*.{js,jsx,css,html}\"",
+        "format:check": "prettier --check \"**/*.{js,jsx,css,html}\"",
         "lint": "eslint .",
         "preview": "vite preview"
     },
@@ -32,7 +34,9 @@
         "eslint": "^10.3.0",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.2",
+        "eslint-plugin-simple-import-sort": "^14.0.0",
         "globals": "^17.6.0",
+        "prettier": "^3.10.1",
         "vite": "^8.0.12"
     }
 }

@@ -1,69 +1,44 @@
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+const TEMAS_VALIDOS = ['dark', 'light', 'midnight-dark', 'midnight-blue'];
+const TEMA_PADRAO = 'dark';
+const CHAVE = 'theme'; // mesma chave que você já usa
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(null);
 
-const temas = {
-    light: {
-        background: '#F5F5F5',
-        surface: '#FFFFFF',
-        surfaceSecondary: '#E5E5E5',
-        primary: '#65A30D',
-        primaryHover: '#84CC16',
-        text: '#171717',
-        textSecondary: '#737373',
-        border: '#D4D4D4'
-    },
-    'midnight-blue': {
-        background: '#0B1020',
-        surface: '#151D35',
-        surfaceSecondary: '#202D4D',
-        primary: '#3B82F6',
-        primaryHover: '#60A5FA',
-        text: '#EAF1FF',
-        textSecondary: '#A8B5D1',
-        border: '#2D3B5C'
-    },
-    'midnight-dark': {
-        background: '#111111',
-        surface: '#1B1B1B',
-        surfaceSecondary: '#292929',
-        primary: '#A3E635',
-        primaryHover: '#BEF264',
-        text: '#F5F5F5',
-        textSecondary: '#A3A3A3',
-        border: '#343434'
+function temaInicial() {
+    try {
+        const salvo = localStorage.getItem(CHAVE);
+        return TEMAS_VALIDOS.includes(salvo) ? salvo : TEMA_PADRAO;
+    } catch {
+        return TEMA_PADRAO;
     }
-};
+}
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => {
-        const savedTheme = localStorage.getItem('theme');
+    const [theme, setThemeState] = useState(temaInicial);
 
-        return temas[savedTheme] ? savedTheme : 'midnight-dark';
-    });
+    // ignora ids inválidos em vez de quebrar
+    const setTheme = (novo) => {
+        if (TEMAS_VALIDOS.includes(novo)) setThemeState(novo);
+    };
 
     useEffect(() => {
-        const root = document.documentElement;
-        const cores = temas[theme];
-
-        root.setAttribute('data-theme', theme);
-
-        Object.entries(cores).forEach(([key, value]) => {
-            const cssName = key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
-            root.style.setProperty(`--${cssName}`, value);
-        });
-
-        localStorage.setItem('theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+        try {
+            localStorage.setItem(CHAVE, theme);
+        } catch {
+            // localStorage indisponível (modo privado, por exemplo)
+        }
     }, [theme]);
 
-    return (
-        <ThemeContext.Provider value={{ theme, setTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+    const value = useMemo(() => ({ theme, setTheme }), [theme]);
+
+    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
-    return useContext(ThemeContext);
+    const ctx = useContext(ThemeContext);
+    if (!ctx) throw new Error('useTheme deve ser usado dentro de ThemeProvider');
+    return ctx;
 }
