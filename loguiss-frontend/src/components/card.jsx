@@ -15,15 +15,31 @@ function CardBase({ children, className }) {
     );
 }
 
-export function StatCard({ titulo, valor, icone: Icon }) {
+export function StatCard({ titulo, valor, icone: Icon, descricao, subDescricao,  tituloClassName = 'text-xl' }) {
     return (
         <CardBase>
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-texto">{titulo}</h2>
+                <h2 className={`font-bold text-texto ${tituloClassName}`}>
+                    {titulo}
+                </h2>
                 {Icon && <Icon size={24} className="text-primaria" />}
             </div>
-            <p className="mt-5 text-3xl font-bold text-texto">{valor}</p>
+                <div className="mt-5 flex items-baseline gap-2">
+                    <p className="text-3xl font-bold text-texto">{valor}</p>
+
+                    {descricao && (
+                        <span className="text-sm text-texto-secundario">
+                            {descricao}
+                        </span>
+                    )}
+                </div>
+                {subDescricao && (
+                <span className="text-xs font-semibold text-primaria">
+                    {subDescricao}
+                </span>
+            )}
         </CardBase>
+
     );
 }
 

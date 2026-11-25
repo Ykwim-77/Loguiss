@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone, CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw, Gift, Package, Crown, Clock3 } from 'lucide-react';
+import { CreditCard, BriefcaseBusiness, Building2, Hash, Mail, Phone, CalendarDays, Check, Sun, Moon, MoonStar, Waves, Save, RotateCcw } from 'lucide-react';
 
 import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';

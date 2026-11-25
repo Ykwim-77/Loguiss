@@ -11,6 +11,8 @@ import router_user from './routes/routes_user.js';
 import router_movimentacao from './routes/routes_movimentacao.js';
 import router_dashboard from './routes/router_dashboard.js';
 import router_empresa from './routes/routes_empresa.js';
+import router_config_ia from './routes/configuracaoIA.routes.js'
+import router_previsao from './routes/previsao.routes.js'
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.use("/user", router_user);
 app.use("/movi", router_movimentacao);
 app.use("/dashboard", router_dashboard);
 app.use("/empresa", router_empresa);
+app.use("/config_ia", router_config_ia);
+app.use("/previsao", router_previsao)
 
 
 app.listen(3000);
