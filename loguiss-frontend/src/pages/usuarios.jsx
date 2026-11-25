@@ -21,7 +21,6 @@ function Usuarios() {
     const [editingIndex, setEditingIndex] = useState(null);
 
     const [visualizar_senha, setVisualizarSenha] = useState(false);
-    const [visualizar_confirmar_senha, setVisualizarConfirmarSenha] = useState(false);
 
     const [newUsuario, setNewUsuario] = useState({
         desc: "",
