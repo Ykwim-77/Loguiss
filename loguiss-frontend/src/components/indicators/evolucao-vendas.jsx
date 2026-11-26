@@ -1,11 +1,19 @@
 import { useState } from 'react';
+import {
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 import { evolucaoVendas } from '../../data/dashboardData';
-
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
 export function EvolucaoVendas() {
-
     const [visualizacao, setVisualizacao] = useState('mensal');
 
     const [periodo1, setPeriodo1] = useState('2026-01');
@@ -17,9 +25,7 @@ export function EvolucaoVendas() {
     const dados = dadosPeriodo1.map((item) => ({
         periodo: item.periodo,
         periodo1: item.vendas,
-        periodo2: dadosPeriodo2.find(
-            (dado) => dado.periodo === item.periodo
-        )?.vendas ?? 0,
+        periodo2: dadosPeriodo2.find((dado) => dado.periodo === item.periodo)?.vendas ?? 0,
     }));
 
     const formatarMoeda = (valor) =>
@@ -30,24 +36,18 @@ export function EvolucaoVendas() {
         });
 
     return (
-        <div className="w-full min-w-0 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5">
-
+        <div className="w-full min-w-0 rounded-xl border border-borda bg-superficie p-5">
             <div className="mb-5">
-                <h2 className="text-xl font-bold text-[#F5F5F5]">
-                    Evolução de vendas
-                </h2>
+                <h2 className="text-xl font-bold text-texto">Evolução de vendas</h2>
 
-                <p className="mt-1 text-sm text-[#A3A3A3]">
+                <p className="mt-1 text-sm text-texto-suave">
                     Compare o desempenho de vendas entre períodos.
                 </p>
             </div>
 
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
                 <div>
-                    <label className="mb-2 block text-sm text-[#A3A3A3]">
-                        Visualização
-                    </label>
+                    <label className="mb-2 block text-sm text-texto-suave">Visualização</label>
 
                     <select
                         value={visualizacao}
@@ -64,7 +64,7 @@ export function EvolucaoVendas() {
                                 setPeriodo2('2026');
                             }
                         }}
-                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
+                        className="w-full rounded-lg border border-borda bg-elevada p-3 text-texto outline-none transition-colors focus:border-primaria focus:ring-1 focus:ring-primaria/30 [&>option]:bg-superficie"
                     >
                         <option value="mensal">Mensal</option>
                         <option value="anual">Anual</option>
@@ -72,22 +72,23 @@ export function EvolucaoVendas() {
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm text-[#A3A3A3]">
-                        Primeiro período
-                    </label>
+                    <label className="mb-2 block text-sm text-texto-suave">Primeiro período</label>
 
                     <select
                         value={periodo1}
                         onChange={(e) => setPeriodo1(e.target.value)}
-                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
+                        className="w-full rounded-lg border border-borda bg-elevada p-3 text-texto outline-none transition-colors focus:border-primaria focus:ring-1 focus:ring-primaria/30 [&>option]:bg-superficie"
                     >
                         {Object.keys(evolucaoVendas[visualizacao]).map((periodo) => (
                             <option key={periodo} value={periodo}>
                                 {visualizacao === 'mensal'
-                                    ? new Date(`${periodo}-02T12:00:00`).toLocaleDateString('pt-BR', {
-                                        month: 'long',
-                                        year: 'numeric',
-                                    })
+                                    ? new Date(`${periodo}-02T12:00:00`).toLocaleDateString(
+                                          'pt-BR',
+                                          {
+                                              month: 'long',
+                                              year: 'numeric',
+                                          },
+                                      )
                                     : periodo}
                             </option>
                         ))}
@@ -95,32 +96,31 @@ export function EvolucaoVendas() {
                 </div>
 
                 <div>
-                    <label className="mb-2 block text-sm text-[#A3A3A3]">
-                        Segundo período
-                    </label>
+                    <label className="mb-2 block text-sm text-texto-suave">Segundo período</label>
 
                     <select
                         value={periodo2}
                         onChange={(e) => setPeriodo2(e.target.value)}
-                        className="w-full rounded-lg border border-[#404040] bg-[#292929] p-3 text-[#F5F5F5] outline-none transition-colors focus:border-[#A3E635] focus:ring-1 focus:ring-[#A3E635]/30"
+                        className="w-full rounded-lg border border-borda bg-elevada p-3 text-texto outline-none transition-colors focus:border-primaria focus:ring-1 focus:ring-primaria/30 [&>option]:bg-superficie"
                     >
                         {Object.keys(evolucaoVendas[visualizacao]).map((periodo) => (
                             <option key={periodo} value={periodo}>
                                 {visualizacao === 'mensal'
-                                    ? new Date(`${periodo}-02T12:00:00`).toLocaleDateString('pt-BR', {
-                                        month: 'long',
-                                        year: 'numeric',
-                                    })
+                                    ? new Date(`${periodo}-02T12:00:00`).toLocaleDateString(
+                                          'pt-BR',
+                                          {
+                                              month: 'long',
+                                              year: 'numeric',
+                                          },
+                                      )
                                     : periodo}
                             </option>
                         ))}
                     </select>
                 </div>
-
             </div>
 
             <div className="h-[320px] w-full">
-
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={dados}
@@ -131,36 +131,21 @@ export function EvolucaoVendas() {
                             bottom: 5,
                         }}
                     >
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#343434"
-                        />
+                        <CartesianGrid strokeDasharray="3 3" stroke={corGrafico.grade} />
 
-                        <XAxis
-                            dataKey="periodo"
-                            stroke="#A3A3A3"
-                            tickLine={false}
-                        />
+                        <XAxis dataKey="periodo" stroke={corGrafico.eixo} tickLine={false} />
 
                         <YAxis
-                            stroke="#A3A3A3"
+                            stroke={corGrafico.eixo}
                             tickLine={false}
                             tickFormatter={formatarMoeda}
                         />
 
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#222222',
-                                border: '1px solid #404040',
-                                borderRadius: '8px',
-                                color: '#F5F5F5',
-                            }}
-                            formatter={(value) => formatarMoeda(value)}
-                        />
+                        <Tooltip {...estiloTooltip} formatter={(value) => formatarMoeda(value)} />
 
                         <Legend
                             wrapperStyle={{
-                                color: '#F5F5F5',
+                                color: 'var(--text)',
                             }}
                         />
 
@@ -168,9 +153,9 @@ export function EvolucaoVendas() {
                             type="monotone"
                             dataKey="periodo1"
                             name="Primeiro período"
-                            stroke="#A3E635"
+                            stroke="var(--primary)"
                             strokeWidth={3}
-                            dot={{ r: 4, fill: '#A3E635' }}
+                            dot={{ r: 4, fill: 'var(--primary)' }}
                             activeDot={{ r: 7 }}
                         />
 
@@ -178,17 +163,14 @@ export function EvolucaoVendas() {
                             type="monotone"
                             dataKey="periodo2"
                             name="Segundo período"
-                            stroke="#65A30D"
+                            stroke="var(--warning)"
                             strokeWidth={3}
-                            dot={{ r: 4, fill: '#65A30D' }}
+                            dot={{ r: 4, fill: 'var(--warning)' }}
                             activeDot={{ r: 7 }}
                         />
-
                     </LineChart>
                 </ResponsiveContainer>
-
             </div>
-
         </div>
     );
 }

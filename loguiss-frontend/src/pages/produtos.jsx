@@ -1,48 +1,46 @@
+import { Package, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Search, Package } from 'lucide-react';
-
-import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
-import { Inputs } from '../components/inputs';
-import { Combobox } from '../components/combobox';
 import { EntityCard } from '../components/card';
-import { formatarMoeda } from '../utils/validacoes';
-
+import { Combobox } from '../components/combobox';
+import { Inputs } from '../components/inputs';
+import { SideBar } from '../components/sidebar';
 import api from '../services/api';
+import { formatarMoeda } from '../utils/validacoes';
 
 const produtoInicial = {
     id_produto: null,
     id_tipo_produto: null,
     desc: "",
     id_categoria: null,
-    categoria: "",
+    categoria: '',
     id_unidade_medida: null,
-    unidade: "",
-    minimo: "",
-    valor: "",
-    quantidade_estoque: "0",
+    unidade: '',
+    minimo: '',
+    valor: '',
+    quantidade_estoque: '0',
     id_fornecedor: null,
-    fornecedor: "",
-    dt_entrada: "",
-    prazo_saida: "",
-    dt_validade: "",
+    fornecedor: '',
+    dt_entrada: '',
+    prazo_saida: '',
+    dt_validade: '',
     fgTipoProducao: false,
 };
 
 const ingredienteInicial = {
-    produto: "",
+    produto: '',
     id_produto: null,
-    quantidade: "",
-    id_unidade: ""
+    quantidade: '',
+    id_unidade: '',
 };
 
 const receitaInicial = {
-    nome: "",
-    margemPerda: "",
-    quantidadePerdida: "",
-    quantidadeProduzida: "",
+    nome: '',
+    margemPerda: '',
+    quantidadePerdida: '',
+    quantidadeProduzida: '',
     ingredientes: [ingredienteInicial],
 };
 
@@ -53,29 +51,27 @@ const produtoParaForm = (p) => {
     return {
         ...produtoInicial,
         id_produto: p.id_produto,
-        id_tipo_produto: p.id_tipo_produto,
-        desc: p.descricao ?? "",
-        categoria: categoria?.descricao ?? "",
+        desc: p.descricao ?? '',
+        categoria: categoria?.descricao ?? '',
         id_categoria: categoria?.id_categoria ?? null,
-        fornecedor: fornecedor?.nome ?? "",
+        fornecedor: fornecedor?.nome ?? '',
         id_fornecedor: fornecedor?.id_fornecedor ?? null,
-        minimo: p.estoque?.minimo ?? "",
-        valor: p.valor ?? "",
+        minimo: p.minimo ?? '',
+        valor: p.valor ?? '',
         quantidade_estoque: String(p.estoque?.quantidade ?? 0),
-        fgTipoProducao: p.tipo_produto?.flag_tipo === 'P',
-        unidade: p.unidade?.nomenclatura ?? "",
+        fgTipoProducao: Boolean(p.fgTipoProducao),
+        unidade: p.unidade ?? '',
         id_unidade_medida: p.id_unidade_medida ?? null,
-        dt_entrada: p.estoque?.dt_entrada?.slice(0, 10) ?? "",
-        prazo_saida: p.estoque?.prazo_saida?.slice(0, 10) ?? "",
-        dt_validade: p.estoque?.dt_validade?.slice(0, 10) ?? "",
+        dt_entrada: (p.dt_entrada ?? '').slice(0, 10),
+        prazo_saida: (p.prazo_saida ?? '').slice(0, 10),
+        dt_validade: (p.dt_validade ?? '').slice(0, 10),
     };
 };
 
-const semSelecao = (texto, id) => texto.trim() !== "" && !id;
+const semSelecao = (texto, id) => texto.trim() !== '' && !id;
 
 const lista = (resultado, chave) =>
-    resultado.status === 'fulfilled' &&
-    Array.isArray(resultado.value.data?.[chave])
+    resultado.status === 'fulfilled' && Array.isArray(resultado.value.data?.[chave])
         ? resultado.value.data[chave]
         : [];
 
@@ -86,17 +82,15 @@ function Produtos() {
     const [categorias, setCategorias] = useState([]);
     const [unidades, setUnidades] = useState([]);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
+    const [searchTerm, setSearchTerm] = useState('');
+    const [appliedSearch, setAppliedSearch] = useState('');
 
     const [editingId, setEditingId] = useState(null);
     const [newProduct, setNewProduct] = useState(produtoInicial);
     const [newReceita, setNewReceita] = useState(receitaInicial);
 
     const filteredProducts = products.filter((produto) =>
-        (produto.descricao ?? "")
-            .toLowerCase()
-            .includes(appliedSearch.toLowerCase())
+        (produto.descricao ?? '').toLowerCase().includes(appliedSearch.toLowerCase()),
     );
 
 
@@ -169,33 +163,42 @@ function Produtos() {
         carregar();
     }, []);
 
+    useEffect(() => { //bloqueia o scroll da tela de trás quando um modal estiver aberto
+        if (!showProductForm) return;
+
+        const overflowAnterior = document.body.style.overflow;
+
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = overflowAnterior;
+        };
+    }, [showProductForm]);
+
     const setCampo = (campo) => (e) =>
         setNewProduct((prev) => ({
             ...prev,
-            [campo]: e.target.value
+            [campo]: e.target.value,
         }));
 
     const setCampoReceita = (campo) => (e) =>
         setNewReceita((prev) => ({
             ...prev,
-            [campo]: e.target.value
+            [campo]: e.target.value,
         }));
 
     const atualizarIngrediente = (index, campos) =>
         setNewReceita((prev) => ({
             ...prev,
             ingredientes: prev.ingredientes.map((ing, i) =>
-                i === index ? { ...ing, ...campos } : ing
+                i === index ? { ...ing, ...campos } : ing,
             ),
         }));
 
     const adicionarIngrediente = () =>
         setNewReceita((prev) => ({
             ...prev,
-            ingredientes: [
-                ...prev.ingredientes,
-                { ...ingredienteInicial }
-            ],
+            ingredientes: [...prev.ingredientes, { ...ingredienteInicial }],
         }));
 
     const removerIngrediente = (index) =>
@@ -227,25 +230,22 @@ function Produtos() {
 
     const validarSelecoes = () => {
         if (semSelecao(newProduct.categoria, newProduct.id_categoria)) {
-            return "Escolha uma categoria da lista.";
+            return 'Escolha uma categoria da lista.';
         }
 
         if (semSelecao(newProduct.unidade, newProduct.id_unidade_medida)) {
-            return "Escolha uma unidade de medida da lista.";
+            return 'Escolha uma unidade de medida da lista.';
         }
 
         if (semSelecao(newProduct.fornecedor, newProduct.id_fornecedor)) {
-            return "Escolha um fornecedor da lista.";
+            return 'Escolha um fornecedor da lista.';
         }
 
-        if (
-            newProduct.fgTipoProducao &&
-            newReceita.ingredientes.some((i) => !i.id_produto)
-        ) {
-            return "Escolha os produtos da receita na lista.";
+        if (newProduct.fgTipoProducao && newReceita.ingredientes.some((i) => !i.id_produto)) {
+            return 'Escolha os produtos da receita na lista.';
         }
 
-        return "";
+        return '';
     };
 
 
@@ -354,24 +354,18 @@ function Produtos() {
             <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
-
                 {/* Cabeçalho */}
                 <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-[var(--text)]">
-                            Produtos
-                        </h1>
+                        <h1 className="text-3xl font-bold text-[var(--text)]">Produtos</h1>
 
                         <p className="text-[var(--text-secondary)]">
-                            Esta é a página de produtos. Aqui você pode gerenciar os produtos cadastrados no sistema.
+                            Esta é a página de produtos. Aqui você pode gerenciar os produtos
+                            cadastrados no sistema.
                         </p>
                     </div>
 
-                    <Button
-                        type="button"
-                        className="mt-2 w-auto"
-                        onClick={abrirNovo}
-                    >
+                    <Button type="button" className="mt-2 w-auto" onClick={abrirNovo}>
                         Adicionar novo produto
                     </Button>
                 </div>
@@ -382,7 +376,7 @@ function Produtos() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === 'Enter') {
                             e.preventDefault();
                             setAppliedSearch(searchTerm.trim());
                         }
@@ -394,9 +388,7 @@ function Produtos() {
                 {/* Cards */}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {filteredProducts.length === 0 && (
-                        <p className="text-gray-400">
-                            Nenhum produto encontrado.
-                        </p>
+                        <p className="text-texto-suave">Nenhum produto encontrado.</p>
                     )}
 
                     {filteredProducts.map((produto) => (
@@ -405,26 +397,32 @@ function Produtos() {
                             titulo={produto.descricao}
                             icone={Package}
                             onEdit={() => abrirEdicao(produto)}
-                            onDelete={() => excluirProduto(produto.id_produto)}
+                            onDelete={() => {
+                                toast.error(
+                                    'A rota de exclusão de produtos ainda não foi integrada.',
+                                );
+                            }}
                         >
-                            <p className="mt-2 text-gray-400">
-                                Categoria: {produto.categorias?.[0]?.categoria?.descricao ?? "Sem categoria"}
+                            <p className="mt-2 text-texto-suave">
+                                Categoria:{' '}
+                                {produto.categorias?.[0]?.categoria?.descricao ?? 'Sem categoria'}
                             </p>
 
-                            <p className="mt-1 text-gray-400">
+                            <p className="mt-1 text-texto-suave">
                                 Quantidade: {produto.estoque?.quantidade ?? 0}
                             </p>
 
-                            <p className="mt-1 text-gray-400">
+                            <p className="mt-1 text-texto-suave">
                                 Valor: {formatarMoeda(produto.valor)}
                             </p>
 
-                            <p className="mt-1 text-gray-400">
-                                Fornecedor: {produto.fornecedores?.[0]?.fornecedor?.nome ?? "Sem fornecedor"}
+                            <p className="mt-1 text-texto-suave">
+                                Fornecedor:{' '}
+                                {produto.fornecedores?.[0]?.fornecedor?.nome ?? 'Sem fornecedor'}
                             </p>
 
-                            <p className="mt-1 text-gray-400">
-                                Produto Produção: {produto.fgTipoProducao ? "Sim" : "Não"}
+                            <p className="mt-1 text-texto-suave">
+                                Produto Produção: {produto.fgTipoProducao ? 'Sim' : 'Não'}
                             </p>
                         </EntityCard>
                     ))}
@@ -434,52 +432,43 @@ function Produtos() {
             {/* Modal */}
             {showProductForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-
-                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#343434] bg-[#1B1B1B] shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-
+                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-borda bg-superficie shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
                         {/* Cabeçalho */}
                         <div className="flex items-center justify-between px-6 py-5">
                             <div>
-                                <h2 className="text-2xl font-bold text-[#F5F5F5]">
-                                    {editingId !== null
-                                        ? "Editar produto"
-                                        : "Adicionar produto"}
+                                <h2 className="text-2xl font-bold text-texto">
+                                    {editingId !== null ? 'Editar produto' : 'Adicionar produto'}
                                 </h2>
 
-                                <p className="mt-1 text-sm text-[#A3A3A3]">
+                                <p className="mt-1 text-sm text-texto-suave">
                                     {editingId !== null
-                                        ? "Atualize as informações do produto."
-                                        : "Preencha os dados para cadastrar um novo produto."}
+                                        ? 'Atualize as informações do produto.'
+                                        : 'Preencha os dados para cadastrar um novo produto.'}
                                 </p>
                             </div>
 
                             <button
                                 type="button"
                                 onClick={fecharForm}
-                                className="text-2xl text-[#A3A3A3] transition-colors hover:text-[#A3E635]"
+                                className="text-2xl text-texto-suave transition-colors hover:text-primaria"
                             >
                                 ×
                             </button>
                         </div>
 
-                        <form
-                            className="flex min-h-0 flex-1 flex-col"
-                            onSubmit={salvarProduto}
-                        >
+                        <form className="flex min-h-0 flex-1 flex-col" onSubmit={salvarProduto}>
                             <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-
                                 {/* Informações do produto */}
                                 <div className="mb-6">
                                     <div className="mb-4 flex items-center gap-2">
-                                        <div className="h-5 w-1 rounded-full bg-[#A3E635]" />
+                                        <div className="h-5 w-1 rounded-full bg-primaria" />
 
-                                        <h3 className="text-sm font-bold uppercase tracking-wider text-[#F5F5F5]">
+                                        <h3 className="text-sm font-bold uppercase tracking-wider text-texto">
                                             Informações do produto
                                         </h3>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
                                         <Inputs
                                             label="Descrição"
                                             className="sm:col-span-2"
@@ -499,14 +488,14 @@ function Produtos() {
                                                 setNewProduct({
                                                     ...newProduct,
                                                     categoria: texto,
-                                                    id_categoria: null
+                                                    id_categoria: null,
                                                 })
                                             }
                                             onSelect={(c) =>
                                                 setNewProduct({
                                                     ...newProduct,
                                                     categoria: c.descricao,
-                                                    id_categoria: c.id_categoria
+                                                    id_categoria: c.id_categoria,
                                                 })
                                             }
                                         />
@@ -523,14 +512,14 @@ function Produtos() {
                                                 setNewProduct({
                                                     ...newProduct,
                                                     unidade: texto,
-                                                    id_unidade_medida: null
+                                                    id_unidade_medida: null,
                                                 })
                                             }
                                             onSelect={(u) =>
                                                 setNewProduct({
                                                     ...newProduct,
                                                     unidade: u.nomenclatura,
-                                                    id_unidade_medida: u.id_unidade
+                                                    id_unidade_medida: u.id_unidade,
                                                 })
                                             }
                                         />
@@ -574,14 +563,14 @@ function Produtos() {
                                                 setNewProduct({
                                                     ...newProduct,
                                                     fornecedor: texto,
-                                                    id_fornecedor: null
+                                                    id_fornecedor: null,
                                                 })
                                             }
                                             onSelect={(f) =>
                                                 setNewProduct({
                                                     ...newProduct,
                                                     fornecedor: f.nome,
-                                                    id_fornecedor: f.id_fornecedor
+                                                    id_fornecedor: f.id_fornecedor,
                                                 })
                                             }
                                         />
@@ -610,27 +599,27 @@ function Produtos() {
 
                                         {/* Tipo de produto */}
                                         <div className="sm:col-span-2">
-                                            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#343434] bg-[#292929]/50 p-4 transition-colors hover:border-[#A3E635]/40">
-
+                                            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-borda bg-elevada/50 p-4 transition-colors hover:border-primaria/40">
                                                 <input
                                                     type="checkbox"
                                                     checked={newProduct.fgTipoProducao}
                                                     onChange={(e) =>
                                                         setNewProduct({
                                                             ...newProduct,
-                                                            fgTipoProducao: e.target.checked
+                                                            fgTipoProducao: e.target.checked,
                                                         })
                                                     }
-                                                    className="h-5 w-5 cursor-pointer accent-[#A3E635]"
+                                                    className="h-5 w-5 cursor-pointer accent-primaria"
                                                 />
 
                                                 <div>
-                                                    <span className="block text-sm font-semibold text-[#F5F5F5]">
+                                                    <span className="block text-sm font-semibold text-texto">
                                                         Produto de produção
                                                     </span>
 
-                                                    <span className="text-xs text-[#A3A3A3]">
-                                                        Ative para cadastrar uma receita e seus ingredientes.
+                                                    <span className="text-xs text-texto-suave">
+                                                        Ative para cadastrar uma receita e seus
+                                                        ingredientes.
                                                     </span>
                                                 </div>
                                             </label>
@@ -640,26 +629,24 @@ function Produtos() {
 
                                 {/* Receita */}
                                 {newProduct.fgTipoProducao && (
-                                    <div className="rounded-xl border border-[#A3E635]/25 bg-[#292929]/40 p-5">
-
+                                    <div className="rounded-xl border border-primaria/25 bg-elevada/40 p-5">
                                         <div className="mb-5 flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#A3E635]/10 text-[#A3E635]">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primaria/10 text-primaria">
                                                 <Package size={21} />
                                             </div>
 
                                             <div>
-                                                <h3 className="text-lg font-bold text-[#F5F5F5]">
+                                                <h3 className="text-lg font-bold text-texto">
                                                     Receita de produção
                                                 </h3>
 
-                                                <p className="text-xs text-[#A3A3A3]">
+                                                <p className="text-xs text-texto-suave">
                                                     Configure os dados e ingredientes da receita.
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
                                             <Inputs
                                                 label="Nome da receita"
                                                 className="sm:col-span-2"
@@ -700,14 +687,13 @@ function Produtos() {
                                         </div>
 
                                         {/* Ingredientes */}
-                                        <div className="mt-6 border-t border-[#404040] pt-5">
-
+                                        <div className="mt-6 border-t border-borda pt-5">
                                             <div className="mb-4 flex items-center justify-between">
-                                                <h4 className="text-sm font-bold text-[#F5F5F5]">
+                                                <h4 className="text-sm font-bold text-texto">
                                                     Produtos utilizados
                                                 </h4>
 
-                                                <span className="rounded-full bg-[#A3E635]/10 px-2.5 py-1 text-xs font-semibold text-[#A3E635]">
+                                                <span className="rounded-full bg-primaria/10 px-2.5 py-1 text-xs font-semibold text-primaria">
                                                     {newReceita.ingredientes.length} ingrediente(s)
                                                 </span>
                                             </div>
@@ -715,29 +701,28 @@ function Produtos() {
                                             {newReceita.ingredientes.map((ingrediente, index) => (
                                                 <div
                                                     key={index}
-                                                    className="mb-3 rounded-lg border border-[#343434] bg-[#1B1B1B] p-3"
+                                                    className="mb-3 rounded-lg border border-borda bg-superficie p-3"
                                                 >
                                                     <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-4">
-
                                                         <Combobox
                                                             aria-label="Produto"
                                                             placeholder="Produto"
                                                             value={ingrediente.produto}
                                                             opcoes={products.filter(
-                                                                (p) => p.id_produto !== editingId
+                                                                (p) => p.id_produto !== editingId,
                                                             )}
                                                             getLabel={(p) => p.descricao}
                                                             getChave={(p) => p.id_produto}
                                                             onChange={(texto) =>
                                                                 atualizarIngrediente(index, {
                                                                     produto: texto,
-                                                                    id_produto: null
+                                                                    id_produto: null,
                                                                 })
                                                             }
                                                             onSelect={(p) =>
                                                                 atualizarIngrediente(index, {
                                                                     produto: p.descricao,
-                                                                    id_produto: p.id_produto
+                                                                    id_produto: p.id_produto,
                                                                 })
                                                             }
                                                             required
@@ -751,7 +736,7 @@ function Produtos() {
                                                             value={ingrediente.quantidade}
                                                             onChange={(e) =>
                                                                 atualizarIngrediente(index, {
-                                                                    quantidade: e.target.value
+                                                                    quantidade: e.target.value,
                                                                 })
                                                             }
                                                             required
@@ -763,17 +748,20 @@ function Produtos() {
                                                             value={ingrediente.id_unidade}
                                                             onChange={(e) =>
                                                                 atualizarIngrediente(index, {
-                                                                    id_unidade: e.target.value === ""
-                                                                        ? ""
-                                                                        : Number(e.target.value)
+                                                                    id_unidade:
+                                                                        e.target.value === ''
+                                                                            ? ''
+                                                                            : Number(
+                                                                                e.target.value,
+                                                                            ),
                                                                 })
                                                             }
                                                             options={[
-                                                                { value: "", label: "Unidade" },
+                                                                { value: '', label: 'Unidade' },
                                                                 ...unidades.map((u) => ({
                                                                     value: u.id_unidade,
-                                                                    label: `${u.descrunidade} - ${u.nomenclatura}`
-                                                                }))
+                                                                    label: `${u.descrunidade} - ${u.nomenclatura}`,
+                                                                })),
                                                             ]}
                                                             required
                                                         />
@@ -782,7 +770,9 @@ function Produtos() {
                                                             type="button"
                                                             variant="danger"
                                                             className="px-4 py-3"
-                                                            onClick={() => removerIngrediente(index)}
+                                                            onClick={() =>
+                                                                removerIngrediente(index)
+                                                            }
                                                         >
                                                             Remover
                                                         </Button>
@@ -805,8 +795,7 @@ function Produtos() {
                             </div>
 
                             {/* Rodapé */}
-                            <div className="flex shrink-0 justify-end gap-3 border-t border-[#343434] bg-[#171717] px-6 py-4">
-
+                            <div className="flex shrink-0 justify-end gap-3 border-t border-borda bg-fundo px-6 py-4">
                                 <Button
                                     type="button"
                                     variant="secondary"
@@ -818,14 +807,9 @@ function Produtos() {
 
                                 <Button
                                     type="submit"
-                                    disabled={saving}
-                                    className="bg-[#A3E635] px-5 font-semibold text-[#111111] hover:bg-[#BEF264]"
+                                    className="px-5"
                                 >
-                                    {saving
-                                        ? "Salvando..."
-                                        : editingId !== null
-                                            ? "Salvar alterações"
-                                            : "Cadastrar produto"}
+                                    {editingId !== null ? 'Salvar alterações' : 'Cadastrar produto'}
                                 </Button>
                             </div>
                         </form>

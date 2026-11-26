@@ -1,12 +1,13 @@
+import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { Inputs } from '../components/inputs';
-import { ButtonEye } from '../components/buttonEye';
 import { Button } from '../components/button';
-import { validarSenha } from '../utils/validacoes';
+import { ButtonEye } from '../components/buttonEye';
+import { Inputs } from '../components/inputs';
 import api from '../services/api';
+import { validarSenha } from '../utils/validacoes';
 
 function RedefinirSenha() {
     const [senha, setSenha] = useState('');
@@ -41,10 +42,7 @@ function RedefinirSenha() {
         setSenhaTocada(true);
         setConfirmarSenhaTocada(true);
 
-        if (
-            validarSenha(senha) ||
-            validarConfirmarSenha(senha, confirmar_senha)
-        ) {
+        if (validarSenha(senha) || validarConfirmarSenha(senha, confirmar_senha)) {
             return;
         }
 
@@ -63,13 +61,13 @@ function RedefinirSenha() {
                 '/user/recuperar_senha',
                 {
                     senha_user: senha,
-                    confirm_senha_user: confirmar_senha
+                    confirm_senha_user: confirmar_senha,
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
             );
 
             toast.success(resposta.data.MSG || 'Senha alterada com sucesso!');
@@ -88,20 +86,17 @@ function RedefinirSenha() {
         }
     }
 
-    const erro_senha =
-        (senha_tocada || enviar_formulario)
-            ? validarSenha(senha)
-            : '';
+    const erro_senha = senha_tocada || enviar_formulario ? validarSenha(senha) : '';
 
     const erro_confirmar_senha =
-        (confirmar_senha_tocada || enviar_formulario)
+        confirmar_senha_tocada || enviar_formulario
             ? validarConfirmarSenha(senha, confirmar_senha)
             : '';
 
     return (
-        <main className="min-h-screen bg-[#111111] flex items-center justify-center p-3">
+        <main className="min-h-screen bg-fundo flex items-center justify-center p-3">
             <div className="w-full max-w-[900px] flex flex-col lg:flex-row overflow-hidden rounded-2xl">
-                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-[#1B1B1B]">
+                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-superficie">
                     <img
                         src="/images/img-estoque.jpeg"
                         alt="Profissional utilizando o sistema Loguiss"
@@ -111,14 +106,12 @@ function RedefinirSenha() {
 
                 <form
                     onSubmit={formularioEnviado}
-                    className="w-full lg:w-1/2 min-h-[440px] bg-[#1B1B1B] px-7 py-9 sm:px-10 flex flex-col justify-center"
+                    className="w-full lg:w-1/2 min-h-[440px] bg-superficie px-7 py-9 sm:px-10 flex flex-col justify-center"
                 >
                     <div className="text-center mb-7">
-                        <h1 className="text-2xl font-bold text-[#A3E635] mb-2">
-                            Redefinir senha
-                        </h1>
+                        <h1 className="text-2xl font-bold text-primaria mb-2">Redefinir senha</h1>
 
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-texto-suave">
                             Insira sua nova senha e confirme para concluir a redefinição.
                         </p>
                     </div>
@@ -162,7 +155,7 @@ function RedefinirSenha() {
                     <Button
                         type="submit"
                         disabled={carregando}
-                        className="bg-[#A3E635] hover:bg-[#BEF264] text-[#111111] font-bold w-full mb-5"
+                        className="w-full mb-5"
                     >
                         {carregando ? 'Redefinindo...' : 'Redefinir senha'}
                     </Button>
@@ -170,7 +163,8 @@ function RedefinirSenha() {
                     <Button
                         type="button"
                         disabled={carregando}
-                        className="bg-[#F5F5F5] hover:bg-[#292929] text-[#111111] font-bold w-full"
+                        variant="secondary"
+                        className="w-full"
                         onClick={() => navigate('/login')}
                     >
                         Voltar para o login

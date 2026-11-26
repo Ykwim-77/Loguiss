@@ -1,27 +1,29 @@
 import './App.css';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { Navigate } from 'react-router-dom';
 import { RotaProtegida } from './components/RotaProtegida';
 
-//telas
-import Login from './pages/login';
-import EsqueceuSenha from './pages/esqueceu-senha';
-import CodigoVerificacao from './pages/codigo-verificacao';
-import RedefinirSenha from './pages/redefinir-senha';
-import Termos from './pages/termos';
-import Politicas from './pages/politicas';
-import Dashboard from './pages/dashboard';
-import Produtos from './pages/produtos';
-import UnidadesMedida from './pages/unidades-medida';
 import Categorias from './pages/categorias';
-import Usuarios from './pages/usuarios';
-import Fornecedor from './pages/fornecedor';
 import Clientes from './pages/clientes';
-import MovimentacaoSaida from './pages/movimentacao-saida';
-import MovimentacaoEntrada from './pages/movimentacao-entrada';
+import CodigoVerificacao from './pages/codigo-verificacao';
 import Configuracoes from './pages/configuracoes';
 import ConfiguracoesIA from './pages/configuracoes-ia';
+import Dashboard from './pages/dashboard';
+import EsqueceuSenha from './pages/esqueceu-senha';
+import Fornecedor from './pages/fornecedor';
+//telas
+import Login from './pages/login';
+import MovimentacaoEntrada from './pages/movimentacao-entrada';
+import MovimentacaoSaida from './pages/movimentacao-saida';
+import Politicas from './pages/politicas';
 import PrevisaoDemandas from './pages/previsao-demanda';
+import Produtos from './pages/produtos';
+import RedefinirSenha from './pages/redefinir-senha';
+import Termos from './pages/termos';
+import UnidadesMedida from './pages/unidades-medida';
+import Usuarios from './pages/usuarios';
 
 function App() {
   return (

@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 
-import { SideBar } from '../components/sidebar';
-
-import { Movimentacoes } from '../components/indicators/movimentacoes';
 import { AlertaEstoque } from '../components/indicators/alerta-estoque';
 import { CardsIndicadores } from '../components/indicators/card-indicadores';
 import { DistribuicaoCategoria } from '../components/indicators/distribuicao-categoria';
-import { ProdutosParados } from '../components/indicators/produtos-parados';
 import { EvolucaoVendas } from '../components/indicators/evolucao-vendas';
-
-
+import { Movimentacoes } from '../components/indicators/movimentacoes';
+import { ProdutosParados } from '../components/indicators/produtos-parados';
+import { SideBar } from '../components/sidebar';
 import api from '../services/api';
 import { adaptarProdutosDashboard } from '../utils/dashboardUtils';
 
 function Dashboard() {
-
     const [produtos, setProdutos] = useState([]);
 
     useEffect(() => {
@@ -22,14 +18,11 @@ function Dashboard() {
             try {
                 const response = await api.get('/produto/list_produtos');
 
-                const produtosAdaptados = adaptarProdutosDashboard(
-                    response.data.produtos
-                );
+                const produtosAdaptados = adaptarProdutosDashboard(response.data.produtos);
 
                 setProdutos(produtosAdaptados);
-
             } catch (error) {
-                console.error("Erro ao buscar produtos:", error);
+                console.error('Erro ao buscar produtos:', error);
             }
         };
 
@@ -37,13 +30,11 @@ function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#111111] text-[#F5F5F5]">
+        <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
             <main className="ml-72 min-h-screen p-5">
                 <div className="mb-5">
-                    <h1 className="text-3xl font-bold text-[#F5F5F5]">
-                        Dashboard
-                    </h1>
+                    <h1 className="text-3xl font-bold text-[#F5F5F5]">Dashboard</h1>
                     <p className="text-[#A3A3A3]">
                         Visualize as métricas e os indicadores do sistema.
                     </p>

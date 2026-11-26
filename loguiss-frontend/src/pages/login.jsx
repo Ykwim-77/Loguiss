@@ -1,13 +1,12 @@
+import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
 
-import { validarFormatoEmail, validarSenha } from '../utils/validacoes';
 import { Button } from '../components/button';
 import { ButtonEye } from '../components/buttonEye';
 import { Inputs } from '../components/inputs';
-
 import api_login from '../services/api.js';
+import { validarFormatoEmail, validarSenha } from '../utils/validacoes';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -33,7 +32,7 @@ function Login() {
         try {
             const resposta_login = await api_login.post('/login/login', {
                 email,
-                senha
+                senha,
             });
 
             if (resposta_login.status === 200) {
@@ -49,24 +48,33 @@ function Login() {
         }
     }
 
-    const erro_senha = (senha_tocada || enviar_formulario)
-        ? validarSenha(senha)
-        : '';
+    const erro_senha = senha_tocada || enviar_formulario ? validarSenha(senha) : '';
 
     return (
-        <main className="min-h-screen bg-[#111111] flex items-center justify-center p-4">
+        <main className="min-h-screen bg-fundo flex items-center justify-center p-4">
             <div className="w-full max-w-[900px] flex flex-col lg:flex-row overflow-hidden rounded-2xl ">
-                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-[#1B1B1B]">
-                    <img src="/images/img-estoque.jpeg" alt="Profissional utilizando o sistema Loguiss" className="absolute inset-0 w-full h-full object-cover object-center" />
+                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-superficie">
+                    <img
+                        src="/images/img-estoque.jpeg"
+                        alt="Profissional utilizando o sistema Loguiss"
+                        className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
                 </aside>
 
-                <form onSubmit={formularioEnviado} className="w-full lg:w-1/2 min-h-[440px] bg-[#1B1B1B] px-7 py-9 sm:px-10 flex flex-col justify-center">
+                <form
+                    onSubmit={formularioEnviado}
+                    className="w-full lg:w-1/2 min-h-[440px] bg-superficie px-7 py-9 sm:px-10 flex flex-col justify-center"
+                >
                     <div className="w-full max-w-[340px] mx-auto">
                         <img src="/images/logo.png" alt="Logo Loguiss" className="w-20 mx-auto" />
                         <div className="text-center mb-7">
-                            <h1 className="text-2xl font-bold text-[#A3E635] mb-2">Bem-vindo de volta!</h1>
-                            <p className="text-xs text-[#F5F5F5]/60">Entre com suas credenciais para continuar.</p>
-                        </div>  
+                            <h1 className="text-2xl font-bold text-primaria mb-2">
+                                Bem-vindo de volta!
+                            </h1>
+                            <p className="text-xs text-texto/60">
+                                Entre com suas credenciais para continuar.
+                            </p>
+                        </div>
                         <div className="mb-4">
                             <Inputs
                                 label="Email"
@@ -100,7 +108,7 @@ function Login() {
                             <Button
                                 type="button"
                                 onClick={() => navigate('/esqueceu-senha')}
-                                className="text-xs text-[#F5F5F5]/60 hover:underline hover:text-[#BEF264] transition-colors"
+                                className="text-xs"
                                 variant="link"
                             >
                                 Esqueci minha senha
@@ -108,33 +116,34 @@ function Login() {
                         </div>
                         <Button
                             type="submit"
-                            className="bg-[#A3E635] hover:bg-[#BEF264] text-[#111111] font-bold w-full"
+                            className="w-full"
                         >
                             Entrar
                         </Button>
                         {/* Termos e políticas */}
-                        <div className="flex mt-4 items-start gap-2 text-xs text-[#F5F5F5]/60">
+                        <div className="flex mt-4 items-start gap-2 text-xs text-texto/60">
                             <input
                                 type="checkbox"
                                 id="aceitar_termos"
                                 required
-                                className="mt-0.5 accent-[#A3E635] cursor-pointer"
+                                className="mt-0.5 accent-primaria cursor-pointer"
                             />
                             <label htmlFor="aceitar_termos">
                                 Eu li e aceito os{' '}
                                 <a
                                     href="/termos"
-                                    className="text-[#F5F5F5] hover:text-[#BEF264] hover:underline transition-colors"
+                                    className="text-texto hover:text-primaria hover:underline transition-colors"
                                 >
                                     Termos de Serviço
-                                </a>
-                                {' '}e{' '}
+                                </a>{' '}
+                                e{' '}
                                 <a
                                     href="/politicas"
-                                    className="text-[#F5F5F5] hover:text-[#BEF264] hover:underline transition-colors"
+                                    className="text-texto hover:text-primaria hover:underline transition-colors"
                                 >
                                     Políticas de Privacidade
-                                </a>.
+                                </a>
+                                .
                             </label>
                         </div>
                     </div>

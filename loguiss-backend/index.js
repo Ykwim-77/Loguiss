@@ -28,10 +28,10 @@ app.use("/unidade_medida", autenticarToken, router_unidade_medida);
 app.use("/cliente", autenticarToken, router_cliente);
 app.use("/user", autenticarToken, router_user);
 app.use("/movi", autenticarToken, router_movimentacao);
-app.use("/dashboard", autenticarToken, router_dashboard);
+app.use("/dashboard", router_dashboard);
 app.use("/empresa", autenticarToken, router_empresa);
 app.use("/config_ia", autenticarToken, router_config_ia);
-app.use("/previsao", autenticarToken, router_previsao)
+app.use("/previsao", router_previsao)
 
 
 app.listen(3000);

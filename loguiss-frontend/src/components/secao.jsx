@@ -12,5 +12,5 @@ export function Secao({ icone: Icon, titulo, descricao, className = '', children
             </div>
             {children}
         </section>
-    )
+    );
 }

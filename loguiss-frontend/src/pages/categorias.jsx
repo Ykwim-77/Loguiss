@@ -1,35 +1,29 @@
-import { useState, useEffect } from 'react';
+import { Layers2, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Search, Layers2 } from 'lucide-react';
-import { SideBar } from '../components/sidebar';
 import { Button } from '../components/button';
-import { Inputs } from '../components/inputs';
 import { EntityCard } from '../components/card';
-
+import { Inputs } from '../components/inputs';
+import { SideBar } from '../components/sidebar';
 import api from '../services/api';
 
 function Categorias() {
     const [showCategoryForm, setShowCategoryForm] = useState(false);
     const [categories, setCategories] = useState([]);
     const [editingIndex, setEditingIndex] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [appliedSearch, setAppliedSearch] = useState("");
+    const [searchTerm, setSearchTerm] = useState('');
+    const [appliedSearch, setAppliedSearch] = useState('');
 
     const [newCategory, setNewCategory] = useState({
-        desc: "",
+        desc: '',
     });
 
-    const filteredCategories = (categories ?? [])
-        .filter((categoria) => {
-            const texto = (
-                categoria.descricao ??
-                categoria.desc ??
-                ""
-            ).toLowerCase();
+    const filteredCategories = (categories ?? []).filter((categoria) => {
+        const texto = (categoria.descricao ?? categoria.desc ?? '').toLowerCase();
 
-            return texto.includes(appliedSearch.toLowerCase());
-        });
+        return texto.includes(appliedSearch.toLowerCase());
+    });
 
     const categoria_api = async () => {
         try {
@@ -37,11 +31,7 @@ function Categorias() {
 
             const categoriasRecebidas = response.data.categorias;
 
-            setCategories(
-                Array.isArray(categoriasRecebidas)
-                    ? categoriasRecebidas
-                    : []
-            );
+            setCategories(Array.isArray(categoriasRecebidas) ? categoriasRecebidas : []);
         } catch (error) {
             console.error('Erro ao buscar categorias:', error);
             toast.error('Erro ao carregar categorias.');
@@ -56,42 +46,41 @@ function Categorias() {
     const fecharFormulario = () => {
         setShowCategoryForm(false);
         setEditingIndex(null);
-        setNewCategory({ desc: "" });
+        setNewCategory({ desc: '' });
     };
 
     const addNewCategory = async (e) => {
         e.preventDefault();
 
         if (!newCategory.desc.trim()) {
-            toast.error("Informe a descrição da categoria.");
+            toast.error('Informe a descrição da categoria.');
             return;
         }
 
         try {
             if (editingIndex !== null) {
                 await editCategory(editingIndex, newCategory.desc.trim());
-                toast.success("Categoria atualizada com sucesso!");
+                toast.success('Categoria atualizada com sucesso!');
             } else {
                 await api.post('/categoria/create_categoria', {
-                    descricao: newCategory.desc.trim()
+                    descricao: newCategory.desc.trim(),
                 });
 
-                toast.success("Categoria cadastrada com sucesso!");
+                toast.success('Categoria cadastrada com sucesso!');
             }
 
             await categoria_api();
             fecharFormulario();
-
         } catch (error) {
-            console.error("Erro ao salvar categoria:", error);
-            toast.error("Erro ao salvar categoria!");
+            console.error('Erro ao salvar categoria:', error);
+            toast.error('Erro ao salvar categoria!');
         }
     };
 
     const editCategory = async (id, descricao) => {
         await api.patch('/categoria/edit_categoria', {
             id_categoria: id,
-            descricao: descricao
+            descricao: descricao,
         });
     };
 
@@ -99,21 +88,31 @@ function Categorias() {
         try {
             await api.delete(`/categoria/delete_categoria/${id}`);
 
-            toast.success("Categoria excluída com sucesso!");
+            toast.success('Categoria excluída com sucesso!');
             await categoria_api();
-
         } catch (error) {
-            console.error("Erro ao excluir categoria:", error);
-            toast.error("Erro ao excluir categoria!");
+            console.error('Erro ao excluir categoria:', error);
+            toast.error('Erro ao excluir categoria!');
         }
     };
+
+    useEffect(() => {
+        if (!showCategoryForm) return;
+
+        const overflowAnterior = document.body.style.overflow;
+
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = overflowAnterior;
+        };
+    }, [showCategoryForm]);
 
     return (
         <div className="min-h-screen bg-[var(--background)] text-[var(--text)]">
             <SideBar />
 
             <main className="ml-72 min-h-screen p-5">
-
                 {/* Cabeçalho */}
                 <div className="mb-3 flex items-center justify-between">
                     <div>
@@ -122,16 +121,17 @@ function Categorias() {
                         </h1>
 
                         <p className="text-[var(--text-secondary)]">
-                            Esta é a página de categorias. Aqui você pode gerenciar as categorias cadastradas no sistema.
+                            Esta é a página de categorias. Aqui você pode gerenciar as categorias
+                            cadastradas no sistema.
                         </p>
                     </div>
 
                     <Button
                         type="button"
-                        className="mt-2 w-auto bg-[#A3E635] p-3 text-[#111111] transition-colors hover:bg-[#BEF264]"
+                        className="mt-2 w-auto p-3"
                         onClick={() => {
                             setEditingIndex(null);
-                            setNewCategory({ desc: "" });
+                            setNewCategory({ desc: '' });
                             setShowCategoryForm(true);
                         }}
                     >
@@ -146,7 +146,7 @@ function Categorias() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === 'Enter') {
                             e.preventDefault();
                             setAppliedSearch(searchTerm.trim());
                         }
@@ -157,33 +157,26 @@ function Categorias() {
 
                 {/* Cards */}
                 <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-
                     {filteredCategories.length === 0 && (
-                        <p className="text-gray-400">
-                            Nenhuma categoria encontrada.
-                        </p>
+                        <p className="text-texto-suave">Nenhuma categoria encontrada.</p>
                     )}
 
                     {filteredCategories.map((categoria) => (
                         <EntityCard
                             key={categoria.id_categoria}
-                            titulo={
-                                categoria.descricao ??
-                                categoria.desc ??
-                                "Sem descrição"
-                            }
+                            titulo={categoria.descricao ?? categoria.desc ?? 'Sem descrição'}
                             icone={Layers2}
                             onEdit={() => {
                                 setEditingIndex(categoria.id_categoria);
 
                                 setNewCategory({
-                                    desc: categoria.descricao ?? categoria.desc ?? ""
+                                    desc: categoria.descricao ?? categoria.desc ?? '',
                                 });
 
                                 setShowCategoryForm(true);
                             }}
                             onDelete={() => {
-                                if (window.confirm("Deseja excluir esta categoria?")) {
+                                if (window.confirm('Deseja excluir esta categoria?')) {
                                     deleteCategory(categoria.id_categoria);
                                 }
                             }}
@@ -195,19 +188,17 @@ function Categorias() {
             {/* Modal */}
             {showCategoryForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-
-                    <div className="w-full max-w-2xl rounded-2xl border border-[#343434] bg-[#1B1B1B] p-6 shadow-2xl">
-
+                    <div className="w-full max-w-2xl rounded-2xl border border-borda bg-superficie p-6 shadow-2xl">
                         {/* Cabeçalho */}
                         <div className="mb-2 flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold text-[#F5F5F5]">
+                                <h2 className="text-2xl font-bold text-texto">
                                     {editingIndex !== null
-                                        ? "Editar categoria"
-                                        : "Adicionar categoria"}
+                                        ? 'Editar categoria'
+                                        : 'Adicionar categoria'}
                                 </h2>
 
-                                <p className="mt-1 text-sm text-[#A3A3A3]">
+                                <p className="mt-1 text-sm text-texto-suave">
                                     Preencha os dados da categoria.
                                 </p>
                             </div>
@@ -215,17 +206,14 @@ function Categorias() {
                             <button
                                 type="button"
                                 onClick={fecharFormulario}
-                                className="text-2xl text-[#A3A3A3] transition-colors hover:text-[#A3E635]"
+                                className="text-2xl text-texto-suave transition-colors hover:text-primaria"
                             >
                                 ×
                             </button>
                         </div>
 
                         {/* Formulário */}
-                        <form
-                            onSubmit={addNewCategory}
-                            className="p-6"
-                        >
+                        <form onSubmit={addNewCategory} className="p-6">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Inputs
                                     label="Descrição"
@@ -234,7 +222,7 @@ function Categorias() {
                                     onChange={(e) =>
                                         setNewCategory({
                                             ...newCategory,
-                                            desc: e.target.value
+                                            desc: e.target.value,
                                         })
                                     }
                                     placeholder="Nome da categoria"
@@ -243,11 +231,11 @@ function Categorias() {
                             </div>
 
                             {/* Botões */}
-                            <div className="mt-6 flex justify-end gap-3 border-t border-[#343434] pt-5">
+                            <div className="mt-6 flex justify-end gap-3 border-t border-borda pt-5">
                                 <Button
                                     type="button"
                                     variant="secondary"
-                                    className="border border-[#404040] bg-[#292929] px-5 text-[#F5F5F5] transition-colors hover:bg-[#343434]"
+                                    className="px-5"
                                     onClick={fecharFormulario}
                                 >
                                     Cancelar
@@ -255,11 +243,11 @@ function Categorias() {
 
                                 <Button
                                     type="submit"
-                                    className="bg-[#A3E635] px-5 text-[#111111] transition-colors hover:bg-[#BEF264]"
+                                    className="px-5"
                                 >
                                     {editingIndex !== null
-                                        ? "Salvar alterações"
-                                        : "Cadastrar categoria"}
+                                        ? 'Salvar alterações'
+                                        : 'Cadastrar categoria'}
                                 </Button>
                             </div>
                         </form>

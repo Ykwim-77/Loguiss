@@ -32,7 +32,7 @@ export function Button({
                 'cursor-pointer rounded-lg font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaria disabled:cursor-not-allowed disabled:opacity-50',
                 variantes[variant],
                 tamanhos[size],
-                className
+                className,
             )}
             {...props}
         >

@@ -4,7 +4,7 @@ export default async function dashboard_service(req, res) {
     try {
         const produtos = await prisma.produto.findMany({
             include: {
-                estoque: true
+                estoque: true,
             }
         });
 

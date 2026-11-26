@@ -1,8 +1,8 @@
-///Arquivo para armazenar os dados ficticios do dashboard, como entradas e saídas, 
+///Arquivo para armazenar os dados ficticios do dashboard, como entradas e saídas,
 // para serem utilizados nos gráficos e tabelas da página de dashboard.
 // Depois podemos apagar ou utilizar para integrar.
-import api from '../services/api.js'
-import { Gift, Package, Crown, Clock3 } from "lucide-react";
+import { Clock3, Crown, Gift, Package } from 'lucide-react';
+import api from '../services/api';
 
 const dados = await api.get('/dashboard/dash')
 const previsao = await api.get('/previsao/ultima')
@@ -10,10 +10,12 @@ const previsao = await api.get('/previsao/ultima')
 console.log(dados)
 console.log(previsao)
 
-export const produtos = dados.data.produtos
+console.log(dados);
+
+export const produtos = dados.data.produtos;
 
 // Dados fictícios das movimentações do sistema
-export const movimentacoes = dados.data.movimentacoes
+export const movimentacoes = dados.data.movimentacoes;
 // Dados fictícios da evolução de vendas
 export const evolucaoVendas = dados.data.evolucaoVendas
 
@@ -31,11 +33,12 @@ export const planos = [
         nome: 'Plano Gratuito',
         icone: Gift,
         selo: 'OFERTA ESPECIAL',
-        descricao: 'Uma oportunidade especial para as 100 primeiras empresas cadastradas! Tenha acesso a todos os recursos do Loguiss gratuitamente durante os primeiros 6 meses.',
+        descricao:
+            'Uma oportunidade especial para as 100 primeiras empresas cadastradas! Tenha acesso a todos os recursos do Loguiss gratuitamente durante os primeiros 6 meses.',
         rotuloPreco: 'Investimento mensal',
         preco: 'R$ 0,00',
         estilo: {
-            card: 'border-primaria/40 bg-gradient-to-br from-primaria/10 to-superficie hover:border-primaria',
+            card: 'border-primaria/40 bg-linear-to-br from-primaria/10 to-superficie hover:border-primaria',
             icone: 'bg-primaria/15',
             selo: 'bg-primaria text-sobre-primaria',
         },
@@ -45,7 +48,8 @@ export const planos = [
         nome: 'Plano Básico',
         icone: Package,
         selo: 'ESSENCIAL',
-        descricao: 'Continue utilizando as principais funcionalidades do Loguiss após o período gratuito. Tenha as ferramentas essenciais para organizar seu estoque e gerenciar sua empresa com praticidade.',
+        descricao:
+            'Continue utilizando as principais funcionalidades do Loguiss após o período gratuito. Tenha as ferramentas essenciais para organizar seu estoque e gerenciar sua empresa com praticidade.',
         rotuloPreco: 'Investimento mensal',
         preco: 'R$ 45,00',
         estilo: {
@@ -60,7 +64,8 @@ export const planos = [
         icone: Crown,
         selo: 'EM BREVE',
         seloIcone: Clock3,
-        descricao: 'Uma experiência ainda mais completa, com funcionalidades avançadas e benefícios exclusivos. Em desenvolvimento, com lançamento previsto após a disponibilização do MVP.',
+        descricao:
+            'Uma experiência ainda mais completa, com funcionalidades avançadas e benefícios exclusivos. Em desenvolvimento, com lançamento previsto após a disponibilização do MVP.',
         rotuloPreco: 'Valor previsto',
         preco: 'R$ 99,90',
         estilo: {

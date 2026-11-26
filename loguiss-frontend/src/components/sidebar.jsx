@@ -1,30 +1,89 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { menuItems as menuList } from '../utils/menuItems';
+import { ChevronRight } from 'lucide-react';
 
-function MenuItem({ item, nested = false }) {
+import { menuItems as menuList } from '../utils/menuItems';
+import { cn } from '../utils/cn';
+
+const baseItem =
+    'flex w-full items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-all';
+
+function MenuItem({ item, onNavigate }) {
     const Icon = item.icon;
     const hasSubmenu = item.subMenu?.length > 0;
 
-    const groupClass = nested ? 'group/submenu' : 'group/root';
-    const hoverClass = nested ? 'group-hover/submenu:block' : 'group-hover/root:block';
+    const [hover, setHover] = useState(false);
+    const [fixo, setFixo] = useState(false);
+    const raiz = useRef(null);
+
+    const aberto = hover || fixo;
+
+    const fechar = useCallback(() => {
+        setHover(false);
+        setFixo(false);
+    }, []);
+
+    // fecha ao clicar fora ou apertar Esc (só enquanto estiver aberto)
+    useEffect(() => {
+        if (!aberto) return;
+
+        const aoClicarFora = (e) => {
+            if (raiz.current && !raiz.current.contains(e.target)) fechar();
+        };
+        const aoApertarTecla = (e) => {
+            if (e.key === 'Escape') fechar();
+        };
+
+        document.addEventListener('mousedown', aoClicarFora);
+        document.addEventListener('keydown', aoApertarTecla);
+        return () => {
+            document.removeEventListener('mousedown', aoClicarFora);
+            document.removeEventListener('keydown', aoApertarTecla);
+        };
+    }, [aberto, fechar]);
+
+    // ao navegar por um link do submenu, fecha este nível e avisa o pai
+    const aoNavegar = () => {
+        fechar();
+        onNavigate?.();
+    };
 
     return (
-        <div className={`relative ${groupClass}`}>
+        <div
+            ref={raiz}
+            className="relative"
+            onMouseEnter={() => hasSubmenu && setHover(true)}
+            onMouseLeave={() => setHover(false)}
+        >
             {hasSubmenu ? (
-                <div className="flex w-full items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium text-texto-suave transition-all hover:bg-elevada hover:text-primaria">
+                <button
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={aberto}
+                    onClick={() => setFixo((v) => !v)}
+                    className={cn(
+                        baseItem,
+                        'text-left',
+                        aberto
+                            ? 'bg-elevada text-primaria'
+                            : 'text-texto-suave hover:bg-elevada hover:text-primaria'
+                    )}
+                >
                     {Icon && <Icon size={20} />}
                     <span>{item.label}</span>
-                    <span className="ml-auto text-xl text-texto-suave">›</span>
-                </div>
+                    <ChevronRight size={16} className="ml-auto" />
+                </button>
             ) : (
                 <NavLink
                     to={item.href}
+                    onClick={onNavigate}
                     className={({ isActive }) =>
-                        `flex w-full items-center gap-4 rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                        cn(
+                            baseItem,
                             isActive
                                 ? 'bg-primaria text-sobre-primaria shadow-sm shadow-primaria/10'
                                 : 'text-texto-suave hover:bg-elevada hover:text-primaria'
-                        }`
+                        )
                     }
                 >
                     {Icon && <Icon size={20} />}
@@ -32,12 +91,13 @@ function MenuItem({ item, nested = false }) {
                 </NavLink>
             )}
 
-            {hasSubmenu && (
+            {hasSubmenu && aberto && (
                 <div
-                    className={`absolute left-full top-0 z-50 hidden w-56 rounded-lg border border-borda bg-superficie p-2 shadow-xl shadow-black/40 ${hoverClass}`}
+                    role="menu"
+                    className="absolute left-full top-0 z-50 w-56 rounded-lg border border-borda bg-superficie p-2 shadow-xl shadow-black/40"
                 >
                     {item.subMenu.map((subItem) => (
-                        <MenuItem key={subItem.label} item={subItem} nested />
+                        <MenuItem key={subItem.label} item={subItem} onNavigate={aoNavegar} />
                     ))}
                 </div>
             )}
