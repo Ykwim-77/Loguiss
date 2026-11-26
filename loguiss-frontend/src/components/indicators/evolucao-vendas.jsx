@@ -10,11 +10,12 @@ import {
     YAxis,
 } from 'recharts';
 
-import { evolucaoVendas as dadosPadrao } from '../../data/dashboardData';
 import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
-export function EvolucaoVendas({ dadosEvolucao = dadosPadrao }) {
-    const base = dadosEvolucao || dadosPadrao || { mensal: {}, anual: {} };
+const DADOS_EVOLUCAO_VAZIOS = { mensal: {}, anual: {} };
+
+export function EvolucaoVendas({ dadosEvolucao = DADOS_EVOLUCAO_VAZIOS }) {
+    const base = dadosEvolucao || DADOS_EVOLUCAO_VAZIOS;
 
     const chavesMensal = useMemo(
         () => Object.keys(base.mensal || {}).sort(),

@@ -17,7 +17,18 @@ export default async function list_produto_service(req, res) {
                 estoque:{
                     include: true
                 },
-                unidade_medida: true
+                unidade_medida: true,
+                tipo_produto: true,
+                receita_producao: {
+                    include: {
+                        produtos: {
+                            include: {
+                                produto: true,
+                                unidade_medida: true,
+                            },
+                        },
+                    },
+                },
             }
         })
         return res.status(200).json({MSG: "produtos encontrados!!", produtos: produtos})

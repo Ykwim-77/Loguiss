@@ -1,8 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { movimentacoes } from '../../data/dashboardData';
-
 
 import { corGrafico, estiloTooltip } from '../../utils/graficos';
 import { Button } from '../button';
@@ -13,21 +11,22 @@ const periodos = [
     { label: 'Últimos 12 meses', meses: 12 },
 ];
 
-const dados = movimentacoes
-
-export function Movimentacoes() {
+export function Movimentacoes({ movimentacoes = [] }) {
     const [periodoSelecionado, setPeriodoSelecionado] = useState(periodos[2]);
 
     const [menuAberto, setMenuAberto] = useState(false);
 
     const mesAtual = new Date().getMonth();
 
-    const dadosFiltrados = Array.from({ length: periodoSelecionado.meses }, (_, indice) => {
-        const indiceMes =
-            (mesAtual - periodoSelecionado.meses + 1 + indice + dados.length) % dados.length;
+    const dadosFiltrados = movimentacoes.length
+        ? Array.from({ length: periodoSelecionado.meses }, (_, indice) => {
+              const indiceMes =
+                  (mesAtual - periodoSelecionado.meses + 1 + indice + movimentacoes.length) %
+                  movimentacoes.length;
 
-        return dados[indiceMes];
-    });
+              return movimentacoes[indiceMes];
+          })
+        : [];
 
     return (
         <div className="mb-0 h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
