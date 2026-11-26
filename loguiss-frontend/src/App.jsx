@@ -1,9 +1,10 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { RotaProtegida } from './components/RotaProtegida';
 
 //telas
-import Login from './pages/login'
+import Login from './pages/login';
 import EsqueceuSenha from './pages/esqueceu-senha';
 import CodigoVerificacao from './pages/codigo-verificacao';
 import RedefinirSenha from './pages/redefinir-senha';
@@ -28,6 +29,7 @@ function App() {
       <Toaster position="top-right" />
       <BrowserRouter>
         <Routes>
+          {/* Rotas públicas */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
@@ -35,24 +37,28 @@ function App() {
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           <Route path="/termos" element={<Termos />} />
           <Route path="/politicas" element={<Politicas />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/produtos" element={<Produtos />} />
-          <Route path="/unidades-medida" element={<UnidadesMedida />} />
-          <Route path="/categorias" element={<Categorias />} />
-          <Route path="/usuarios" element={<Usuarios />} />
-          <Route path="/fornecedores" element={<Fornecedor />} />
-          <Route path="/clientes" element={<Clientes />} />
-          <Route path="/movimentacao-saida" element={<MovimentacaoSaida />} />
-          <Route path="/movimentacao-entrada" element={<MovimentacaoEntrada />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/configuracoes-ia" element={<ConfiguracoesIA />} />
-          <Route path="/previsao-demanda" element={<PrevisaoDemandas />} />
+
+          {/* Rotas protegidas (exigem token JWT válido no localStorage) */}
+          <Route element={<RotaProtegida redirecionarPara="/login" />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/produtos" element={<Produtos />} />
+            <Route path="/unidades-medida" element={<UnidadesMedida />} />
+            <Route path="/categorias" element={<Categorias />} />
+            <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/fornecedores" element={<Fornecedor />} />
+            <Route path="/clientes" element={<Clientes />} />
+            <Route path="/movimentacao-saida" element={<MovimentacaoSaida />} />
+            <Route path="/movimentacao-entrada" element={<MovimentacaoEntrada />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/configuracoes-ia" element={<ConfiguracoesIA />} />
+            <Route path="/previsao-demanda" element={<PrevisaoDemandas />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </>
-
   );
-
 }
 
 export default App;
