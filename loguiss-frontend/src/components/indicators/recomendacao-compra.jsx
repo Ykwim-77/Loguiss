@@ -1,7 +1,5 @@
 import { AlertTriangle, ArrowRight, Package, ShoppingCart } from 'lucide-react';
 
-import { recomendacoesCompraPadrao } from '../../data/dashboardData';
-
 const formatarNumeroBR = (valor, decimais = 0) =>
     Number(valor).toLocaleString('pt-BR', {
         minimumFractionDigits: decimais,
@@ -11,7 +9,7 @@ const formatarNumeroBR = (valor, decimais = 0) =>
 export function RecomendacoesCompra({
     titulo = 'Recomendações de compra',
     descricao = 'Quantidade sugerida e quando iniciar a reposição',
-    dados = recomendacoesCompraPadrao,
+    dados = [],
     onRevisar,
 }) {
     const totalAnalisados = dados.length;

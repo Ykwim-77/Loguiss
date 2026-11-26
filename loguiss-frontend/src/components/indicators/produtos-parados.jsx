@@ -10,7 +10,7 @@ export function ProdutosParados() {
         .slice(0, 5);
 
     return (
-        <div className="mb-5 h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
+        <div className="h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
             <div className="mb-5">
                 <h2 className="text-xl font-bold text-texto">Produtos parados em estoque</h2>
                 <p className="mt-1 text-sm text-texto-suave">

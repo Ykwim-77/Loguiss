@@ -10,10 +10,61 @@ import { SideBar } from '../components/sidebar';
 import api from '../services/api';
 import { formatarMoeda } from '../utils/validacoes';
 
+// Formata dígitos como moeda pt-BR enquanto digita (ex.: "1250" -> "12,50")
+function formatarMoedaDigitacao(valor) {
+    const apenasDigitos = String(valor ?? '').replace(/\D/g, '');
+    if (!apenasDigitos) return '';
+
+    const numero = Number(apenasDigitos) / 100;
+    return numero.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
+// Formata número vindo da API (ex.: 12.5 ou "12.50") para exibição no input ("12,50")
+function formatarNumeroParaInput(valor) {
+    if (valor === null || valor === undefined || valor === '') return '';
+    if (typeof valor === 'number') {
+        return valor.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
+    const str = String(valor).trim();
+    if (str.includes(',')) {
+        return formatarMoedaDigitacao(str);
+    }
+    const num = Number(str);
+    if (!Number.isFinite(num)) return '';
+    return num.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+}
+
+// Converte valor formatado ("1.250,50" ou "12,50") para Number (1250.5 / 12.5)
+function converterMoedaParaNumero(valorFormatado) {
+    if (valorFormatado === null || valorFormatado === undefined || valorFormatado === '') {
+        return 0;
+    }
+    if (typeof valorFormatado === 'number') {
+        return Number.isFinite(valorFormatado) ? valorFormatado : 0;
+    }
+    const limpo = String(valorFormatado)
+        .replace(/\s/g, '')
+        .replace('R$', '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+
+    const numero = Number(limpo);
+    return Number.isFinite(numero) ? numero : 0;
+}
+
 const produtoInicial = {
     id_produto: null,
     id_tipo_produto: null,
-    desc: "",
+    desc: '',
     id_categoria: null,
     categoria: '',
     id_unidade_medida: null,
@@ -47,19 +98,25 @@ const receitaInicial = {
 const produtoParaForm = (p) => {
     const categoria = p.categorias?.[0]?.categoria;
     const fornecedor = p.fornecedores?.[0]?.fornecedor;
+    const isProducao = Boolean(
+        p.fgTipoProducao ??
+            p.tipo_produto?.flag_tipo === 'P' ??
+            p.tipo === 'P',
+    );
 
     return {
         ...produtoInicial,
         id_produto: p.id_produto,
+        id_tipo_produto: p.id_tipo_produto ?? null,
         desc: p.descricao ?? '',
         categoria: categoria?.descricao ?? '',
         id_categoria: categoria?.id_categoria ?? null,
         fornecedor: fornecedor?.nome ?? '',
         id_fornecedor: fornecedor?.id_fornecedor ?? null,
         minimo: p.minimo ?? '',
-        valor: p.valor ?? '',
+        valor: formatarNumeroParaInput(p.valor),
         quantidade_estoque: String(p.estoque?.quantidade ?? 0),
-        fgTipoProducao: Boolean(p.fgTipoProducao),
+        fgTipoProducao: isProducao,
         unidade: p.unidade ?? '',
         id_unidade_medida: p.id_unidade_medida ?? null,
         dt_entrada: (p.dt_entrada ?? '').slice(0, 10),
@@ -81,6 +138,7 @@ function Produtos() {
     const [fornecedores, setFornecedores] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [unidades, setUnidades] = useState([]);
+    const [tiposProduto, setTiposProduto] = useState([]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [appliedSearch, setAppliedSearch] = useState('');
@@ -93,21 +151,42 @@ function Produtos() {
         (produto.descricao ?? '').toLowerCase().includes(appliedSearch.toLowerCase()),
     );
 
+    // Retorna "P" quando marcado (produto produção) e "N" quando desmarcado (produto normal)
+    const obterFlagTipo = (fgProducao) => (fgProducao ? 'P' : 'N');
 
-    const montarPayloadProduto = () => {
-        const tipoSelecionado = tiposProduto.find(
-            (tipo) => tipo.flag_tipo === (newProduct.fgTipoProducao ? 'P' : 'N')
+    const resolverIdTipoProduto = (fgProducao) => {
+        const flagDesejada = obterFlagTipo(fgProducao);
+
+        const encontrado = tiposProduto.find(
+            (tipo) =>
+                String(tipo.flag_tipo ?? tipo.sigla ?? tipo.tipo ?? '').toUpperCase() ===
+                flagDesejada,
         );
 
-        if (!tipoSelecionado) {
-            throw new Error('Tipo de produto não encontrado.');
+        if (encontrado?.id_tipo_produto) {
+            return Number(encontrado.id_tipo_produto);
         }
+
+        if (newProduct.id_tipo_produto) {
+            return Number(newProduct.id_tipo_produto);
+        }
+
+        // Fallback padrão caso não haja lista de tipos carregada
+        return fgProducao ? 2 : 1;
+    };
+
+    const montarPayloadProduto = () => {
+        const flagTipo = obterFlagTipo(newProduct.fgTipoProducao);
+        const idTipoProduto = resolverIdTipoProduto(newProduct.fgTipoProducao);
+        const valorNumerico = converterMoedaParaNumero(newProduct.valor);
 
         return {
             descricao: newProduct.desc.trim(),
-            id_tipo_produto: tipoSelecionado.id_tipo_produto,
+            id_tipo_produto: idTipoProduto,
+            tipo: flagTipo,
+            flag_tipo: flagTipo,
             id_unidade_medida: Number(newProduct.id_unidade_medida),
-            valor: Number(newProduct.valor),
+            valor: valorNumerico,
             flag_ativo: 'T',
             id_categoria_user: Number(newProduct.id_categoria),
 
@@ -118,28 +197,27 @@ function Produtos() {
                 quantidade: Number(newProduct.quantidade_estoque),
                 dt_entrada: newProduct.dt_entrada,
                 minimo: Number(newProduct.minimo),
-                prazo_saida: newProduct.prazo_saida
+                prazo_saida: newProduct.prazo_saida,
             },
 
             receita: newProduct.fgTipoProducao
                 ? {
-                    descricao: newReceita.nome,
-                    margem_perda: Number(newReceita.margemPerda),
-                    quantidade_produzida: Number(newReceita.quantidadeProduzida),
-                    quantidade_perdida: Number(newReceita.quantidadePerdida)
-                }
+                      descricao: newReceita.nome,
+                      margem_perda: Number(newReceita.margemPerda),
+                      quantidade_produzida: Number(newReceita.quantidadeProduzida),
+                      quantidade_perdida: Number(newReceita.quantidadePerdida),
+                  }
                 : null,
 
             ingredientes: newProduct.fgTipoProducao
                 ? newReceita.ingredientes.map((ingrediente) => ({
-                    id_produto: Number(ingrediente.id_produto),
-                    quantidade: Number(ingrediente.quantidade),
-                    unidade_medida_ingrediente: Number(ingrediente.id_unidade)
-                }))
-                : []
+                      id_produto: Number(ingrediente.id_produto),
+                      quantidade: Number(ingrediente.quantidade),
+                      unidade_medida_ingrediente: Number(ingrediente.id_unidade),
+                  }))
+                : [],
         };
     };
-
 
     useEffect(() => {
         const carregar = async () => {
@@ -155,7 +233,15 @@ function Produtos() {
             setCategorias(lista(resultados[2], 'categorias'));
             setUnidades(lista(resultados[3], 'unidades'));
 
-            if (resultados.some((r) => r.status === 'rejected')) {
+            if (resultados[4]?.status === 'fulfilled') {
+                const dataTipos = resultados[4].value.data;
+                const listaTipos = Array.isArray(dataTipos)
+                    ? dataTipos
+                    : dataTipos?.tiposProduto ?? dataTipos?.tipos_produto ?? dataTipos?.tipos ?? [];
+                setTiposProduto(listaTipos);
+            }
+
+            if (resultados.slice(0, 4).some((r) => r.status === 'rejected')) {
                 toast.error('Alguns dados não puderam ser carregados.');
             }
         };
@@ -163,7 +249,8 @@ function Produtos() {
         carregar();
     }, []);
 
-    useEffect(() => { //bloqueia o scroll da tela de trás quando um modal estiver aberto
+    useEffect(() => {
+        // bloqueia o scroll da tela de trás quando um modal estiver aberto
         if (!showProductForm) return;
 
         const overflowAnterior = document.body.style.overflow;
@@ -180,6 +267,30 @@ function Produtos() {
             ...prev,
             [campo]: e.target.value,
         }));
+
+    const handleChangeValor = (e) => {
+        const formatado = formatarMoedaDigitacao(e.target.value);
+        setNewProduct((prev) => ({
+            ...prev,
+            valor: formatado,
+        }));
+    };
+
+    const handleToggleProducao = (e) => {
+        const marcado = e.target.checked;
+        const flagDesejada = obterFlagTipo(marcado);
+        const tipoEncontrado = tiposProduto.find(
+            (tipo) =>
+                String(tipo.flag_tipo ?? tipo.sigla ?? tipo.tipo ?? '').toUpperCase() ===
+                flagDesejada,
+        );
+
+        setNewProduct((prev) => ({
+            ...prev,
+            fgTipoProducao: marcado,
+            id_tipo_produto: tipoEncontrado?.id_tipo_produto ?? (marcado ? 2 : 1),
+        }));
+    };
 
     const setCampoReceita = (campo) => (e) =>
         setNewReceita((prev) => ({
@@ -248,8 +359,27 @@ function Produtos() {
         return '';
     };
 
-
     const [saving, setSaving] = useState(false);
+
+    const editarProduto = async () => {
+        const flagTipo = obterFlagTipo(newProduct.fgTipoProducao);
+        const idTipoProduto = resolverIdTipoProduto(newProduct.fgTipoProducao);
+        const valorNumerico = converterMoedaParaNumero(newProduct.valor);
+
+        const payload = {
+            descricao: newProduct.desc.trim(),
+            id_tipo_produto: idTipoProduto,
+            tipo: flagTipo,
+            flag_tipo: flagTipo,
+            id_unidade_medida: Number(newProduct.id_unidade_medida),
+            valor: valorNumerico,
+            flag_ativo: 'T',
+        };
+
+        const response = await api.put(`/produto/edit_produto/${editingId}`, payload);
+
+        toast.success(response.data.MSG || 'Produto atualizado com sucesso!');
+    };
 
     const salvarProduto = async (e) => {
         e.preventDefault();
@@ -266,13 +396,9 @@ function Produtos() {
             return;
         }
 
-        if (!newProduct.valor || Number(newProduct.valor) < 0) {
+        const valorNumerico = converterMoedaParaNumero(newProduct.valor);
+        if (newProduct.valor === '' || valorNumerico < 0) {
             toast.error('Informe um valor válido.');
-            return;
-        }
-
-        if (!newProduct.id_tipo_produto) {
-            toast.error('Selecione um tipo de produto válido.');
             return;
         }
 
@@ -284,14 +410,9 @@ function Produtos() {
             } else {
                 const payload = montarPayloadProduto();
 
-                const response = await api.post(
-                    '/produto/create_produto',
-                    payload
-                );
+                const response = await api.post('/produto/create_produto', payload);
 
-                toast.success(
-                    response.data.MSG || 'Produto cadastrado com sucesso!'
-                );
+                toast.success(response.data.MSG || 'Produto cadastrado com sucesso!');
             }
 
             fecharForm();
@@ -299,54 +420,25 @@ function Produtos() {
             const atualizacao = await api.get('/produto/list_produtos');
 
             setProducts(atualizacao.data.produtos ?? []);
-
         } catch (error) {
             toast.error(
-                error.response?.data?.MSG ||
-                'Erro ao salvar produto!'
+                error.response?.data?.MSG || error.message || 'Erro ao salvar produto!',
             );
         } finally {
             setSaving(false);
         }
     };
+
     const excluirProduto = async (id_produto) => {
         try {
-            const response = await api.delete(
-                `/produto/delete_produto/${id_produto}`
-            );
+            const response = await api.delete(`/produto/delete_produto/${id_produto}`);
 
-            toast.success(
-                response.data.MSG || 'Produto desativado com sucesso!'
-            );
+            toast.success(response.data.MSG || 'Produto desativado com sucesso!');
 
-            setProducts((prev) =>
-                prev.filter((produto) => produto.id_produto !== id_produto)
-            );
-
+            setProducts((prev) => prev.filter((produto) => produto.id_produto !== id_produto));
         } catch (error) {
-            toast.error(
-                error.response?.data?.MSG ||
-                'Erro ao desativar produto!'
-            );
+            toast.error(error.response?.data?.MSG || 'Erro ao desativar produto!');
         }
-    };
-    const editarProduto = async () => {
-        const payload = {
-            descricao: newProduct.desc.trim(),
-            id_tipo_produto: Number(newProduct.id_tipo_produto),
-            id_unidade_medida: Number(newProduct.id_unidade_medida),
-            valor: Number(newProduct.valor),
-            flag_ativo: 'T',
-        };
-
-        const response = await api.put(
-            `/produto/edit_produto/${editingId}`,
-            payload
-        );
-
-        toast.success(
-            response.data.MSG || 'Produto atualizado com sucesso!'
-        );
     };
 
     return (
@@ -391,41 +483,47 @@ function Produtos() {
                         <p className="text-texto-suave">Nenhum produto encontrado.</p>
                     )}
 
-                    {filteredProducts.map((produto) => (
-                        <EntityCard
-                            key={produto.id_produto}
-                            titulo={produto.descricao}
-                            icone={Package}
-                            onEdit={() => abrirEdicao(produto)}
-                            onDelete={() => {
-                                toast.error(
-                                    'A rota de exclusão de produtos ainda não foi integrada.',
-                                );
-                            }}
-                        >
-                            <p className="mt-2 text-texto-suave">
-                                Categoria:{' '}
-                                {produto.categorias?.[0]?.categoria?.descricao ?? 'Sem categoria'}
-                            </p>
+                    {filteredProducts.map((produto) => {
+                        const isProducao = Boolean(
+                            produto.fgTipoProducao ??
+                                produto.tipo_produto?.flag_tipo === 'P' ??
+                                produto.tipo === 'P',
+                        );
 
-                            <p className="mt-1 text-texto-suave">
-                                Quantidade: {produto.estoque?.quantidade ?? 0}
-                            </p>
+                        return (
+                            <EntityCard
+                                key={produto.id_produto}
+                                titulo={produto.descricao}
+                                icone={Package}
+                                onEdit={() => abrirEdicao(produto)}
+                                onDelete={() => excluirProduto(produto.id_produto)}
+                            >
+                                <p className="mt-2 text-texto-suave">
+                                    Categoria:{' '}
+                                    {produto.categorias?.[0]?.categoria?.descricao ??
+                                        'Sem categoria'}
+                                </p>
 
-                            <p className="mt-1 text-texto-suave">
-                                Valor: {formatarMoeda(produto.valor)}
-                            </p>
+                                <p className="mt-1 text-texto-suave">
+                                    Quantidade: {produto.estoque?.quantidade ?? 0}
+                                </p>
 
-                            <p className="mt-1 text-texto-suave">
-                                Fornecedor:{' '}
-                                {produto.fornecedores?.[0]?.fornecedor?.nome ?? 'Sem fornecedor'}
-                            </p>
+                                <p className="mt-1 text-texto-suave">
+                                    Valor: {formatarMoeda(produto.valor)}
+                                </p>
 
-                            <p className="mt-1 text-texto-suave">
-                                Produto Produção: {produto.fgTipoProducao ? 'Sim' : 'Não'}
-                            </p>
-                        </EntityCard>
-                    ))}
+                                <p className="mt-1 text-texto-suave">
+                                    Fornecedor:{' '}
+                                    {produto.fornecedores?.[0]?.fornecedor?.nome ??
+                                        'Sem fornecedor'}
+                                </p>
+
+                                <p className="mt-1 text-texto-suave">
+                                    Produto Produção: {isProducao ? 'Sim' : 'Não'}
+                                </p>
+                            </EntityCard>
+                        );
+                    })}
                 </div>
             </main>
 
@@ -544,11 +642,10 @@ function Produtos() {
 
                                         <Inputs
                                             label="Valor unitário"
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
+                                            type="text"
+                                            inputMode="numeric"
                                             value={newProduct.valor}
-                                            onChange={setCampo('valor')}
+                                            onChange={handleChangeValor}
                                             placeholder="0,00"
                                             required
                                         />
@@ -603,23 +700,19 @@ function Produtos() {
                                                 <input
                                                     type="checkbox"
                                                     checked={newProduct.fgTipoProducao}
-                                                    onChange={(e) =>
-                                                        setNewProduct({
-                                                            ...newProduct,
-                                                            fgTipoProducao: e.target.checked,
-                                                        })
-                                                    }
+                                                    onChange={handleToggleProducao}
                                                     className="h-5 w-5 cursor-pointer accent-primaria"
                                                 />
 
                                                 <div>
                                                     <span className="block text-sm font-semibold text-texto">
-                                                        Produto de produção
+                                                        Produto de produção ({obterFlagTipo(newProduct.fgTipoProducao)})
                                                     </span>
 
                                                     <span className="text-xs text-texto-suave">
-                                                        Ative para cadastrar uma receita e seus
-                                                        ingredientes.
+                                                        {newProduct.fgTipoProducao
+                                                            ? 'Tipo "P": produto de produção (permite cadastrar receita e ingredientes).'
+                                                            : 'Tipo "N": produto normal.'}
                                                     </span>
                                                 </div>
                                             </label>
@@ -725,77 +818,72 @@ function Produtos() {
                                                                     id_produto: p.id_produto,
                                                                 })
                                                             }
-                                                            required
                                                         />
 
                                                         <Inputs
                                                             aria-label="Quantidade"
                                                             type="number"
                                                             min="0"
-                                                            placeholder="Quantidade"
+                                                            step="any"
+                                                            placeholder="Qtd"
                                                             value={ingrediente.quantidade}
                                                             onChange={(e) =>
                                                                 atualizarIngrediente(index, {
                                                                     quantidade: e.target.value,
                                                                 })
                                                             }
-                                                            required
                                                         />
 
-                                                        <Inputs
+                                                        <Combobox
                                                             aria-label="Unidade"
-                                                            type="select"
-                                                            value={ingrediente.id_unidade}
-                                                            onChange={(e) =>
+                                                            placeholder="Unidade"
+                                                            value={ingrediente.unidade ?? ''}
+                                                            opcoes={unidades}
+                                                            getLabel={(u) =>
+                                                                `${u.descrunidade} - ${u.nomenclatura}`
+                                                            }
+                                                            getChave={(u) => u.id_unidade}
+                                                            onChange={(texto) =>
                                                                 atualizarIngrediente(index, {
-                                                                    id_unidade:
-                                                                        e.target.value === ''
-                                                                            ? ''
-                                                                            : Number(
-                                                                                e.target.value,
-                                                                            ),
+                                                                    unidade: texto,
+                                                                    id_unidade: '',
                                                                 })
                                                             }
-                                                            options={[
-                                                                { value: '', label: 'Unidade' },
-                                                                ...unidades.map((u) => ({
-                                                                    value: u.id_unidade,
-                                                                    label: `${u.descrunidade} - ${u.nomenclatura}`,
-                                                                })),
-                                                            ]}
-                                                            required
+                                                            onSelect={(u) =>
+                                                                atualizarIngrediente(index, {
+                                                                    unidade: u.nomenclatura,
+                                                                    id_unidade: u.id_unidade,
+                                                                })
+                                                            }
                                                         />
 
-                                                        <Button
-                                                            type="button"
-                                                            variant="danger"
-                                                            className="px-4 py-3"
-                                                            onClick={() =>
-                                                                removerIngrediente(index)
-                                                            }
-                                                        >
-                                                            Remover
-                                                        </Button>
+                                                        {newReceita.ingredientes.length > 1 && (
+                                                            <Button
+                                                                type="button"
+                                                                onClick={() => removerIngrediente(index)}
+                                                                className="w-auto"
+                                                            >
+                                                                Remover
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
 
                                             <Button
                                                 type="button"
-                                                variant="secondary"
-                                                size="sm"
-                                                className="mt-2"
                                                 onClick={adicionarIngrediente}
+                                                className="mt-2 w-auto"
                                             >
-                                                + Adicionar produto
+                                                + Adicionar ingrediente
                                             </Button>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Rodapé */}
-                            <div className="flex shrink-0 justify-end gap-3 border-t border-borda bg-fundo px-6 py-4">
+                            {/* Rodapé do Modal */}
+                            <div className="flex items-center justify-end gap-3 border-t border-borda px-6 py-4">
                                 <Button
                                     type="button"
                                     variant="secondary"
@@ -805,11 +893,12 @@ function Produtos() {
                                     Cancelar
                                 </Button>
 
-                                <Button
-                                    type="submit"
-                                    className="px-5"
-                                >
-                                    {editingId !== null ? 'Salvar alterações' : 'Cadastrar produto'}
+                                <Button type="submit" disabled={saving} className="w-auto">
+                                    {saving
+                                        ? 'Salvando...'
+                                        : editingId !== null
+                                          ? 'Salvar alterações'
+                                          : 'Salvar produto'}
                                 </Button>
                             </div>
                         </form>

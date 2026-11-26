@@ -2,7 +2,11 @@ import { prisma } from "../../database.js";
 
 export default async function list_user_service(req, res) {
     try {
-        const users = await prisma.user.findMany({})
+        const users = await prisma.user.findMany({
+            where:{
+                flag_ativo: "T"
+            }
+        })
         if(!users){
             return res.status(400).json({MSG: "nenhum usuário encontrado!"})
         }

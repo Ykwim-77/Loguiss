@@ -9,8 +9,11 @@ export const INTERVALO_MAXIMO_MINUTOS = 43200; // 30 dias
 export const PRAZO_REPOSICAO_MINIMO_DIAS = 1;
 export const PRAZO_REPOSICAO_MAXIMO_DIAS = 60;
 
-export const DIAS_HISTORICO = 60; // quantos dias de saídas são enviados à IA
-export const PRODUTOS_POR_LOTE = 10; // produtos por chamada de previsão
+export const DIAS_HISTORICO = 30; // histórico necessário para calcular as médias de 7 e 30 dias
+export const DIAS_HISTORICO_ENVIADO = 14; // duas semanas bastam para capturar o padrão semanal
+export const MAX_PRODUTOS_PREVISAO = 20;
+export const MAX_MOVIMENTACOES_PREVISAO = 40;
+export const PRODUTOS_POR_LOTE = MAX_PRODUTOS_PREVISAO; // até 20 produtos em uma chamada
 export const MAX_ALERTAS_POR_PRODUTO = 3;
 
 export default {
@@ -20,6 +23,9 @@ export default {
   PRAZO_REPOSICAO_MINIMO_DIAS,
   PRAZO_REPOSICAO_MAXIMO_DIAS,
   DIAS_HISTORICO,
+  DIAS_HISTORICO_ENVIADO,
+  MAX_PRODUTOS_PREVISAO,
+  MAX_MOVIMENTACOES_PREVISAO,
   PRODUTOS_POR_LOTE,
   MAX_ALERTAS_POR_PRODUTO,
 };

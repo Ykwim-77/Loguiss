@@ -5,12 +5,6 @@ import { Clock3, Crown, Gift, Package } from 'lucide-react';
 import api from '../services/api';
 
 const dados = await api.get('/dashboard/dash')
-const previsao = await api.get('/previsao/ultima')
-
-console.log(dados)
-console.log(previsao)
-
-console.log(dados);
 
 export const produtos = dados.data.produtos;
 
@@ -75,17 +69,3 @@ export const planos = [
         },
     },
 ];
-
-export const dadosPrevisao = previsao.data.previsao
-
-export const dadosIA = previsao.data.dadosIA
-
-export const seriesIA = previsao.data.seriesIA
-
-export const dadosSaida = previsao.data.dadosSaida
-
-export const recomendacoesCompraPadrao = previsao.data.recomendacoesCompra
-
-export const movimentacoesPadrao = previsao.data.movimentacoes
-
-export const alertasPadrao = previsao.data.alertas

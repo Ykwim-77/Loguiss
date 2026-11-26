@@ -1,15 +1,17 @@
 import { CalendarDays, ChartBarDecreasing, RefreshCw, RotateCcw, Save } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '../components/button';
 import { Inputs } from '../components/inputs';
 import { Secao } from '../components/secao';
 import { SideBar } from '../components/sidebar';
+import api from '../services/api';
 
 const dadosIniciais = {
-    dias: '30',
-    tempoAtualizacao: '15',
+    dias: '14',
+    tempoAtualizacao: '1440',
+    agendamentoAtivo: false,
 };
 
 const campos = [
@@ -17,23 +19,28 @@ const campos = [
         id: 'dias',
         label: 'Dias de previsão',
         icone: CalendarDays,
-        tipo: 'number',
+        tipo: 'select',
+        options: [
+            { value: '5', label: '5 dias' },
+            { value: '10', label: '10 dias' },
+            { value: '14', label: '14 dias' },
+            { value: '30', label: '30 dias' },
+        ],
     },
 ];
 
-const soDigitos = (valor) => valor.replace(/\D/g, '');
+const intervalos = [
+    { value: '15', label: 'A cada 15 minutos' },
+    { value: '30', label: 'A cada 30 minutos' },
+    { value: '60', label: 'A cada 1 hora' },
+    { value: '1440', label: 'A cada 24 horas' },
+];
 
-function validarIA(IA) {
-    const dias = String(IA.dias).trim();
-
+function formatarConfiguracao(configuracao) {
     return {
-        dias: !dias
-            ? 'O campo é obrigatório'
-            : Number(dias) < 1 || Number(dias) > 365
-              ? 'Informe um período entre 1 e 365 dias'
-              : '',
-
-        tempoAtualizacao: !IA.tempoAtualizacao ? 'Selecione um intervalo de atualização' : '',
+        dias: String(configuracao.horizonteDias),
+        tempoAtualizacao: String(configuracao.intervaloMinutos),
+        agendamentoAtivo: configuracao.agendamentoAtivo,
     };
 }
 
@@ -41,9 +48,42 @@ function ConfiguracoesIA() {
     const [IA, setIA] = useState(dadosIniciais);
     const [dadosSalvos, setDadosSalvos] = useState(dadosIniciais);
     const [tentouSalvar, setTentouSalvar] = useState(false);
+    const [carregando, setCarregando] = useState(true);
+    const [salvando, setSalvando] = useState(false);
 
     const salvo = JSON.stringify(IA) === JSON.stringify(dadosSalvos);
-    const erros = validarIA(IA);
+    const erros = {
+        dias: !IA.dias ? 'Selecione o horizonte da previsão' : '',
+        tempoAtualizacao: !IA.tempoAtualizacao ? 'Selecione um intervalo de atualização' : '',
+    };
+
+    useEffect(() => {
+        let ativo = true;
+
+        async function carregarConfiguracao() {
+            try {
+                const resposta = await api.get('/config_ia');
+                if (!ativo) return;
+                const configuracao = formatarConfiguracao(resposta.data);
+                setIA(configuracao);
+                setDadosSalvos(configuracao);
+            } catch (error) {
+                if (ativo) {
+                    toast.error(
+                        error.response?.data?.erro ||
+                            'Não foi possível carregar as configurações de IA.',
+                    );
+                }
+            } finally {
+                if (ativo) setCarregando(false);
+            }
+        }
+
+        carregarConfiguracao();
+        return () => {
+            ativo = false;
+        };
+    }, []);
 
     const alterarCampo = (id, valor) => {
         setIA((atual) => ({
@@ -52,7 +92,7 @@ function ConfiguracoesIA() {
         }));
     };
 
-    function salvarAlteracoes(event) {
+    async function salvarAlteracoes(event) {
         event.preventDefault();
         setTentouSalvar(true);
 
@@ -61,10 +101,25 @@ function ConfiguracoesIA() {
             return;
         }
 
-        setDadosSalvos({ ...IA });
-        setTentouSalvar(false);
-
-        toast.success('Configurações de IA salvas com sucesso!');
+        setSalvando(true);
+        try {
+            const resposta = await api.put('/config_ia', {
+                horizonteDias: Number(IA.dias),
+                intervaloMinutos: Number(IA.tempoAtualizacao),
+                agendamentoAtivo: IA.agendamentoAtivo,
+            });
+            const configuracao = formatarConfiguracao(resposta.data);
+            setIA(configuracao);
+            setDadosSalvos(configuracao);
+            setTentouSalvar(false);
+            toast.success('Configurações de IA salvas com sucesso!');
+        } catch (error) {
+            toast.error(
+                error.response?.data?.erro || 'Não foi possível salvar as configurações de IA.',
+            );
+        } finally {
+            setSalvando(false);
+        }
     }
 
     function descartarAlteracoes() {
@@ -94,20 +149,19 @@ function ConfiguracoesIA() {
                         descricao="Defina quantos dias e em qual frequência de previsão deseja visualizar os dados nos gráficos e análises."
                     >
                         <form onSubmit={salvarAlteracoes} className="mt-6 space-y-4">
-                            {campos.map(({ id, label, icone, tipo }) => (
+                            {campos.map(({ id, label, icone, tipo, options }) => (
                                 <Inputs
                                     key={id}
                                     id={id}
                                     label={label}
                                     type={tipo}
                                     icon={icone}
-                                    min="1"
-                                    max="365"
-                                    step="1"
+                                    options={options}
                                     value={IA[id]}
-                                    onChange={(e) => alterarCampo(id, soDigitos(e.target.value))}
+                                    onChange={(e) => alterarCampo(id, e.target.value)}
                                     error={erros[id]}
                                     touched={tentouSalvar}
+                                    disabled={carregando || salvando}
                                 />
                             ))}
                             <Inputs
@@ -115,21 +169,29 @@ function ConfiguracoesIA() {
                                 label="Tempo de atualização"
                                 type="select"
                                 icon={RefreshCw}
-                                options={[
-                                    { value: '5', label: 'A cada 5 minutos' },
-                                    { value: '15', label: 'A cada 15 minutos' },
-                                    { value: '30', label: 'A cada 30 minutos' },
-                                    { value: '60', label: 'A cada 1 hora' },
-                                ]}
+                                options={intervalos}
                                 value={IA.tempoAtualizacao}
                                 onChange={(e) => alterarCampo('tempoAtualizacao', e.target.value)}
                                 error={erros.tempoAtualizacao}
                                 touched={tentouSalvar}
+                                disabled={carregando || salvando}
                             />
+                            <label className="flex items-center gap-3 text-sm text-[var(--text)]">
+                                <input
+                                    type="checkbox"
+                                    checked={IA.agendamentoAtivo}
+                                    onChange={(e) =>
+                                        alterarCampo('agendamentoAtivo', e.target.checked)
+                                    }
+                                    disabled={carregando || salvando}
+                                    className="h-4 w-4 accent-[var(--primary)]"
+                                />
+                                Ativar geração automática de previsões
+                            </label>
 
                             <p className="text-xs text-[var(--text-secondary)]">
-                                Intervalos menores podem aumentar a frequência de processamento dos
-                                dados.
+                                O agendamento usa o intervalo selecionado. O mínimo permitido é 15
+                                minutos.
                             </p>
                             
                             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
@@ -144,7 +206,7 @@ function ConfiguracoesIA() {
                                         size="sm"
                                         className="flex items-center gap-2"
                                         onClick={descartarAlteracoes}
-                                        disabled={salvo}
+                                        disabled={salvo || carregando || salvando}
                                     >
                                         <RotateCcw size={15} />
                                         Descartar
@@ -154,10 +216,10 @@ function ConfiguracoesIA() {
                                         type="submit"
                                         size="sm"
                                         className="flex items-center gap-2"
-                                        disabled={salvo}
+                                        disabled={salvo || carregando || salvando}
                                     >
                                         <Save size={15} />
-                                        Salvar alterações
+                                        {salvando ? 'Salvando...' : 'Salvar alterações'}
                                     </Button>
                                 </div>
                             </div>

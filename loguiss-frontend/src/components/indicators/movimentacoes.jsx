@@ -30,7 +30,7 @@ export function Movimentacoes() {
     });
 
     return (
-        <div className="mb-5 h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
+        <div className="mb-0 h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
             <div className="mb-2 flex items-center justify-between gap-4">
                 <h2 className="text-xl font-bold text-texto">Movimentações</h2>
 

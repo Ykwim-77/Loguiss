@@ -39,11 +39,9 @@ export async function salvarPrevisao({
           },
         });
 
-        for (const { entrada, previsao, recomendacao } of linhas) {
-          const serie = Array.isArray(previsao?.serie) ? previsao.serie : [];
-
-          await tx.previsao_produto.create({
-            data: {
+        if (linhas.length > 0) {
+          await tx.previsao_produto.createMany({
+            data: linhas.map(({ entrada, previsao, recomendacao }) => ({
               id_previsao: criada.id_previsao,
               id_produto: numeroSeguro(entrada.id_produto),
               estoque_na_data: numeroSeguro(entrada.estoque_atual, 0),
@@ -60,14 +58,37 @@ export async function salvarPrevisao({
                   : numeroSeguro(recomendacao.dias_para_comprar),
               urgente: Boolean(recomendacao?.urgente),
               comprar_qtd: numeroSeguro(recomendacao?.comprar_qtd, 0),
-              periodos: {
-                create: serie.map((dia) => ({
-                  data: new Date(`${dia.data}T00:00:00Z`),
-                  quantidade: numeroSeguro(dia.quantidade, 0),
-                })),
-              },
-            },
+            })),
           });
+
+          const criadosProdutos = await tx.previsao_produto.findMany({
+            where: { id_previsao: criada.id_previsao },
+            select: { id_previsao_produto: true, id_produto: true },
+          });
+
+          const mapaIdPrevProd = new Map(
+            criadosProdutos.map((item) => [item.id_produto, item.id_previsao_produto])
+          );
+
+          const periodosParaInserir = [];
+          for (const { entrada, previsao } of linhas) {
+            const idPrevProd = mapaIdPrevProd.get(numeroSeguro(entrada.id_produto));
+            if (!idPrevProd) continue;
+            const serie = Array.isArray(previsao?.serie) ? previsao.serie : [];
+            for (const dia of serie) {
+              periodosParaInserir.push({
+                id_previsao_produto: idPrevProd,
+                data: new Date(`${dia.data}T00:00:00Z`),
+                quantidade: numeroSeguro(dia.quantidade, 0),
+              });
+            }
+          }
+
+          if (periodosParaInserir.length > 0) {
+            await tx.previsao_periodo.createMany({
+              data: periodosParaInserir,
+            });
+          }
         }
 
         if (Array.isArray(alertas) && alertas.length > 0) {

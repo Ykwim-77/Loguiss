@@ -1,6 +1,10 @@
 import { prisma } from '../../database.js';
 import { erroHttp } from '../../utils/erros.js';
-import { DIAS_HISTORICO } from '../../utils/previsao/constantes.js';
+import {
+  DIAS_HISTORICO,
+  MAX_MOVIMENTACOES_PREVISAO,
+  MAX_PRODUTOS_PREVISAO,
+} from '../../utils/previsao/constantes.js';
 import calc from '../../utils/previsao/calculos.js';
 
 /**
@@ -11,17 +15,49 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
   const hoje = calc.chaveData();
   const ontem = calc.somarDias(hoje, -1);
   const datasPrevisao = calc.intervaloDias(calc.somarDias(hoje, 1), horizonteDias);
-  // O histórico termina na véspera: o dia de hoje ainda está incompleto.
   const diasHistorico = calc.intervaloDias(
     calc.somarDias(ontem, -(DIAS_HISTORICO - 1)),
     DIAS_HISTORICO
   );
 
-  const produtos = await prisma.produto.findMany({
+  const idsFiltro = idsProdutos.length ? [...new Set(idsProdutos)] : [];
+
+  const filtroProdutos = {
+    flag_ativo: 'T',
+    estoque: { isNot: null },
+    ...(idsFiltro.length ? { id_produto: { in: idsFiltro } } : {}),
+  };
+  const produtosCandidatos = await prisma.produto.findMany({
+    where: filtroProdutos,
+    orderBy: { id_produto: 'asc' },
+    select: { id_produto: true },
+  });
+
+  if (!produtosCandidatos.length) {
+    throw erroHttp(404, 'Nenhum produto ativo com estoque cadastrado.', 'SEM_PRODUTOS');
+  }
+
+  const dataCorteHistorico = new Date(`${diasHistorico[0]}T00:00:00-03:00`);
+  const vendasAgrupadas = await prisma.movimentacao_estoque.groupBy({
+    by: ['id_produto', 'tipo'],
+    where: {
+      id_produto: { in: produtosCandidatos.map((produto) => produto.id_produto) },
+      data_movimento: { gte: dataCorteHistorico },
+    },
+    _sum: { quantidade: true },
+  });
+  const idsSelecionados = calc
+    .ordenarProdutosPorVendas(
+      produtosCandidatos.map((produto) => produto.id_produto),
+      vendasAgrupadas
+    )
+    .slice(0, MAX_PRODUTOS_PREVISAO);
+
+  const produtosEncontrados = await prisma.produto.findMany({
     where: {
       flag_ativo: 'T',
       estoque: { isNot: null },
-      ...(idsProdutos.length ? { id_produto: { in: idsProdutos } } : {}),
+      id_produto: { in: idsSelecionados },
     },
     include: {
       estoque: true,
@@ -31,6 +67,10 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
     },
     orderBy: { id_produto: 'asc' },
   });
+  const produtosPorId = new Map(
+    produtosEncontrados.map((produto) => [produto.id_produto, produto])
+  );
+  const produtos = idsSelecionados.map((id) => produtosPorId.get(id)).filter(Boolean);
 
   if (!produtos.length) {
     throw erroHttp(404, 'Nenhum produto ativo com estoque cadastrado.', 'SEM_PRODUTOS');
@@ -38,9 +78,11 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
 
   const movimentos = await prisma.movimentacao_estoque.findMany({
     where: {
-      id_produto: { in: produtos.map((p) => p.id_produto) },
-      data_movimento: { gte: new Date(`${diasHistorico[0]}T00:00:00-03:00`) },
+      id_produto: { in: idsSelecionados },
+      data_movimento: { gte: dataCorteHistorico },
     },
+    orderBy: [{ data_movimento: 'desc' }, { id_movimentacao: 'desc' }],
+    take: MAX_MOVIMENTACOES_PREVISAO,
     select: {
       id_produto: true,
       tipo: true,
@@ -52,8 +94,12 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
 
   const porProduto = new Map();
   for (const mov of movimentos) {
-    if (!porProduto.has(mov.id_produto)) porProduto.set(mov.id_produto, []);
-    porProduto.get(mov.id_produto).push(mov);
+    let lista = porProduto.get(mov.id_produto);
+    if (!lista) {
+      lista = [];
+      porProduto.set(mov.id_produto, lista);
+    }
+    lista.push(mov);
   }
 
   const entradas = produtos.map((produto) =>

@@ -76,10 +76,10 @@ function Clientes() {
     const addNewCliente = async () => {
         try {
             await api.post('/cliente/create_cliente', {
-                nome: newCliente.nome,
+                nome_cliente: newCliente.nome,
                 email: newCliente.email,
                 telefone: newCliente.telefone,
-                cpf: newCliente.cpf,
+                cpf_cnpj: newCliente.cpf,
             });
 
             await cliente_api();
@@ -97,12 +97,11 @@ function Clientes() {
     // Editar cliente
     const editCliente = async (id, updatedCliente) => {
         try {
-            await api.patch('/cliente/edit_cliente', {
-                id_cliente: id,
-                nome: updatedCliente.nome,
+            await api.patch(`/cliente/edit_cliente/${id}`, {
+                nome_cliente: updatedCliente.nome,
                 email: updatedCliente.email,
                 telefone: updatedCliente.telefone,
-                cpf: updatedCliente.cpf,
+                cpf_cnpj: updatedCliente.cpf,
             });
 
             await cliente_api();

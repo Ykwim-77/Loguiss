@@ -10,7 +10,7 @@ export default async function edit_user_service(req, res) {
         cpf,
         tipo_user
     } = req.body
-    const id_user = req.params
+    const id_user = req.params.id_user
     try {
 
         if(senha != confirmar_senha){
@@ -22,7 +22,7 @@ export default async function edit_user_service(req, res) {
                 email: email
             }
         })
-        if(email_existe){
+        if(email_existe && email != email_existe.email){
             return res.status(400).json({MSG: "email já existe! favor inserir um válido"})
         }
     } catch (error) {
@@ -36,7 +36,7 @@ export default async function edit_user_service(req, res) {
                 cpf: cpf
             }
         })
-        if(cpf_existe){
+        if(cpf_existe && cpf != cpf_existe.cpf){
             return res.status(400).json({MSG: "CPF já cadastrado!, favor inserir um válido"})
         }
     } catch (error) {
@@ -48,7 +48,7 @@ export default async function edit_user_service(req, res) {
         const edit_user = await prisma.$transaction( async (pris) =>{
             const user = await pris.user.update({
                 where:{
-                    id_user: Number(id_user.id_user)
+                    id_user: Number(id_user)
                 },
                 data:{
                     nome_usuario: nome,

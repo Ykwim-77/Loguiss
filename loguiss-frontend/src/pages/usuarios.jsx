@@ -27,6 +27,13 @@ const TIPOS_USUARIO = [
     { value: 'Gerente', label: 'Gerente' },
 ];
 
+const normalizarTipoUsuario = (valor) => {
+    if (!valor) return '';
+    const limpo = String(valor).trim().toLowerCase();
+    const match = TIPOS_USUARIO.find((item) => item.value.toLowerCase() === limpo);
+    return match ? match.value : String(valor).trim();
+};
+
 function Usuarios() {
     const [showUsuariosForm, setShowUsuariosForm] = useState(false);
     const [usuarios, setUsuarios] = useState([]);
@@ -95,7 +102,9 @@ function Usuarios() {
 
     const abrirEdicao = (usuario) => {
         resetUsuario();
-        setEditingIndex(usuario.id_usuario);
+        setEditingIndex(usuario.id_user);
+
+        const tipoAtual = usuario.tipo_user ?? usuario.tipo_usuario ?? '';
 
         setNewUsuario({
             desc: usuario.nome_usuario ?? '',
@@ -104,7 +113,7 @@ function Usuarios() {
             confirm_senha: '',
             telefone: usuario.telefone ?? '',
             cpf: usuario.cpf ?? '',
-            tipo_usuario: usuario.tipo_usuario ?? '',
+            tipo_usuario: normalizarTipoUsuario(tipoAtual),
         });
 
         setShowUsuariosForm(true);
@@ -147,7 +156,7 @@ function Usuarios() {
                 confirmar_senha: newUsuario.confirm_senha,
                 telefone: newUsuario.telefone,
                 cpf: newUsuario.cpf,
-                tipo_user: newUsuario.tipo_usuario
+                tipo_user: newUsuario.tipo_usuario,
             });
 
             toast.success(response.data.MSG || 'Usuário cadastrado com sucesso!');
@@ -257,13 +266,13 @@ function Usuarios() {
 
                     {filteredUsuarios.map((usuario) => (
                         <EntityCard
-                            key={usuario.id_usuario}
+                            key={usuario.id_user}
                             titulo={usuario.nome_usuario}
                             icone={User}
                             onEdit={() => abrirEdicao(usuario)}
                             onDelete={() => {
                                 if (window.confirm('Deseja excluir este usuário?')) {
-                                    deleteUsuario(usuario.id_usuario);
+                                    deleteUsuario(usuario.id_user);
                                 }
                             }}
                         >
@@ -274,7 +283,7 @@ function Usuarios() {
                             <p className="mt-1 text-texto-suave">CPF: {usuario.cpf}</p>
 
                             <p className="mt-1 text-texto-suave">
-                                Tipo de usuário: {usuario.tipo_usuario}
+                                Tipo de usuário: {usuario.tipo_user}
                             </p>
                         </EntityCard>
                     ))}

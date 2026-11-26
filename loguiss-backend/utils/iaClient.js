@@ -1,17 +1,23 @@
 import { GoogleGenAI } from '@google/genai';
 import { erroHttp } from './erros.js';
 
-const MODELO_PADRAO = process.env.GEMINI_MODEL || 'gemini-3.7-flash';
+const MODELO_PADRAO = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
 const MODELOS_FALLBACK = (
   process.env.GEMINI_FALLBACK_MODELS ||
   process.env.GEMINI_FALLBACK_MODEL ||
-  'gemma-4-31b-it,gemma-4-26b-a4b-it,gemini-3.1-flash-lite,gemini-3.5-flash-lite'
+  'gemini-2.5-flash-lite,gemini-3.1-flash-lite'
 )
   .split(',')
   .map((m) => m.trim())
   .filter(Boolean);
 
 const BUSCA_WEB_HABILITADA = process.env.GEMINI_USAR_BUSCA_WEB !== 'false';
+const TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 30000;
+const TIMEOUT_MODELO_MS = 12000;
+const MAX_MODELOS_POR_CHAMADA = 3;
+
+let clienteCache = null;
+let chaveCache = null;
 
 function obterCliente() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -22,17 +28,33 @@ function obterCliente() {
       'IA_SEM_CHAVE'
     );
   }
-  return new GoogleGenAI({ apiKey });
+  if (!clienteCache || chaveCache !== apiKey) {
+    clienteCache = new GoogleGenAI({ apiKey });
+    chaveCache = apiKey;
+  }
+  return clienteCache;
 }
 
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function comTimeout(promessa, ms, rotulo, controller) {
+  let timerId;
+  const timeoutPromessa = new Promise((_, reject) => {
+    timerId = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`Timeout (${ms}ms) na chamada da IA: ${rotulo}`));
+    }, ms);
+  });
+
+  return Promise.race([promessa, timeoutPromessa]).finally(() => clearTimeout(timerId));
+}
+
 function ehErro503(error) {
   const mensagem = String(error?.message || '');
   return (
-    error?.status === 503 ||
+    Number(error?.status ?? error?.code) === 503 ||
     mensagem.includes('"code":503') ||
     mensagem.includes('UNAVAILABLE')
   );
@@ -41,9 +63,18 @@ function ehErro503(error) {
 function ehErroCota429(error) {
   const mensagem = String(error?.message || '');
   return (
-    error?.status === 429 ||
+    Number(error?.status ?? error?.code) === 429 ||
     mensagem.includes('"code":429') ||
     mensagem.includes('RESOURCE_EXHAUSTED')
+  );
+}
+
+function ehModeloIndisponivel(error) {
+  const status = Number(error?.status ?? error?.code);
+  const mensagem = String(error?.message || '');
+  return (
+    status === 404 ||
+    (status === 400 && /\bmodel\b.*(not found|not supported|does not exist|not available)/i.test(mensagem))
   );
 }
 
@@ -88,14 +119,32 @@ function extrairTextoResposta(response) {
   return '';
 }
 
-function montarConfig(modelo, { system, usarBuscaWeb, maxTokens }) {
+function montarConfig(modelo, {
+  system,
+  usarBuscaWeb,
+  maxTokens,
+  abortSignal,
+  responseJsonSchema,
+}) {
   const ehGemma = modelo.toLowerCase().startsWith('gemma');
+  const limiteTokens = Number(maxTokens) > 0 ? Number(maxTokens) : 2048;
   const config = {
-    maxOutputTokens: Math.max(Number(maxTokens) || 2048, 4096),
+    maxOutputTokens: limiteTokens,
+    abortSignal,
+    temperature: 0.2,
   };
 
   if (system && !ehGemma) {
     config.systemInstruction = system;
+  }
+
+  if (responseJsonSchema && !ehGemma) {
+    config.responseMimeType = 'application/json';
+    config.responseJsonSchema = responseJsonSchema;
+  }
+
+  if (!usarBuscaWeb && modelo.toLowerCase().startsWith('gemini-2.5')) {
+    config.thinkingConfig = { thinkingBudget: 0 };
   }
 
   if (usarBuscaWeb && BUSCA_WEB_HABILITADA && !ehGemma) {
@@ -115,15 +164,44 @@ function montarContents(modelo, system, usuario) {
   return usuario;
 }
 
-async function executarChamada(ai, modelo, { system, usuario, usarBuscaWeb, maxTokens }) {
-  const config = montarConfig(modelo, { system, usarBuscaWeb, maxTokens });
+async function executarChamada(ai, modelo, {
+  system,
+  usuario,
+  usarBuscaWeb,
+  maxTokens,
+  timeoutMs,
+  deadline,
+  responseJsonSchema,
+}) {
+  const restanteMs = deadline ? deadline - Date.now() : Number(timeoutMs);
+  const limiteMs = Math.min(
+    Number(timeoutMs) > 0 ? Number(timeoutMs) : TIMEOUT_MS,
+    restanteMs
+  );
+  if (limiteMs <= 0) {
+    throw new Error(`Timeout (${Number(timeoutMs)}ms) na chamada da IA: ${modelo}`);
+  }
+
+  const controller = new AbortController();
+  const config = montarConfig(modelo, {
+    system,
+    usarBuscaWeb,
+    maxTokens,
+    abortSignal: controller.signal,
+    responseJsonSchema,
+  });
   const contents = montarContents(modelo, system, usuario);
 
-  const response = await ai.models.generateContent({
-    model: modelo,
-    contents,
-    config,
-  });
+  const response = await comTimeout(
+    ai.models.generateContent({
+      model: modelo,
+      contents,
+      config,
+    }),
+    limiteMs,
+    modelo,
+    controller
+  );
 
   const texto = extrairTextoResposta(response);
   const finishReason = response?.candidates?.[0]?.finishReason;
@@ -141,39 +219,57 @@ async function executarChamada(ai, modelo, { system, usuario, usarBuscaWeb, maxT
   return { texto, modelo };
 }
 
-async function gerarComModelo(ai, modelo, { system, usuario, usarBuscaWeb, maxTokens }) {
-  const maxTentativas = 2;
+async function gerarComModelo(ai, modelo, {
+  system,
+  usuario,
+  usarBuscaWeb,
+  maxTokens,
+  timeoutMs,
+  deadline,
+  responseJsonSchema,
+}) {
+  try {
+    return await executarChamada(ai, modelo, {
+      system,
+      usuario,
+      usarBuscaWeb,
+      maxTokens,
+      timeoutMs,
+      deadline,
+      responseJsonSchema,
+    });
+  } catch (error) {
+    if (error?.finishReason === 'MALFORMED_FUNCTION_CALL' && usarBuscaWeb) {
+      console.warn(
+        `[iaClient] ${modelo} retornou MALFORMED_FUNCTION_CALL com busca web, tentando sem busca web...`
+      );
+      return await executarChamada(ai, modelo, {
+        system,
+        usuario,
+        usarBuscaWeb: false,
+        maxTokens,
+        timeoutMs,
+        deadline,
+        responseJsonSchema,
+      });
+    }
 
-  for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
-    try {
+    if (ehErro503(error)) {
+      const esperaMs = 800 + Math.floor(Math.random() * 400);
+      console.warn(`[iaClient] ${modelo} retornou 503, tentando novamente em ${esperaMs}ms...`);
+      await esperar(esperaMs);
       return await executarChamada(ai, modelo, {
         system,
         usuario,
         usarBuscaWeb,
         maxTokens,
+        timeoutMs,
+        deadline,
+        responseJsonSchema,
       });
-    } catch (error) {
-      // Se deu MALFORMED_FUNCTION_CALL com busca web, tenta imediatamente sem busca web
-      if (error?.finishReason === 'MALFORMED_FUNCTION_CALL' && usarBuscaWeb) {
-        console.warn(
-          `[iaClient] ${modelo} retornou MALFORMED_FUNCTION_CALL com busca web, tentando sem busca web...`
-        );
-        return await executarChamada(ai, modelo, {
-          system,
-          usuario,
-          usarBuscaWeb: false,
-          maxTokens,
-        });
-      }
-
-      if (ehErro503(error) && tentativa < maxTentativas) {
-        console.warn(`[iaClient] ${modelo} retornou 503, tentando novamente em 500ms...`);
-        await esperar(500);
-        continue;
-      }
-
-      throw error;
     }
+
+    throw error;
   }
 }
 
@@ -181,15 +277,26 @@ export async function consultarIA({
   system,
   usuario,
   usarBuscaWeb = false,
-  maxTokens = 4096,
+  maxTokens = 2048,
+  timeoutMs = TIMEOUT_MS,
+  responseJsonSchema,
   modelo = MODELO_PADRAO,
 }) {
   const ai = obterCliente();
-  const params = { system, usuario, usarBuscaWeb, maxTokens };
+  const timeoutConfigurado = Number(timeoutMs) > 0 ? Number(timeoutMs) : TIMEOUT_MS;
+  const params = {
+    system,
+    usuario,
+    usarBuscaWeb,
+    maxTokens,
+    timeoutMs: Math.min(timeoutConfigurado, TIMEOUT_MODELO_MS),
+    deadline: Date.now() + timeoutConfigurado,
+    responseJsonSchema,
+  };
 
   const candidatos = [modelo, ...MODELOS_FALLBACK].filter(
     (m, idx, arr) => m && arr.indexOf(m) === idx
-  );
+  ).slice(0, MAX_MODELOS_POR_CHAMADA);
 
   let ultimoErro = null;
 
@@ -214,15 +321,25 @@ export async function consultarIA({
           return await gerarComModelo(ai, atual, { ...params, usarBuscaWeb: false });
         } catch (erroSemBusca) {
           ultimoErro = erroSemBusca;
-          error = erroSemBusca;
         }
       }
 
-      if (ehErro503(error) || ehErroCota429(error)) {
-        if (i < candidatos.length - 1) {
-          await esperar(150);
-          continue;
-        }
+      const erroTimeout = String(error?.message || '').startsWith('Timeout (');
+      if (
+        (ehErro503(error) || ehErroCota429(error) || ehModeloIndisponivel(error) || erroTimeout) &&
+        i < candidatos.length - 1
+      ) {
+        await esperar(150);
+        continue;
+      }
+
+      if (ehErro503(error)) {
+        console.warn('[iaClient] todos os modelos tentados estão temporariamente indisponíveis.');
+        throw erroHttp(
+          503,
+          'A API do Gemini está com alta demanda no momento. Tente novamente em alguns instantes.',
+          'GEMINI_INDISPONIVEL'
+        );
       }
 
       throw error;

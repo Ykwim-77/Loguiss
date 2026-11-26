@@ -90,6 +90,41 @@ export function estatisticas(quantidades) {
   };
 }
 
+export function previsaoCompleta(previsao) {
+  const horizonteDias = Number(previsao?.horizonte_dias);
+  const produtos = previsao?.produtos;
+  return (
+    Number.isInteger(horizonteDias) &&
+    horizonteDias > 0 &&
+    Array.isArray(produtos) &&
+    produtos.length > 0 &&
+    produtos.every(
+      (produto) =>
+        Array.isArray(produto.periodos) && produto.periodos.length === horizonteDias
+    )
+  );
+}
+
+export function ordenarProdutosPorVendas(idsProdutos, movimentosAgrupados) {
+  const vendasPorProduto = new Map(
+    idsProdutos.map((id) => [Number(id), 0])
+  );
+
+  for (const movimento of movimentosAgrupados) {
+    const idProduto = Number(movimento.id_produto);
+    if (!vendasPorProduto.has(idProduto) || !ehSaida(movimento.tipo)) continue;
+
+    const quantidade = Number(movimento._sum?.quantidade ?? 0);
+    if (Number.isFinite(quantidade)) {
+      vendasPorProduto.set(idProduto, vendasPorProduto.get(idProduto) + quantidade);
+    }
+  }
+
+  return [...vendasPorProduto.keys()].sort(
+    (a, b) => vendasPorProduto.get(b) - vendasPorProduto.get(a) || a - b
+  );
+}
+
 /** Prazo de reposição = média de (prazo_chegada - data_movimento) das entradas. */
 export function prazoReposicaoMedio(entradas, padrao) {
   const prazos = entradas
@@ -283,6 +318,11 @@ export function montarEntradaProduto(produto, movimentos, diasHistorico, prazoPa
       data_inicial: diasHistorico[0],
       quantidades_por_dia: quantidades,
     },
+    movimentacoes_recentes: movimentos.map((movimento) => ({
+      data: chaveData(movimento.data_movimento),
+      tipo: normalizar(movimento.tipo),
+      quantidade: arredondar(Number(movimento.quantidade), 2),
+    })),
   };
 }
 
@@ -299,6 +339,56 @@ export function montarLinhas(entradas, previsoes) {
     });
     return { entrada, previsao, recomendacao };
   });
+}
+
+/** Projeta por padrão semanal e médias locais quando o provedor de IA falha. */
+export function preverLocalmente(entradas, datasPrevisao) {
+  return new Map(
+    entradas.map((entrada) => {
+      const historico = entrada.historico_saidas?.quantidades_por_dia ?? [];
+      const dataInicial = entrada.historico_saidas?.data_inicial;
+      const porDiaSemana = Array.from({ length: 7 }, () => []);
+
+      historico.forEach((quantidade, indice) => {
+        const data = somarDias(dataInicial, indice);
+        const diaSemana = new Date(`${data}T00:00:00Z`).getUTCDay();
+        const valor = Number(quantidade);
+        if (Number.isFinite(valor) && valor >= 0) porDiaSemana[diaSemana].push(valor);
+      });
+
+      const media7 = Number(entrada.estatisticas?.media_dia_7);
+      const media30 = Number(entrada.estatisticas?.media_dia_30);
+      const mediaRecente = Number.isFinite(media7) && media7 >= 0 ? media7 : media30 || 0;
+      const tendencia = Number(entrada.estatisticas?.tendencia_percentual);
+      const fatorTendencia =
+        Number.isFinite(tendencia) && entrada.estatisticas?.tendencia_percentual !== null
+          ? Math.min(1.3, Math.max(0.7, 1 + tendencia / 200))
+          : 1;
+      const diasComSaida = Number(entrada.estatisticas?.dias_com_saida) || 0;
+
+      const serie = datasPrevisao.map((data) => {
+        const diaSemana = new Date(`${data}T00:00:00Z`).getUTCDay();
+        const observacoes = porDiaSemana[diaSemana];
+        const mediaDiaSemana = observacoes.length ? media(observacoes) : mediaRecente;
+        const base = mediaDiaSemana * 0.65 + mediaRecente * 0.35;
+        const previsto = diasComSaida ? Math.max(0, base * fatorTendencia) : 0;
+        const quantidade = entrada.fracionado
+          ? arredondar(previsto, 3)
+          : Math.round(previsto);
+        return { data, quantidade };
+      });
+
+      return [
+        entrada.id_produto,
+        {
+          serie,
+          confianca: arredondar(Math.min(0.55, 0.2 + diasComSaida / 60), 2),
+          justificativa:
+            'Projeção local baseada no padrão semanal e nas médias históricas; IA indisponível.',
+        },
+      ];
+    })
+  );
 }
 
 /** Confere a severidade dos alertas da IA pela regra e acrescenta ruptura que a IA não avisou. */
@@ -363,6 +453,8 @@ export default {
   ehSaida,
   serieDiaria,
   estatisticas,
+  previsaoCompleta,
+  ordenarProdutosPorVendas,
   prazoReposicaoMedio,
   validarContexto,
   validarPrevisao,
@@ -374,6 +466,7 @@ export default {
   dividirEmLotes,
   montarEntradaProduto,
   montarLinhas,
+  preverLocalmente,
   consolidarAlertas,
   descreverEmpresa,
 };

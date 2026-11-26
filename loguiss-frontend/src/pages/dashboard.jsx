@@ -40,19 +40,23 @@ function Dashboard() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-1">
+                <div className="grid grid-cols-1 gap-5">
                     <CardsIndicadores produtos={produtos} />
                     <AlertaEstoque produtos={produtos} />
                     <Movimentacoes />
-                    <div className="grid grid-cols-1 gap-0 xl:grid-cols-2">
+                    
+                    {/* Troque gap-0 por gap-5 (ou o valor padrão do seu projeto) */}
+                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
                         <DistribuicaoCategoria />
                         <ProdutosParados produtos={produtos} />
                     </div>
+
                     <EvolucaoVendas />
                 </div>
             </main>
         </div>
     );
+
 }
 
 export default Dashboard;

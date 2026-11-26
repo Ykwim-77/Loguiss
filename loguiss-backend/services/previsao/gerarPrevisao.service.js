@@ -16,7 +16,6 @@ import { consultarPrevisaoIA } from './consultarPrevisaoIA.service.js';
 import { salvarPrevisao } from './salvarPrevisao.service.js';
 import { buscarPrevisao } from './buscarPrevisao.service.js';
 
-// Evita duas gerações ao mesmo tempo (cada uma gasta tempo e dinheiro de IA).
 let gerandoAgora = false;
 
 /**
@@ -30,7 +29,10 @@ export async function gerarPrevisao(opcoes = {}) {
 
   gerandoAgora = true;
   try {
-    const config = await buscarConfiguracaoIA();
+    const [config, empresa] = await Promise.all([
+      buscarConfiguracaoIA(),
+      buscarEmpresa(),
+    ]);
 
     const horizonteDias = Number(opcoes.horizonteDias ?? config.horizonte_dias);
     if (!HORIZONTES_VALIDOS.includes(horizonteDias)) {
@@ -41,7 +43,6 @@ export async function gerarPrevisao(opcoes = {}) {
       );
     }
 
-    const empresa = await buscarEmpresa();
     const descricao = calc.descreverEmpresa(empresa);
     if (!descricao.completo) {
       console.warn('[previsao] cidade, UF ou segmento não cadastrados na empresa: a pesquisa da IA ficará genérica.');
@@ -66,7 +67,7 @@ export async function gerarPrevisao(opcoes = {}) {
 
     const idPrevisao = await salvarPrevisao({
       horizonteDias,
-      modelo: contexto.modelo ?? previsao.modelo,
+      modelo: previsao.modelo ?? contexto.modelo,
       localizacao,
       segmento,
       contexto: contexto.contexto,
@@ -82,5 +83,6 @@ export async function gerarPrevisao(opcoes = {}) {
     gerandoAgora = false;
   }
 }
+
 
 export default { gerarPrevisao };

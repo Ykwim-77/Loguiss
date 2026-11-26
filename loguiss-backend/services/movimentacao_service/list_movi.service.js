@@ -7,7 +7,7 @@ export default async function list_movimentacao_service(req, res) {
         try {
             const movimentacoes = await prisma.movimentacao_estoque.findMany({
                 where:{
-                    tipo: tipo
+                    tipo: "SAIDA"
                 },
                 include:{
                     produto: true,
@@ -23,7 +23,7 @@ export default async function list_movimentacao_service(req, res) {
         try {
             const movimentacoes = await prisma.movimentacao_estoque.findMany({
                 where:{
-                    tipo: tipo
+                    tipo: "ENTRADA"
                 },
                 include:{
                     produto: true,
