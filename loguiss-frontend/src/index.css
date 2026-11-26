@@ -1,38 +1,83 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Tema padrão: Graphite & Lime */
-:root {
+:root,
+[data-theme='dark'] {
     --background: #111111;
-    --surface: #1B1B1B;
+    --surface: #1b1b1b;
     --surface-secondary: #292929;
-    --primary: #A3E635;
-    --primary-hover: #BEF264;
-    --on-primary: #111111;        /* texto sobre fundo lima */
-    --text: #F5F5F5;
-    --text-secondary: #A3A3A3;
+    --primary: #a3e635;
+    --primary-hover: #bef264;
+    --on-primary: #111111; /* texto sobre fundo lima */
+    --text: #f5f5f5;
+    --text-secondary: #a3a3a3;
     --border: #343434;
-    --danger: #DC2626;
-    --danger-hover: #B91C1C;
-    --danger-text: #F87171;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-text: #f87171;
+    --warning: #facc15;
+    --warning-text: #fde047;
+    --success: #22c55e;
+    --success-text: #4ade80;
+    --info: #38bdf8;
 
-    color-scheme: dark;           /* calendário do input date, scrollbar nativa etc. */
+    color-scheme: dark; /* calendário do input date, scrollbar nativa etc. */
 }
 
-[data-theme="light"] {
-    --background: #F5F5F5;
-    --surface: #FFFFFF;
-    --surface-secondary: #E5E5E5;
-    --primary: #65A30D;
-    --primary-hover: #84CC16;
+[data-theme='light'] {
+    --background: #f5f5f5;
+    --surface: #ffffff;
+    --surface-secondary: #e5e5e5;
+    --primary: #65a30d;
+    --primary-hover: #84cc16;
     --on-primary: #111111;
     --text: #171717;
     --text-secondary: #737373;
-    --border: #D4D4D4;
-    --danger: #DC2626;
-    --danger-hover: #B91C1C;
-    --danger-text: #B91C1C;
+    --border: #d4d4d4;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-text: #b91c1c;
+    --warning: #ca8a04;
+    --warning-text: #a16207;
+    --success: #16a34a;
+    --success-text: #15803d;
+    --info: #0284c7;
 
     color-scheme: light;
+}
+
+[data-theme='midnight-dark'] {
+    --background: #07080d;
+    --surface: #0e1018;
+    --surface-secondary: #171a25;
+    --primary: #a3e635;
+    --primary-hover: #bef264;
+    --on-primary: #07080d;
+    --text: #edeef5;
+    --text-secondary: #8e93a8;
+    --border: #232736;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-text: #f87171;
+
+    color-scheme: dark;
+}
+
+[data-theme='midnight-blue'] {
+    --background: #0b1020;
+    --surface: #151d35;
+    --surface-secondary: #202d4d;
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
+    --on-primary: #0b1020;
+    --text: #eaf1ff;
+    --text-secondary: #a8b5d1;
+    --border: #2d3b5c;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-text: #f87171;
+
+    color-scheme: dark;
 }
 
 /* Gera as classes do Tailwind (bg-fundo, text-texto, border-borda...)
@@ -50,6 +95,11 @@
     --color-perigo: var(--danger);
     --color-perigo-hover: var(--danger-hover);
     --color-perigo-texto: var(--danger-text);
+    --color-aviso: var(--warning);
+    --color-aviso-texto: var(--warning-text);
+    --color-sucesso: var(--success);
+    --color-sucesso-texto: var(--success-text);
+    --color-info: var(--info);
 }
 
 body {
@@ -57,7 +107,16 @@ body {
     color: var(--text);
 }
 
-::-webkit-scrollbar { width: 7px; }
-::-webkit-scrollbar-track { background: var(--background); }
-::-webkit-scrollbar-thumb { background: var(--surface-secondary); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+::-webkit-scrollbar {
+    width: 7px;
+}
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--surface-secondary);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}

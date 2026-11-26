@@ -1,19 +1,21 @@
+import { ChartBarIncreasing } from 'lucide-react';
 import {
-    LineChart,
+    CartesianGrid,
+    Legend,
     Line,
+    LineChart,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    ReferenceLine,
 } from 'recharts';
+
 import { dadosIA, seriesIA } from '../../data/dashboardData';
-import { ChartBarIncreasing } from 'lucide-react';
+import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
 const cores = [
-    '#A3E635',
+    'var(--primary)',
     '#65A30D',
     '#38BDF8',
     '#A78BFA',
@@ -58,21 +60,17 @@ export function PrevisaoDemandasIA({
     const seriesExibidas = seriesTop5.length > 0 ? seriesTop5 : listaSeries.slice(0, limiteTop);
 
     return (
-        <div className="w-full min-w-0 rounded-xl border border-[#292929] bg-[#1B1B1B] p-5 mt-4">
+        <div className="w-full min-w-0 rounded-xl border border-borda bg-superficie p-5 mt-4">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#A3E635]/10">
-                        <ChartBarIncreasing size={20} className="text-[#A3E635]" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primaria/10">
+                        <ChartBarIncreasing size={20} className="text-primaria" />
                     </div>
 
                     <div>
-                        <h2 className="text-base font-bold text-[#F5F5F5]">
-                            {titulo}
-                        </h2>
+                        <h2 className="text-base font-bold text-texto">{titulo}</h2>
 
-                        <p className="text-xs text-[#A3A3A3]">
-                            {descricao}
-                        </p>
+                        <p className="text-xs text-texto-suave">{descricao}</p>
                     </div>
                 </div>
             </div>
@@ -88,14 +86,11 @@ export function PrevisaoDemandasIA({
                             bottom: 5,
                         }}
                     >
-                        <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#343434"
-                        />
+                        <CartesianGrid strokeDasharray="3 3" stroke={corGrafico.grade} />
 
                         <XAxis
                             dataKey={eixoX}
-                            stroke="#A3A3A3"
+                            stroke={corGrafico.eixo}
                             tickLine={false}
                             tick={{ fontSize: 11 }}
                             minTickGap={15}
@@ -103,20 +98,15 @@ export function PrevisaoDemandasIA({
 
                         <YAxis
                             width={45}
-                            stroke="#A3A3A3"
+                            stroke={corGrafico.eixo}
                             tickLine={false}
                             tick={{ fontSize: 11 }}
                             tickFormatter={formatarValor}
                         />
 
                         <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#222222',
-                                border: '1px solid #404040',
-                                borderRadius: '8px',
-                                color: '#F5F5F5',
-                                fontSize: '12px',
-                            }}
+                            {...estiloTooltip}
+                            contentStyle={{ ...estiloTooltip.contentStyle, fontSize: '12px' }}
                             formatter={(valor) => formatarValor(valor)}
                         />
 
@@ -126,7 +116,7 @@ export function PrevisaoDemandasIA({
                             iconType="plainline"
                             iconSize={14}
                             wrapperStyle={{
-                                color: '#F5F5F5',
+                                color: 'var(--text)',
                                 fontSize: '11px',
                                 paddingBottom: '15px',
                             }}
@@ -160,10 +150,8 @@ export function PrevisaoDemandasIA({
             </div>
 
             <div className="mt-2 flex items-center justify-center gap-2">
-                <span className="w-6 border-t-2 border-dashed border-[#F97316]" />
-                <span className="text-xs text-[#A3A3A3]">
-                    Estoque seguro
-                </span>
+                <span className="w-6 border-t-2 border-dashed border-texto-suave" />
+                <span className="text-xs text-texto-suave">Estoque seguro</span>
             </div>
         </div>
     );

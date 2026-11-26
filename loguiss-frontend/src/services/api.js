@@ -1,9 +1,30 @@
-import axios from 'axios'; //biblioteca usada para facilitar a comunicação
+import axios from 'axios';
 
-// const url = import.meta.env.VITE_BACK_URL
-
-const api_unidade = axios.create({ //create por estar criando uma conexão com o servidor
-    baseURL: "http://localhost:3000" // endereço que o backEnd fica(o endpoint vai ser passado depois)
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
 });
 
-export default api_unidade // sempre lembrar de exportar
+// Envia o token automaticamente em TODAS as requisições
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// Se o backend responder 401 (token expirado/inválido), limpa e manda pro login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;

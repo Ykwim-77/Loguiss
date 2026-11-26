@@ -1,4 +1,5 @@
 import { useId } from 'react';
+
 import { cn } from '../utils/cn';
 
 export function Inputs({
@@ -35,7 +36,7 @@ export function Inputs({
             <div
                 className={cn(
                     'flex items-center gap-3 rounded-lg border bg-fundo p-3 focus-within:border-primaria has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-70',
-                    mostrarErro ? 'border-perigo' : 'border-borda'
+                    mostrarErro ? 'border-perigo' : 'border-borda',
                 )}
             >
                 {Icon && <Icon size={20} className="text-texto-suave" />}
@@ -47,7 +48,9 @@ export function Inputs({
                         className="w-full bg-transparent text-texto outline-none [&>option]:bg-superficie"
                     >
                         {options.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
+                            <option key={o.value} value={o.value}>
+                                {o.label}
+                            </option>
                         ))}
                     </select>
                 ) : (

@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { toast } from 'sonner';
 
-import api from '../services/api';
-import { Inputs } from '../components/inputs';
 import { Button } from '../components/button';
+import { Inputs } from '../components/inputs';
+import api from '../services/api';
 import { validarFormatoEmail } from '../utils/validacoes';
 
 function EsqueceuSenha() {
@@ -33,41 +32,32 @@ function EsqueceuSenha() {
             setLoading(true);
 
             const response = await api.post('/login/cod_verify', {
-                email: email.trim()
+                email: email.trim(),
             });
 
-            toast.success(
-                response.data.MSG || 'Código enviado para seu e-mail!'
-            );
+            toast.success(response.data.MSG || 'Código enviado para seu e-mail!');
 
             navigate('/codigo-verificacao', {
                 state: {
                     email: email.trim(),
-                    token: response.data.token
-                }
+                    token: response.data.token,
+                },
             });
-
         } catch (error) {
-            console.error(
-                'Erro ao solicitar recuperação de senha:',
-                error.response?.data || error
-            );
+            console.error('Erro ao solicitar recuperação de senha:', error.response?.data || error);
 
             toast.error(
-                error.response?.data?.MSG ||
-                'Não foi possível enviar o código. Tente novamente.'
+                error.response?.data?.MSG || 'Não foi possível enviar o código. Tente novamente.',
             );
-
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <main className="min-h-screen bg-[#111111] flex items-center justify-center p-4">
+        <main className="min-h-screen bg-fundo flex items-center justify-center p-4">
             <div className="w-full max-w-[900px] flex flex-col lg:flex-row overflow-hidden rounded-2xl">
-
-                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-[#1B1B1B]">
+                <aside className="hidden lg:flex relative w-1/2 min-h-[470px] overflow-hidden bg-superficie">
                     <img
                         src="/images/img-estoque.jpeg"
                         alt="Profissional utilizando o sistema Loguiss"
@@ -77,17 +67,17 @@ function EsqueceuSenha() {
 
                 <form
                     onSubmit={formularioEnviado}
-                    className="w-full lg:w-1/2 min-h-[440px] bg-[#1B1B1B] px-7 py-9 sm:px-10 flex flex-col justify-center"
+                    className="w-full lg:w-1/2 min-h-[440px] bg-superficie px-7 py-9 sm:px-10 flex flex-col justify-center"
                 >
                     <div className="w-full max-w-[340px] mx-auto">
-
                         <div className="text-center mb-7">
-                            <h1 className="text-2xl font-bold text-[#A3E635] mb-2">
+                            <h1 className="text-2xl font-bold text-primaria mb-2">
                                 Esqueceu a senha?
                             </h1>
 
-                            <p className="text-xs text-gray-400">
-                                Insira seu email cadastrado para receber as instruções de redefinição de senha.
+                            <p className="text-xs text-texto-suave">
+                                Insira seu email cadastrado para receber as instruções de
+                                redefinição de senha.
                             </p>
                         </div>
 
@@ -108,19 +98,19 @@ function EsqueceuSenha() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-[#A3E635] hover:bg-[#BEF264] text-[#111111] font-bold w-full mb-5"
+                            className="w-full mb-5"
                         >
                             {loading ? 'Enviando código...' : 'Verificar email'}
                         </Button>
 
                         <Button
                             type="button"
-                            className="bg-[#F5F5F5] hover:bg-[#292929] text-[#111111] font-bold w-full"
+                            variant="secondary"
+                            className="w-full"
                             onClick={() => navigate('/login')}
                         >
                             Voltar para o login
                         </Button>
-
                     </div>
                 </form>
             </div>

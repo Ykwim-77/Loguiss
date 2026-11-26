@@ -13,23 +13,24 @@ import router_dashboard from './routes/router_dashboard.js';
 import router_empresa from './routes/routes_empresa.js';
 import router_config_ia from './routes/configuracaoIA.routes.js'
 import router_previsao from './routes/previsao.routes.js'
+import autenticarToken from './middlewares/authMiddleware.js';
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use("/login", router_login);
-app.use("/categoria", router_categoria);
-app.use("/receita", router_receita);
-app.use("/produto", router_produto);
-app.use("/fornecedor", router_fornecedor);
-app.use("/unidade_medida", router_unidade_medida);
-app.use("/cliente", router_cliente);
-app.use("/user", router_user);
-app.use("/movi", router_movimentacao);
+app.use("/categoria", autenticarToken, router_categoria);
+app.use("/receita", autenticarToken, router_receita);
+app.use("/produto", autenticarToken, router_produto);
+app.use("/fornecedor", autenticarToken, router_fornecedor);
+app.use("/unidade_medida", autenticarToken, router_unidade_medida);
+app.use("/cliente", autenticarToken, router_cliente);
+app.use("/user", autenticarToken, router_user);
+app.use("/movi", autenticarToken, router_movimentacao);
 app.use("/dashboard", router_dashboard);
-app.use("/empresa", router_empresa);
-app.use("/config_ia", router_config_ia);
+app.use("/empresa", autenticarToken, router_empresa);
+app.use("/config_ia", autenticarToken, router_config_ia);
 app.use("/previsao", router_previsao)
 
 
