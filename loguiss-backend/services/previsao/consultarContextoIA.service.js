@@ -40,7 +40,6 @@ export async function consultarContextoIA({
   } catch (erro) {
     if (erro.codigo === 'IA_SEM_CHAVE') throw erro;
 
-    // Sem o contexto a previsão ainda funciona, só que sem eventos e sazonalidade.
     console.warn(`[previsao] seguindo sem contexto: ${erro.message}`);
     return {
       contexto: { eventos: [], sazonalidade: '', fontes: [], indisponivel: true },

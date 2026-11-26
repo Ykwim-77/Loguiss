@@ -9,7 +9,7 @@ export const INTERVALO_MAXIMO_MINUTOS = 43200; // 30 dias
 export const PRAZO_REPOSICAO_MINIMO_DIAS = 1;
 export const PRAZO_REPOSICAO_MAXIMO_DIAS = 60;
 
-export const DIAS_HISTORICO = 60; // quantos dias de saídas são enviados à IA
+export const DIAS_HISTORICO = 5; // quantos dias de saídas são enviados à IA
 export const PRODUTOS_POR_LOTE = 10; // produtos por chamada de previsão
 export const MAX_ALERTAS_POR_PRODUTO = 3;
 

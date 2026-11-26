@@ -3,8 +3,13 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '../components/button';
+import { SideBar } from '../components/sidebar';
+import { Inputs } from '../components/inputs';
+import { Search, Combine } from 'lucide-react';
+import { index } from 'lodash';
 import { EntityCard } from '../components/card';
 import api from '../services/api';
+
 
 function UnidadesMedida() {
     const [showUnitForm, setShowUnitForm] = useState(false);
@@ -215,7 +220,7 @@ function UnidadesMedida() {
 
                     {!loading && filteredUnidades.map((unidade) => (
                         <EntityCard
-                            key={index}
+                            key={unidade.id_unidade}
                             titulo={unidade.desc}
                             icone={Combine}
                             onEdit={() => {
@@ -232,7 +237,7 @@ function UnidadesMedida() {
                             }}
                             onDelete={() => {
                                 if (window.confirm('Deseja excluir esta unidade de medida?')) {
-                                    deleteUnit(index);
+                                    deleteUnit(unidade.id_unidade);
                                     toast.success('Unidade de medida excluída com sucesso!');
                                 }
                             }}

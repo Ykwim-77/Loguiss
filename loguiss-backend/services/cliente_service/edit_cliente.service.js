@@ -12,9 +12,6 @@ export async function edit_cliente_service(req, res) {
     const id_cliente = req.params.id_cliente;
 
     
-    if(!email || !nome_cliente || !telefone || !cpf_cnpj || !id_cliente){
-        return res.status(400).json({MSG: "Alguns dados faltantes, favor conferir!"})
-    }
     try {
         const existe_cliente = await prisma.cliente.findUnique({
             where:{

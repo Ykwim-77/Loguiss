@@ -5,8 +5,32 @@ export default async function dashboard_service(req, res) {
         const produtos = await prisma.produto.findMany({
             include: {
                 estoque: true,
-            }
+                categorias: true,
+            },
         });
+        const categorias = await prisma.categoria.findMany();
+
+        const mapaCategorias = new Map(
+            categorias.map((cat) => [cat.id_categoria ?? cat.id, cat])
+        );
+
+        function obterCategoria(relacoesCategorias) {
+            if (!Array.isArray(relacoesCategorias) || relacoesCategorias.length === 0) {
+                return null;
+            }
+
+            const nomes = relacoesCategorias
+                .map((rel) => {
+                    const cat = mapaCategorias.get(rel.id_categoria);
+                    return cat?.descricao ?? cat?.nome ?? null;
+                })
+                .filter(Boolean);
+
+            return nomes.length > 0 ? nomes.join(', ') : null;
+        }
+
+        const isEntrada = (tipo) => tipo === 'E' || tipo === 'ENTRADA';
+        const isSaida = (tipo) => tipo === 'S' || tipo === 'SAIDA';
 
         const movimentacoes = await prisma.movimentacao_estoque.findMany({
             select: {
@@ -20,15 +44,11 @@ export default async function dashboard_service(req, res) {
 
         const produtos_formatados = produtos.map((produto) => {
             const movimentacoesProduto = movimentacoes.filter(
-                (movimentacao) =>
-                    movimentacao.id_produto === produto.id_produto
+                (movimentacao) => movimentacao.id_produto === produto.id_produto
             );
 
             const ultimaMovimentacao = movimentacoesProduto
-                .sort(
-                    (a, b) =>
-                        new Date(b.data_movimento) - new Date(a.data_movimento)
-                )[0];
+                .sort((a, b) => new Date(b.data_movimento) - new Date(a.data_movimento))[0];
 
             const dias = ultimaMovimentacao
                 ? Math.floor(
@@ -37,21 +57,20 @@ export default async function dashboard_service(req, res) {
                 )
                 : null;
 
+            const estoqueObj = Array.isArray(produto.estoque)
+                ? produto.estoque[0]
+                : produto.estoque;
+
             return {
                 id: produto.id_produto,
                 nome: produto.descricao,
-                estoqueAtual: produto.estoque.quantidade,
-                estoqueMinimo: produto.estoque.minimo,
-                valorUnitario: produto.valor,
-
+                estoqueAtual: Number(estoqueObj?.quantidade ?? 0),
+                estoqueMinimo: Number(estoqueObj?.minimo ?? 0),
+                valorUnitario: Number(produto.valor ?? 0),
+                categoria: obterCategoria(produto.categorias),
                 saidas: movimentacoesProduto
-                    .filter((movimentacao) => movimentacao.tipo === "S")
-                    .reduce(
-                        (total, movimentacao) =>
-                            Number(total) + Number(movimentacao.quantidade),
-                        0
-                    ),
-
+                    .filter((movimentacao) => isSaida(movimentacao.tipo))
+                    .reduce((total, movimentacao) => Number(total) + Number(movimentacao.quantidade), 0),
                 diasSemMovimentacao: dias
             };
         });
@@ -62,49 +81,45 @@ export default async function dashboard_service(req, res) {
             'Set', 'Out', 'Nov', 'Dez'
         ];
 
+        const anoFiltro = Number(req.query?.ano) || new Date().getFullYear();
+
         const movimentacoes_formatadas = nomesMeses.map((mes, index) => {
             const movimentacoesMes = movimentacoes.filter((movimentacao) => {
                 const data = new Date(movimentacao.data_movimento);
-
                 return (
                     data.getMonth() === index &&
-                    data.getFullYear() === new Date().getFullYear()
+                    data.getFullYear() === anoFiltro
                 );
             });
 
             return {
                 mes,
                 entradas: movimentacoesMes
-                    .filter((movimentacao) => movimentacao.tipo === "E")
+                    .filter((movimentacao) => isEntrada(movimentacao.tipo))
                     .reduce((total, movimentacao) => Number(total) + Number(movimentacao.quantidade), 0),
-
                 saidas: movimentacoesMes
-                    .filter((movimentacao) => movimentacao.tipo === "S")
+                    .filter((movimentacao) => isSaida(movimentacao.tipo))
                     .reduce((total, movimentacao) => Number(total) + Number(movimentacao.quantidade), 0)
             };
-        });    
-        
+        });
+
         const evolucaoVendas = {
             mensal: {},
             anual: {}
         };
 
-        const saidas = movimentacoes.filter(
-            (m) => m.tipo === "S"
-        );
+        const saidas = movimentacoes.filter((m) => isSaida(m.tipo));
 
         saidas.forEach((m) => {
             const data = new Date(m.data_movimento);
 
             const ano = data.getFullYear();
-            const mes = String(data.getMonth() + 1).padStart(2, "0");
-            const dia = String(data.getDate()).padStart(2, "0");
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
 
             const chaveMes = `${ano}-${mes}`;
 
-            const produto = produtos.find(
-                (p) => p.id_produto === m.id_produto
-            );
+            const produto = produtos.find((p) => p.id_produto === m.id_produto);
 
             const valorVenda =
                 Number(m.quantidade) * Number(m.valor_unitario ?? produto?.valor ?? 0);
@@ -122,7 +137,6 @@ export default async function dashboard_service(req, res) {
                     periodo: dia,
                     vendas: 0
                 };
-
                 evolucaoVendas.mensal[chaveMes].push(registroDia);
             }
 
@@ -150,11 +164,10 @@ export default async function dashboard_service(req, res) {
             movimentacoes: movimentacoes_formatadas,
             evolucaoVendas: evolucaoVendas
         });
-
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            MSG: "Erro ao carregar dashboard."
+            MSG: 'Erro ao carregar dashboard.'
         });
     }
 }

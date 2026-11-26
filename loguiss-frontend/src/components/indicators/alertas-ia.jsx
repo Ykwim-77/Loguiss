@@ -117,13 +117,6 @@ export function AlertasIA({
                                             <span className="text-texto-suave">
                                                 {alerta.tempo} · {alerta.codigo}
                                             </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => onVerProjecao?.(alerta)}
-                                                className="font-semibold text-texto transition-colors hover:text-primaria cursor-pointer"
-                                            >
-                                                Ver projeção →
-                                            </button>
                                         </div>
                                     </div>
                                 </div>

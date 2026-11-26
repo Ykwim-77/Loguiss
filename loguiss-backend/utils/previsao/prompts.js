@@ -112,16 +112,45 @@ export function montarMensagemPrevisao({
   contexto,
   produtos,
 }) {
+  const eventosEnxutos = (Array.isArray(contexto?.eventos) ? contexto.eventos : [])
+    .filter((e) => e?.confirmado !== false)
+    .slice(0, 8)
+    .map((e) => ({
+      nome: e.nome,
+      inicio: e.data_inicio,
+      fim: e.data_fim,
+      impacto: e.impacto,
+      obs: e.observacao ? String(e.observacao).slice(0, 120) : undefined,
+    }));
+
+  const produtosEnxutos = produtos.map((p) => ({
+    id_produto: p.id_produto,
+    nome: p.nome,
+    categoria: p.categoria,
+    unidade: p.unidade,
+    fracionado: p.fracionado,
+    estoque_atual: p.estoque_atual,
+    estoque_seguro: p.estoque_seguro,
+    prazo_reposicao_dias: p.prazo_reposicao_dias,
+    estatisticas: p.estatisticas,
+    historico_saidas: {
+      data_inicial: p.historico_saidas.data_inicial,
+      quantidades_por_dia: p.historico_saidas.quantidades_por_dia.map((q) =>
+        Number(Number(q).toFixed(2))
+      ),
+    },
+  }));
+
   return JSON.stringify({
     dataReferencia,
     dataInicioPrevisao,
     dataFimPrevisao,
     horizonteDias,
     contexto: {
-      eventos: contexto.eventos,
-      sazonalidade: contexto.sazonalidade,
+      eventos: eventosEnxutos,
+      sazonalidade: contexto?.sazonalidade ? String(contexto.sazonalidade).slice(0, 300) : '',
     },
-    produtos,
+    produtos: produtosEnxutos,
   });
 }
 

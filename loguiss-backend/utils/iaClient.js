@@ -12,6 +12,10 @@ const MODELOS_FALLBACK = (
   .filter(Boolean);
 
 const BUSCA_WEB_HABILITADA = process.env.GEMINI_USAR_BUSCA_WEB !== 'false';
+const TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 60000;
+
+let clienteCache = null;
+let chaveCache = null;
 
 function obterCliente() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -22,11 +26,26 @@ function obterCliente() {
       'IA_SEM_CHAVE'
     );
   }
-  return new GoogleGenAI({ apiKey });
+  if (!clienteCache || chaveCache !== apiKey) {
+    clienteCache = new GoogleGenAI({ apiKey });
+    chaveCache = apiKey;
+  }
+  return clienteCache;
 }
 
 function esperar(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function comTimeout(promessa, ms, rotulo) {
+  let timerId;
+  const timeoutPromessa = new Promise((_, reject) => {
+    timerId = setTimeout(() => {
+      reject(new Error(`Timeout (${ms}ms) na chamada da IA: ${rotulo}`));
+    }, ms);
+  });
+
+  return Promise.race([promessa, timeoutPromessa]).finally(() => clearTimeout(timerId));
 }
 
 function ehErro503(error) {
@@ -90,8 +109,9 @@ function extrairTextoResposta(response) {
 
 function montarConfig(modelo, { system, usarBuscaWeb, maxTokens }) {
   const ehGemma = modelo.toLowerCase().startsWith('gemma');
+  const limiteTokens = Number(maxTokens) > 0 ? Number(maxTokens) : 2048;
   const config = {
-    maxOutputTokens: Math.max(Number(maxTokens) || 2048, 4096),
+    maxOutputTokens: limiteTokens,
   };
 
   if (system && !ehGemma) {
@@ -119,11 +139,15 @@ async function executarChamada(ai, modelo, { system, usuario, usarBuscaWeb, maxT
   const config = montarConfig(modelo, { system, usarBuscaWeb, maxTokens });
   const contents = montarContents(modelo, system, usuario);
 
-  const response = await ai.models.generateContent({
-    model: modelo,
-    contents,
-    config,
-  });
+  const response = await comTimeout(
+    ai.models.generateContent({
+      model: modelo,
+      contents,
+      config,
+    }),
+    TIMEOUT_MS,
+    modelo
+  );
 
   const texto = extrairTextoResposta(response);
   const finishReason = response?.candidates?.[0]?.finishReason;
@@ -142,38 +166,38 @@ async function executarChamada(ai, modelo, { system, usuario, usarBuscaWeb, maxT
 }
 
 async function gerarComModelo(ai, modelo, { system, usuario, usarBuscaWeb, maxTokens }) {
-  const maxTentativas = 2;
+  try {
+    return await executarChamada(ai, modelo, {
+      system,
+      usuario,
+      usarBuscaWeb,
+      maxTokens,
+    });
+  } catch (error) {
+    if (error?.finishReason === 'MALFORMED_FUNCTION_CALL' && usarBuscaWeb) {
+      console.warn(
+        `[iaClient] ${modelo} retornou MALFORMED_FUNCTION_CALL com busca web, tentando sem busca web...`
+      );
+      return await executarChamada(ai, modelo, {
+        system,
+        usuario,
+        usarBuscaWeb: false,
+        maxTokens,
+      });
+    }
 
-  for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
-    try {
+    if (ehErro503(error)) {
+      console.warn(`[iaClient] ${modelo} retornou 503, tentando novamente em 500ms...`);
+      await esperar(500);
       return await executarChamada(ai, modelo, {
         system,
         usuario,
         usarBuscaWeb,
         maxTokens,
       });
-    } catch (error) {
-      // Se deu MALFORMED_FUNCTION_CALL com busca web, tenta imediatamente sem busca web
-      if (error?.finishReason === 'MALFORMED_FUNCTION_CALL' && usarBuscaWeb) {
-        console.warn(
-          `[iaClient] ${modelo} retornou MALFORMED_FUNCTION_CALL com busca web, tentando sem busca web...`
-        );
-        return await executarChamada(ai, modelo, {
-          system,
-          usuario,
-          usarBuscaWeb: false,
-          maxTokens,
-        });
-      }
-
-      if (ehErro503(error) && tentativa < maxTentativas) {
-        console.warn(`[iaClient] ${modelo} retornou 503, tentando novamente em 500ms...`);
-        await esperar(500);
-        continue;
-      }
-
-      throw error;
     }
+
+    throw error;
   }
 }
 
@@ -181,7 +205,7 @@ export async function consultarIA({
   system,
   usuario,
   usarBuscaWeb = false,
-  maxTokens = 4096,
+  maxTokens = 2048,
   modelo = MODELO_PADRAO,
 }) {
   const ai = obterCliente();
@@ -218,11 +242,9 @@ export async function consultarIA({
         }
       }
 
-      if (ehErro503(error) || ehErroCota429(error)) {
-        if (i < candidatos.length - 1) {
-          await esperar(150);
-          continue;
-        }
+      if ((ehErro503(error) || ehErroCota429(error)) && i < candidatos.length - 1) {
+        await esperar(150);
+        continue;
       }
 
       throw error;

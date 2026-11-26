@@ -1,8 +1,3 @@
-/**
- * Transforma o que está no banco no mesmo formato do seu arquivo de exemplo
- * (dadosIA, seriesIA, dadosSaida, recomendacoes, alertas, movimentacoes),
- * para o front só consumir e exibir.
- */
 import {
   chaveData,
   somarDias,
@@ -15,12 +10,18 @@ import {
 const FUSO = 'America/Sao_Paulo';
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+const formatadorHora = new Intl.DateTimeFormat('pt-BR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: FUSO,
+});
+
 export function codigoProduto(id) {
   return `P-${String(id).padStart(3, '0')}`;
 }
 
 function isoData(data) {
-  return new Date(data).toISOString().slice(0, 10);
+  return (data instanceof Date ? data : new Date(data)).toISOString().slice(0, 10);
 }
 
 function rotuloDia(iso) {
@@ -29,30 +30,28 @@ function rotuloDia(iso) {
 }
 
 function horaLocal(data) {
-  return new Date(data).toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: FUSO,
-  });
+  return formatadorHora.format(data instanceof Date ? data : new Date(data));
 }
 
-/** "Há 12 min", "Hoje, 08:15", "Ontem, 17:46" ou "21/11, 12:05". */
 export function tempoRelativo(data, agora = new Date()) {
-  const minutos = Math.floor((agora - new Date(data)) / 60000);
+  const dataObj = data instanceof Date ? data : new Date(data);
+  const agoraObj = agora instanceof Date ? agora : new Date(agora);
+  const minutos = Math.floor((agoraObj - dataObj) / 60000);
   if (minutos < 1) return 'Agora';
   if (minutos < 60) return `Há ${minutos} min`;
 
-  const hoje = chaveData(agora);
-  const dia = chaveData(data);
-  if (dia === hoje) return `Hoje, ${horaLocal(data)}`;
-  if (somarDias(dia, 1) === hoje) return `Ontem, ${horaLocal(data)}`;
-  return `${rotuloDia(dia)}, ${horaLocal(data)}`;
+  const hoje = chaveData(agoraObj);
+  const dia = chaveData(dataObj);
+  if (dia === hoje) return `Hoje, ${horaLocal(dataObj)}`;
+  if (somarDias(dia, 1) === hoje) return `Ontem, ${horaLocal(dataObj)}`;
+  return `${rotuloDia(dia)}, ${horaLocal(dataObj)}`;
 }
 
-/** "Hoje", "Ontem" ou "21 nov". */
 function rotuloDataMovimento(data, agora = new Date()) {
-  const hoje = chaveData(agora);
-  const dia = chaveData(data);
+  const dataObj = data instanceof Date ? data : new Date(data);
+  const agoraObj = agora instanceof Date ? agora : new Date(agora);
+  const hoje = chaveData(agoraObj);
+  const dia = chaveData(dataObj);
   if (dia === hoje) return 'Hoje';
   if (somarDias(dia, 1) === hoje) return 'Ontem';
   const [, mes, d] = dia.split('-');
@@ -84,57 +83,66 @@ function formatarMovimentacao(mov, agora) {
   };
 }
 
-/**
- * previsao: registro com include de produtos (periodos, produto) e alertas.
- * movimentacoes: últimas movimentações do banco (não vêm da IA).
- */
 export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
-  // dadosIA: uma linha por dia, uma coluna por produto (p<id>)
   const linhas = new Map();
+  const seriesIA = [];
+  const dadosSaida = [];
+  const recomendacoesRaw = [];
+
   for (const pp of previsao.produtos) {
+    const chaveProd = `p${pp.id_produto}`;
+    const nomeProd = pp.produto.descricao;
+    const unidadeProd = pp.produto.unidade_medida?.nomenclatura ?? '';
+
     for (const periodo of pp.periodos) {
       const iso = isoData(periodo.data);
-      if (!linhas.has(iso)) linhas.set(iso, { data: iso, periodo: rotuloDia(iso) });
-      linhas.get(iso)[`p${pp.id_produto}`] = periodo.quantidade;
+      let linha = linhas.get(iso);
+      if (!linha) {
+        linha = { data: iso, periodo: rotuloDia(iso) };
+        linhas.set(iso, linha);
+      }
+      linha[chaveProd] = periodo.quantidade;
+    }
+
+    seriesIA.push({
+      dataKey: chaveProd,
+      nome: nomeProd,
+      estoqueSeguro: pp.estoque_seguro,
+    });
+
+    dadosSaida.push({
+      nome: nomeProd,
+      quantidade: pp.total_previsto,
+    });
+
+    if (pp.comprar_qtd > 0) {
+      recomendacoesRaw.push({
+        id: pp.id_produto,
+        nome: nomeProd,
+        codigo: codigoProduto(pp.id_produto),
+        categoria: categoriaDe(pp.produto),
+        estoque: pp.estoque_na_data,
+        unidade: unidadeProd,
+        mediaDia: arredondar(pp.media_dia, 1),
+        coberturaDias: pp.cobertura_dias,
+        diasParaComprar: pp.dias_para_comprar,
+        statusPrazo: statusPrazo(pp.dias_para_comprar),
+        urgente: pp.urgente,
+        comprarQtd: pp.comprar_qtd,
+        confianca: pp.confianca,
+        justificativa: pp.justificativa,
+      });
     }
   }
+
   const dadosIA = [...linhas.values()].sort((a, b) => a.data.localeCompare(b.data));
 
-  const seriesIA = previsao.produtos.map((pp) => ({
-    dataKey: `p${pp.id_produto}`,
-    nome: pp.produto.descricao,
-    estoqueSeguro: pp.estoque_seguro,
-  }));
-
-  const dadosSaida = previsao.produtos.map((pp) => ({
-    nome: pp.produto.descricao,
-    quantidade: pp.total_previsto,
-  }));
-
-  const recomendacoesCompra = previsao.produtos
-    .filter((pp) => pp.comprar_qtd > 0)
-    .map((pp) => ({
-      id: pp.id_produto,
-      nome: pp.produto.descricao,
-      codigo: codigoProduto(pp.id_produto),
-      categoria: categoriaDe(pp.produto),
-      estoque: pp.estoque_na_data,
-      unidade: pp.produto.unidade_medida?.nomenclatura ?? '',
-      mediaDia: arredondar(pp.media_dia, 1),
-      coberturaDias: pp.cobertura_dias,
-      diasParaComprar: pp.dias_para_comprar,
-      statusPrazo: statusPrazo(pp.dias_para_comprar),
-      urgente: pp.urgente,
-      comprarQtd: pp.comprar_qtd,
-      confianca: pp.confianca,
-      justificativa: pp.justificativa,
-    }))
-    .sort((a, b) => {
-      if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
-      const da = a.diasParaComprar ?? Infinity;
-      const db = b.diasParaComprar ?? Infinity;
-      return da - db;
-    });
+  const recomendacoesCompra = recomendacoesRaw.sort((a, b) => {
+    if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+    const da = a.diasParaComprar ?? Infinity;
+    const db = b.diasParaComprar ?? Infinity;
+    return da - db;
+  });
 
   const ordemSeveridade = { urgente: 0, atencao: 1, informativo: 2 };
   const alertas = [...previsao.alertas]

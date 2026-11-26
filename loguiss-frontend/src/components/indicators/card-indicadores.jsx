@@ -10,7 +10,7 @@ export function CardsIndicadores({ produtos }) {
     );
 
     return (
-        <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="mb-0 grid grid-cols-1 gap-5 md:grid-cols-2">
             <StatCard
                 titulo="Total de produtos cadastrados"
                 valor={produtos.length}

@@ -7,7 +7,7 @@ import { PrevisaoDemandasIA } from '../components/indicators/previsao-demandas-i
 import { PrevisaoSaida } from '../components/indicators/previsao-venda';
 import { RecomendacoesCompra } from '../components/indicators/recomendacao-compra';
 import { SideBar } from '../components/sidebar';
-import { produtos } from '../data/dashboardData';
+import { alertasPadrao, produtos } from '../data/dashboardData';
 
 function PrevisaoDemanda() {
     return (
@@ -31,7 +31,7 @@ function PrevisaoDemanda() {
                     />
                     <StatCard
                         titulo="Produtos em risco"
-                        valor="3"
+                        valor={produtos.filter((produto) => produto.estoqueAtual < produto.estoqueMinimo).length}
                         icone={TriangleAlert}
                         subDescricao="Produtos com baixo estoque"
                     />
@@ -44,7 +44,7 @@ function PrevisaoDemanda() {
                     />
                     <StatCard
                         titulo="Alertas"
-                        valor="5"
+                        valor={alertasPadrao.length}
                         icone={ChartColumn}
                         subDescricao="Estimativas que pedem atenção"
                     />

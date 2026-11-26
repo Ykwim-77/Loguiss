@@ -20,47 +20,45 @@ const COLORS = [
 
 const RADIAN = Math.PI / 180;
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-    if (cx == null || cy == null || innerRadius == null || outerRadius == null) {
-        return null;
-    }
-
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-
-    const x = Number(cx) + radius * Math.cos(-(midAngle ?? 0) * RADIAN);
-    const y = Number(cy) + radius * Math.sin(-(midAngle ?? 0) * RADIAN);
-
-    return (
-        <text
-            x={x}
-            y={y}
-            fill="var(--on-primary)"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={13}
-            fontWeight="bold"
-        >
-            {`${((percent ?? 0) * 100).toFixed(0)}%`}
-        </text>
-    );
-};
-
 const MyCustomPie = (props) => {
     const pontosAtivos = useActiveTooltipDataPoints();
     const tooltipAtivo = useIsTooltipActive();
 
     const fatiaAtiva = tooltipAtivo && props.payload === pontosAtivos?.[0];
-
     const fillOpacity = tooltipAtivo && !fatiaAtiva ? 0.5 : 1;
 
+    // Cálculo da posição do texto (80% perto da borda externa)
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.8;
+    const x = Number(cx) + radius * Math.cos(-(midAngle ?? 0) * RADIAN);
+    const y = Number(cy) + radius * Math.sin(-(midAngle ?? 0) * RADIAN);
+
     return (
-        <Sector
-            {...props}
-            fill={COLORS[props.index % COLORS.length]}
-            stroke="none"
-            fillOpacity={fillOpacity}
-            style={{ transition: 'fill-opacity 0.3s ease' }}
-        />
+        <g>
+            <Sector
+                {...props}
+                fill={COLORS[props.index % COLORS.length]}
+                stroke="none"
+                fillOpacity={fillOpacity}
+                style={{ transition: 'fill-opacity 0.3s ease' }}
+            />
+
+            {/* Exibe a porcentagem apenas na fatia que está com o mouse em cima */}
+            {fatiaAtiva && (
+                <text
+                    x={x}
+                    y={y}
+                    fill="var(--on-primary)"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={13}
+                    fontWeight="bold"
+                    style={{ pointerEvents: 'none' }}
+                >
+                    {`${((percent ?? 0) * 100).toFixed(0)}%`}
+                </text>
+            )}
+        </g>
     );
 };
 
@@ -68,7 +66,6 @@ export function DistribuicaoCategoria() {
     const dadosCategoria = Object.values(
         produtos.reduce((acumulador, produto) => {
             const categoria = produto.categoria;
-            
 
             if (!acumulador[categoria]) {
                 acumulador[categoria] = {
@@ -84,7 +81,7 @@ export function DistribuicaoCategoria() {
     );
 
     return (
-        <div className="mb-5 h-[380px] w-125 rounded-xl border border-borda bg-superficie p-5">
+        <div className="h-[380px] w-full rounded-xl border border-borda bg-superficie p-5">
             <div className="mb-4">
                 <h2 className="text-xl font-bold text-texto">Distribuição por categoria</h2>
 
@@ -103,8 +100,6 @@ export function DistribuicaoCategoria() {
                             cx="50%"
                             cy="50%"
                             outerRadius={105}
-                            labelLine={false}
-                            label={renderCustomizedLabel}
                             shape={MyCustomPie}
                         />
 
