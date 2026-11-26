@@ -1,3 +1,5 @@
+import { DIAS_HISTORICO_ENVIADO, MAX_MOVIMENTACOES_PREVISAO } from './constantes.js';
+
 /**
  * Prompts enviados à IA. Ficam separados da lógica para você ajustar o texto
  * sem mexer no service.
@@ -12,14 +14,14 @@
 // 1) CONTEXTO (com busca na web)
 // ---------------------------------------------------------------
 export const SYSTEM_CONTEXTO = `Você é um analista de varejo brasileiro especializado em micro e pequenas empresas.
-Sua tarefa é PESQUISAR NA WEB e resumir o que pode alterar a demanda dos produtos de uma empresa em um período futuro: feriados nacionais e locais, datas comemorativas, eventos da cidade ou região, férias escolares, estação do ano/clima e padrões sazonais do segmento da empresa.
+Pesquise o que pode afetar a demanda no período e local informados: feriados, datas comerciais, eventos locais, férias escolares, clima e sazonalidade do segmento.
 
 Regras:
-- Faça poucas buscas, objetivas (no máximo 5), e prefira fontes confiáveis e atualizadas.
-- Considere eventos dentro do período informado e também os que terminam pouco antes dele e ainda afetam a demanda.
-- Nunca invente datas. Se não conseguir confirmar uma data, use "confirmado": false ou deixe o evento de fora.
-- Liste apenas eventos relevantes para o segmento da empresa (no máximo 10).
-- A resposta final deve ser SOMENTE um JSON válido, sem texto antes ou depois e sem blocos de código markdown.
+- Faça no máximo 3 buscas e use fontes confiáveis.
+- Inclua eventos do período ou que terminem pouco antes dele e ainda afetem a demanda.
+- Não invente datas; marque "confirmado": false se não puder confirmar.
+- Liste até 6 eventos relevantes e até 3 fontes.
+- Responda somente com JSON válido, sem markdown ou texto extra.
 
 Formato obrigatório:
 {
@@ -35,7 +37,7 @@ Formato obrigatório:
       "observacao": "string curta explicando o efeito esperado na demanda"
     }
   ],
-  "sazonalidade": "resumo de 1 a 3 frases sobre a época do ano e como ela costuma afetar o segmento",
+  "sazonalidade": "resumo de uma frase sobre época do ano e efeito no segmento",
   "fontes": ["https://..."]
 }`;
 
@@ -63,27 +65,11 @@ export function montarMensagemContexto({
 // 2) PREVISÃO (sem busca na web)
 // ---------------------------------------------------------------
 export const SYSTEM_PREVISAO = `Você é um analista de demanda para micro e pequenas empresas brasileiras.
-Você recebe, em JSON, o histórico de saídas e o estoque de vários produtos, mais o contexto do período (eventos e sazonalidade já pesquisados). Sua tarefa é prever quanto de cada produto vai SAIR (vendido ou consumido), dia a dia, no período pedido.
+Preveja as saídas diárias usando contexto, estoque e JSON de entrada.
+Chaves: ref=data de referência; inicio/fim=datas previstas; dias=horizonte; contexto contém eventos e sazonalidade. Cada produto usa id, nome, cat=categoria, un=unidade, frac=fracionado, est=estoque atual, seg=estoque seguro, lead=prazo de reposição, m7/m30=médias diárias, t=tendência percentual, d=dias com saída nos últimos 30 dias, hist.i/hist.q=saídas diárias consecutivas e mov=até 40 movimentações recentes dos produtos enviados (data, tipo e quantidade).
 
-Como os dados chegam:
-- "dataInicioPrevisao" é o primeiro dia a prever e "horizonteDias" é quantos dias prever.
-- Em cada produto, "historico_saidas.quantidades_por_dia" traz as saídas diárias em dias consecutivos, começando em "historico_saidas.data_inicial" e terminando na véspera de "dataReferencia". Zero significa que não houve saída naquele dia.
-- "estatisticas" traz a média de 7 dias, a média de 30 dias e a tendência percentual, já calculadas pelo sistema. Use como base.
-- "fracionado": true permite quantidades decimais (kg, litros); false exige números inteiros.
-
-Regras:
-1. Considere o dia da semana (calcule a partir das datas), a tendência recente e os eventos e a sazonalidade do contexto.
-2. Não pesquise na web e não invente eventos além dos informados no contexto.
-3. Se houver pouco histórico (menos de 7 dias com saída), baseie-se no que existe, reduza a confiança e diga isso na justificativa.
-4. Nunca devolva quantidades negativas.
-5. "quantidades_por_dia" deve ter exatamente "horizonteDias" números, e o primeiro número corresponde a "dataInicioPrevisao".
-6. "confianca" vai de 0 a 1.
-7. "justificativa" tem no máximo 2 frases curtas, em português, citando os fatores usados (tendência, dia da semana, evento).
-8. Alertas: gere somente quando fizerem sentido para o usuário (risco de ruptura, cobertura baixa, consumo em alta, demanda fora do normal por causa de evento). No máximo 2 por produto. Use "urgente" apenas para risco real de faltar produto antes de a reposição chegar, "atencao" para situações a acompanhar e "informativo" para observações. Na descrição, cite números.
-9. Devolva todos os produtos recebidos, usando o mesmo "id_produto".
-10. A resposta deve ser SOMENTE um JSON válido, sem texto antes ou depois e sem blocos de código markdown.
-
-Formato obrigatório:
+Regras: considere médias, tendência, dia da semana e eventos. Sem histórico suficiente, reduza a confiança e explique. Não invente eventos nem quantidades negativas. Retorne todos os produtos recebidos, usando o mesmo id e exatamente dias quantidades, começando em inicio. frac=true permite decimais; caso contrário, use inteiros. Confiança entre 0 e 1. Justificativa em até 2 frases curtas. Gere no máximo 2 alertas relevantes por produto; use urgente só para risco real de ruptura e cite números.
+Responda somente com JSON válido, sem markdown ou texto extra, neste formato:
 {
   "horizonte_dias": 14,
   "produtos": [
@@ -112,43 +98,62 @@ export function montarMensagemPrevisao({
   contexto,
   produtos,
 }) {
+  function somarDias(data, quantidade) {
+    const dataObj = new Date(`${data}T00:00:00Z`);
+    dataObj.setUTCDate(dataObj.getUTCDate() + quantidade);
+    return dataObj.toISOString().slice(0, 10);
+  }
+
   const eventosEnxutos = (Array.isArray(contexto?.eventos) ? contexto.eventos : [])
     .filter((e) => e?.confirmado !== false)
-    .slice(0, 8)
+    .slice(0, 6)
     .map((e) => ({
       nome: e.nome,
       inicio: e.data_inicio,
       fim: e.data_fim,
       impacto: e.impacto,
-      obs: e.observacao ? String(e.observacao).slice(0, 120) : undefined,
+      obs: e.observacao ? String(e.observacao).slice(0, 80) : undefined,
     }));
 
-  const produtosEnxutos = produtos.map((p) => ({
-    id_produto: p.id_produto,
-    nome: p.nome,
-    categoria: p.categoria,
-    unidade: p.unidade,
-    fracionado: p.fracionado,
-    estoque_atual: p.estoque_atual,
-    estoque_seguro: p.estoque_seguro,
-    prazo_reposicao_dias: p.prazo_reposicao_dias,
-    estatisticas: p.estatisticas,
-    historico_saidas: {
-      data_inicial: p.historico_saidas.data_inicial,
-      quantidades_por_dia: p.historico_saidas.quantidades_por_dia.map((q) =>
-        Number(Number(q).toFixed(2))
-      ),
-    },
-  }));
+  let movimentacoesRestantes = MAX_MOVIMENTACOES_PREVISAO;
+  const produtosEnxutos = produtos.map((p) => {
+    const historico = p.historico_saidas.quantidades_por_dia;
+    const inicio = Math.max(0, historico.length - DIAS_HISTORICO_ENVIADO);
+    const movimentacoes = (p.movimentacoes_recentes ?? []).slice(0, movimentacoesRestantes);
+    movimentacoesRestantes -= movimentacoes.length;
+    return {
+      id: p.id_produto,
+      nome: String(p.nome).slice(0, 80),
+      cat: String(p.categoria ?? '').slice(0, 40),
+      un: String(p.unidade ?? '').slice(0, 16),
+      frac: p.fracionado,
+      est: p.estoque_atual,
+      seg: p.estoque_seguro,
+      lead: p.prazo_reposicao_dias,
+      m7: p.estatisticas.media_dia_7,
+      m30: p.estatisticas.media_dia_30,
+      t: p.estatisticas.tendencia_percentual,
+      d: p.estatisticas.dias_com_saida,
+      hist: {
+        i: somarDias(p.historico_saidas.data_inicial, inicio),
+        q: historico.slice(inicio).map((q) => Number(Number(q).toFixed(2))),
+      },
+      mov: movimentacoes.map((movimento) => ({
+        data: movimento.data,
+        tipo: String(movimento.tipo).slice(0, 16),
+        q: Number(Number(movimento.quantidade).toFixed(2)),
+      })),
+    };
+  });
 
   return JSON.stringify({
-    dataReferencia,
-    dataInicioPrevisao,
-    dataFimPrevisao,
-    horizonteDias,
+    ref: dataReferencia,
+    inicio: dataInicioPrevisao,
+    fim: dataFimPrevisao,
+    dias: horizonteDias,
     contexto: {
       eventos: eventosEnxutos,
-      sazonalidade: contexto?.sazonalidade ? String(contexto.sazonalidade).slice(0, 300) : '',
+      sazonalidade: contexto?.sazonalidade ? String(contexto.sazonalidade).slice(0, 160) : '',
     },
     produtos: produtosEnxutos,
   });

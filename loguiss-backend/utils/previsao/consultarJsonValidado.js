@@ -4,10 +4,14 @@ import { consultarIA, extrairJson } from '../iaClient.js';
 /** Chama a IA e valida a resposta. Se vier fora do formato, tenta mais uma vez. */
 export async function consultarJsonValidado(parametros, validar) {
   let ultimoErro;
+  const timeoutTotalMs = Number(parametros.timeoutMs) > 0 ? Number(parametros.timeoutMs) : 30000;
+  const deadline = Date.now() + timeoutTotalMs;
 
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     // Falhas de rede, chave ou API sobem direto (não adianta tentar de novo).
-    const resposta = await consultarIA(parametros);
+    const restanteMs = deadline - Date.now();
+    if (restanteMs <= 0) break;
+    const resposta = await consultarIA({ ...parametros, timeoutMs: restanteMs });
 
     try {
       const json = extrairJson(resposta.texto);

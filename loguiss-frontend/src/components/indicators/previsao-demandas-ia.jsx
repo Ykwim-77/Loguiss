@@ -4,14 +4,12 @@ import {
     Legend,
     Line,
     LineChart,
-    ReferenceLine,
     ResponsiveContainer,
     Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
 
-import { dadosIA, seriesIA } from '../../data/dashboardData';
 import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
 const cores = [
@@ -31,9 +29,8 @@ export function PrevisaoDemandasIA({
     titulo,
     descricao,
     icone: Icon,
-    dados = dadosIA,
-    series = seriesIA,
-    estoqueSeguro = seriesIA.map((serie) => serie.estoqueSeguro),
+    dados = [],
+    series = [],
     eixoX = 'periodo',
     formatarValor = (valor) => valor,
     limiteTop = 5,
@@ -130,28 +127,13 @@ export function PrevisaoDemandasIA({
                                 name={serie.nome}
                                 stroke={serie.cor || cores[index % cores.length]}
                                 strokeWidth={2.5}
-                                dot={false}
+                                dot={listaDados.length === 1 ? { r: 5 } : false}
                                 activeDot={{ r: 5 }}
                             />
                         ))}
 
-                        {seriesExibidas.map((serie, index) => (
-                            <ReferenceLine
-                                key={`seguro-${serie.dataKey}`}
-                                y={serie.estoqueSeguro}
-                                stroke={serie.cor || cores[index % cores.length]}
-                                strokeDasharray="6 4"
-                                strokeWidth={2}
-                                ifOverflow="extendDomain"
-                            />
-                        ))}
                     </LineChart>
                 </ResponsiveContainer>
-            </div>
-
-            <div className="mt-2 flex items-center justify-center gap-2">
-                <span className="w-6 border-t-2 border-dashed border-texto-suave" />
-                <span className="text-xs text-texto-suave">Estoque seguro</span>
             </div>
         </div>
     );

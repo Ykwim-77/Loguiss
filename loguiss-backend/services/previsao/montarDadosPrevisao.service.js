@@ -1,6 +1,10 @@
 import { prisma } from '../../database.js';
 import { erroHttp } from '../../utils/erros.js';
-import { DIAS_HISTORICO } from '../../utils/previsao/constantes.js';
+import {
+  DIAS_HISTORICO,
+  MAX_MOVIMENTACOES_PREVISAO,
+  MAX_PRODUTOS_PREVISAO,
+} from '../../utils/previsao/constantes.js';
 import calc from '../../utils/previsao/calculos.js';
 
 /**
@@ -18,11 +22,42 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
 
   const idsFiltro = idsProdutos.length ? [...new Set(idsProdutos)] : [];
 
-  const produtos = await prisma.produto.findMany({
+  const filtroProdutos = {
+    flag_ativo: 'T',
+    estoque: { isNot: null },
+    ...(idsFiltro.length ? { id_produto: { in: idsFiltro } } : {}),
+  };
+  const produtosCandidatos = await prisma.produto.findMany({
+    where: filtroProdutos,
+    orderBy: { id_produto: 'asc' },
+    select: { id_produto: true },
+  });
+
+  if (!produtosCandidatos.length) {
+    throw erroHttp(404, 'Nenhum produto ativo com estoque cadastrado.', 'SEM_PRODUTOS');
+  }
+
+  const dataCorteHistorico = new Date(`${diasHistorico[0]}T00:00:00-03:00`);
+  const vendasAgrupadas = await prisma.movimentacao_estoque.groupBy({
+    by: ['id_produto', 'tipo'],
+    where: {
+      id_produto: { in: produtosCandidatos.map((produto) => produto.id_produto) },
+      data_movimento: { gte: dataCorteHistorico },
+    },
+    _sum: { quantidade: true },
+  });
+  const idsSelecionados = calc
+    .ordenarProdutosPorVendas(
+      produtosCandidatos.map((produto) => produto.id_produto),
+      vendasAgrupadas
+    )
+    .slice(0, MAX_PRODUTOS_PREVISAO);
+
+  const produtosEncontrados = await prisma.produto.findMany({
     where: {
       flag_ativo: 'T',
       estoque: { isNot: null },
-      ...(idsFiltro.length ? { id_produto: { in: idsFiltro } } : {}),
+      id_produto: { in: idsSelecionados },
     },
     include: {
       estoque: true,
@@ -32,17 +67,22 @@ export async function montarDadosPrevisao({ horizonteDias, idsProdutos = [], pra
     },
     orderBy: { id_produto: 'asc' },
   });
+  const produtosPorId = new Map(
+    produtosEncontrados.map((produto) => [produto.id_produto, produto])
+  );
+  const produtos = idsSelecionados.map((id) => produtosPorId.get(id)).filter(Boolean);
 
   if (!produtos.length) {
     throw erroHttp(404, 'Nenhum produto ativo com estoque cadastrado.', 'SEM_PRODUTOS');
   }
 
-  const dataCorteHistorico = new Date(`${diasHistorico[0]}T00:00:00-03:00`);
   const movimentos = await prisma.movimentacao_estoque.findMany({
     where: {
-      id_produto: { in: produtos.map((p) => p.id_produto) },
+      id_produto: { in: idsSelecionados },
       data_movimento: { gte: dataCorteHistorico },
     },
+    orderBy: [{ data_movimento: 'desc' }, { id_movimentacao: 'desc' }],
+    take: MAX_MOVIMENTACOES_PREVISAO,
     select: {
       id_produto: true,
       tipo: true,

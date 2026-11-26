@@ -1,8 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, ClipboardList, Package } from 'lucide-react';
 import { useState } from 'react';
 
-import { movimentacoesPadrao } from '../../data/dashboardData';
-
 const formatarNumeroBR = (valor, decimais = 0) =>
     Number(valor).toLocaleString('pt-BR', {
         minimumFractionDigits: decimais,
@@ -12,7 +10,7 @@ const formatarNumeroBR = (valor, decimais = 0) =>
 export function HistoricoMovimentacoes({
     titulo = 'Histórico de movimentações',
     descricao = 'Saídas e entradas recentes da amostra',
-    dados = movimentacoesPadrao,
+    dados = [],
     badgeRodape = 'Dados demonstrativos',
 }) {
     const [filtroTipo, setFiltroTipo] = useState('saida');

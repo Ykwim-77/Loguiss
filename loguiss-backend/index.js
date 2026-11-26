@@ -14,6 +14,7 @@ import router_empresa from './routes/routes_empresa.js';
 import router_config_ia from './routes/configuracaoIA.routes.js'
 import router_previsao from './routes/previsao.routes.js'
 import autenticarToken from './middlewares/authMiddleware.js';
+import { iniciarAgendador } from './jobs/agendadorPrevisao.js';
 
 const app = express();
 
@@ -34,4 +35,6 @@ app.use("/config_ia", autenticarToken, router_config_ia);
 app.use("/previsao", router_previsao)
 
 
-app.listen(3000);
+app.listen(3000, () => {
+    iniciarAgendador();
+});

@@ -45,8 +45,19 @@ O servidor Node escuta na porta `3000`, definida em `index.js`. Os comandos `npm
 | `EMAIL_APP` | Conta Gmail usada para enviar e-mails. |
 | `SENHA_APP` | Senha de aplicativo da conta de envio. |
 | `FRONT_URL` | Origem do frontend permitida pela configuração CORS em `app.js`. |
+| `GEMINI_API_KEY` | Chave da API Gemini usada para gerar previsões. |
+| `GEMINI_MODEL` | Modelo principal; padrão `gemini-3.5-flash-lite`. |
+| `GEMINI_FALLBACK_MODELS` | Lista opcional de modelos alternativos, separada por vírgula. |
+| `GEMINI_TIMEOUT_MS` | Tempo máximo por chamada da IA em milissegundos; padrão `30000`. |
+| `GEMINI_USAR_BUSCA_WEB` | Define se a IA pode pesquisar contexto na web; use `false` para desativar. |
 
 Não inclua credenciais reais no README, no `.env.example` ou no controle de versão. Mantenha valores locais somente em `.env`.
+
+Se a API Gemini estiver indisponível, a previsão usa uma projeção local baseada no histórico e no padrão semanal. O campo `previsao.modelo` identifica o resultado como `fallback-local` ou `misto-gemini-e-local`; a resposta da API mantém o mesmo formato.
+
+Cada previsão considera até 20 produtos ativos com maior volume de saídas nos últimos 30 dias e envia até 40 movimentações recentes somente desses produtos. As movimentações aparecem compactadas no campo `mov` e também alimentam o histórico diário; os produtos vão em um único lote para a chamada de previsão da IA.
+
+As consultas `GET /previsao/ultima` e `GET /previsao/:id` reconstroem os dados salvos para o frontend. Além dos gráficos e recomendações existentes, `produtosPrevisao` traz os detalhes e a série diária salva de cada produto, e `respostasIA` expõe as respostas originais persistidas por lote.
 
 ## Banco de dados e migrations
 

@@ -1,14 +1,13 @@
 import { Package } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-import { dadosSaida } from '../../data/dashboardData';
 import { corGrafico, estiloTooltip } from '../../utils/graficos';
 
 export function PrevisaoSaida({
     titulo = 'Previsão de venda',
     descricao = 'Estimativa de saída nos próximos 14 dias',
     dias = 14,
-    dados = dadosSaida,
+    dados = [],
     limiteTop = 5,
 }) {
     const listaDados = Array.isArray(dados) ? dados : [];

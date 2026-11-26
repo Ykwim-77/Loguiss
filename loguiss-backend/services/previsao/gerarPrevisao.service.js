@@ -67,7 +67,7 @@ export async function gerarPrevisao(opcoes = {}) {
 
     const idPrevisao = await salvarPrevisao({
       horizonteDias,
-      modelo: contexto.modelo ?? previsao.modelo,
+      modelo: previsao.modelo ?? contexto.modelo,
       localizacao,
       segmento,
       contexto: contexto.contexto,

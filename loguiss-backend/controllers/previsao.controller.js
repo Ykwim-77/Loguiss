@@ -33,7 +33,9 @@ async function ultima(req, res) {
 
     const resultado = await buscarPrevisao({ horizonteDias });
     if (!resultado) {
-      return res.status(404).json({ erro: 'Ainda não existe previsão gerada.' });
+      return res
+        .status(404)
+        .json({ erro: 'Ainda não existe uma previsão completa salva para este horizonte.' });
     }
     return res.json(resultado);
   } catch (erro) {

@@ -88,14 +88,20 @@ export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
   const seriesIA = [];
   const dadosSaida = [];
   const recomendacoesRaw = [];
+  const produtosPrevisao = [];
 
   for (const pp of previsao.produtos) {
     const chaveProd = `p${pp.id_produto}`;
     const nomeProd = pp.produto.descricao;
     const unidadeProd = pp.produto.unidade_medida?.nomenclatura ?? '';
+    const categoria = categoriaDe(pp.produto);
+    const serie = pp.periodos.map((periodo) => ({
+      data: isoData(periodo.data),
+      quantidade: periodo.quantidade,
+    }));
 
-    for (const periodo of pp.periodos) {
-      const iso = isoData(periodo.data);
+    for (const periodo of serie) {
+      const iso = periodo.data;
       let linha = linhas.get(iso);
       if (!linha) {
         linha = { data: iso, periodo: rotuloDia(iso) };
@@ -103,6 +109,26 @@ export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
       }
       linha[chaveProd] = periodo.quantidade;
     }
+
+    produtosPrevisao.push({
+      id: pp.id_produto,
+      nome: nomeProd,
+      codigo: codigoProduto(pp.id_produto),
+      categoria,
+      unidade: unidadeProd,
+      estoque: pp.estoque_na_data,
+      estoqueSeguro: pp.estoque_seguro,
+      prazoReposicaoDias: pp.prazo_reposicao_dias,
+      mediaDia: pp.media_dia,
+      totalPrevisto: pp.total_previsto,
+      confianca: pp.confianca,
+      justificativa: pp.justificativa,
+      coberturaDias: pp.cobertura_dias,
+      diasParaComprar: pp.dias_para_comprar,
+      urgente: pp.urgente,
+      comprarQtd: pp.comprar_qtd,
+      serie,
+    });
 
     seriesIA.push({
       dataKey: chaveProd,
@@ -120,7 +146,7 @@ export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
         id: pp.id_produto,
         nome: nomeProd,
         codigo: codigoProduto(pp.id_produto),
-        categoria: categoriaDe(pp.produto),
+          categoria,
         estoque: pp.estoque_na_data,
         unidade: unidadeProd,
         mediaDia: arredondar(pp.media_dia, 1),
@@ -162,6 +188,10 @@ export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
       lido: a.lido,
     }));
 
+  const respostasIA = Array.isArray(previsao.resposta_bruta?.lotes)
+    ? previsao.resposta_bruta.lotes
+    : [];
+
   return {
     previsao: {
       id: previsao.id_previsao,
@@ -172,9 +202,11 @@ export function montarVisao(previsao, movimentacoes = [], agora = new Date()) {
       segmento: previsao.segmento,
       contexto: previsao.contexto,
     },
+    respostasIA,
     dadosIA,
     seriesIA,
     dadosSaida,
+    produtosPrevisao,
     recomendacoesCompra,
     alertas,
     movimentacoes: movimentacoes.map((m) => formatarMovimentacao(m, agora)),

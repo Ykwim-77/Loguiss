@@ -1,8 +1,6 @@
 import { AlertCircle, AlertTriangle, Bell, Info, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { alertasPadrao } from '../../data/dashboardData';
-
 const estilosSeveridade = {
     urgente: {
         card: 'border-perigo/30 bg-perigo/10',
@@ -30,7 +28,7 @@ const estilosSeveridade = {
 export function AlertasIA({
     titulo = 'Alertas',
     descricao = 'Pontos para revisar antes da próxima reposição',
-    dados = alertasPadrao,
+    dados = [],
     onVerProjecao,
 }) {
     const [dispensados, setDispensados] = useState([]);
