@@ -16,14 +16,6 @@ function Login() {
     const [enviar_formulario, setEnviarFormulario] = useState(false);
     const [visualizar_senha, setVisualizarSenha] = useState(false);
 
-    const [termosAceitos, setTermosAceitos] = useState(() => { 
-        return localStorage.getItem('aceitar_termos') === 'true';
-    });
-
-    useEffect(() => {
-        localStorage.setItem('aceitar_termos', String(termosAceitos));
-    }, [termosAceitos]); //salva a flag de termos em local storage pra não precisar ficar marcando toda vez que fizer login
-
     const navigate = useNavigate();
 
     async function formularioEnviado(e) {
@@ -129,33 +121,23 @@ function Login() {
                             Entrar
                         </Button>
                         {/* Termos e políticas */}
-                        <div className="flex mt-4 items-start gap-2 text-xs text-texto/60">
-                            <input
-                                type="checkbox"
-                                id="aceitar_termos"
-                                checked={termosAceitos}
-                                onChange={(e) => setTermosAceitos(e.target.checked)}
-                                required
-                                className="mt-0.5 accent-primaria cursor-pointer"
-                            />
-                            <label htmlFor="aceitar_termos">
-                                Eu li e aceito os{' '}
-                                <a
-                                    href="/termos"
-                                    className="text-texto hover:text-primaria hover:underline transition-colors"
-                                >
-                                    Termos de Serviço
-                                </a>{' '}
-                                e{' '}
-                                <a
-                                    href="/politicas"
-                                    className="text-texto hover:text-primaria hover:underline transition-colors"
-                                >
-                                    Políticas de Privacidade
-                                </a>
-                                .
-                            </label>
-                        </div>
+                        <p className="mt-4 text-xs text-texto/60">
+                            Ao continuar, você concorda com os{' '}
+                            <a
+                                href="/termos"
+                                className="text-texto hover:text-primaria hover:underline transition-colors"
+                            >
+                                Termos de Serviço
+                            </a>{' '}
+                            e as{' '}
+                            <a
+                                href="/politicas"
+                                className="text-texto hover:text-primaria hover:underline transition-colors"
+                            >
+                                Políticas de Privacidade
+                            </a>
+                            .
+                        </p>
                     </div>
                 </form>
             </div>
