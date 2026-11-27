@@ -1,70 +1,74 @@
-import { prisma } from '../../database.js';
 import jwt from 'jsonwebtoken';
 import nodemailer from "nodemailer";
+import { prisma } from '../../database.js';
 
+export async function Cod_verify(req, res) {
+    const { email } = req.body;
 
-const chave_jwt = process.env.CHAVE_JWT // pega a chave dos JWTs da .env
-const senha_app = process.env.SENHA_APP
-const email_app = process.env.EMAIL_APP
-
-export async function Cod_verify(req,res) {
-    const {email} = req.body
-    if(!email){
-        return res.satus(400).json({MSG: "Envie o email para ser enviado o código de verificação por ele!!"})
+    if (!email) {
+        return res.status(400).json({ MSG: "Envie o email para ser enviado o código de verificação por ele!!" });
     }
 
-    try{
-        const email_existente = await prisma.user.findUnique({  // tenta achar um email igual no servidor
-            where:{
+    const chave_jwt = process.env.CHAVE_JWT;
+    const senha_app = process.env.SENHA_APP;
+    const email_app = process.env.EMAIL_APP;
+
+    if (!email_app || !senha_app) {
+        console.error("Variáveis EMAIL_APP ou SENHA_APP não configuradas no ambiente.");
+        return res.status(500).json({ MSG: "Configuração de e-mail indisponível no servidor." });
+    }
+
+    try {
+        const email_existente = await prisma.user.findUnique({
+            where: {
                 email: email
             }
-        })
-        if(!email_existente){
-            return res.status(404).json({MSG: "Email não existe!! faça o cadastro"})
+        });
+
+        if (!email_existente) {
+            return res.status(404).json({ MSG: "Email não existe!! faça o cadastro" });
         }
-        
 
-        const codigo_verify = String(Math.floor(100000 + Math.random() * 90000))
-
-        const expira_em = new Date();// pega a hora atual junto com a data
-
-        expira_em.setMinutes(expira_em.getMinutes() + 15) // aqui  vai pegar a hora atual e adicionar mais 15 minutos
-
+        const codigo_verify = String(Math.floor(100000 + Math.random() * 900000));
+        const expira_em = new Date();
+        expira_em.setMinutes(expira_em.getMinutes() + 15);
 
         await prisma.verificacao_user.update({
-            where:{
-                id_user: email_existente.id_user,
+            where: {
+                id_user: email_existente.id_user
             },
-            data:{
+            data: {
                 cod_verify: codigo_verify,
                 expira_em: expira_em
-            },
-
-        })
-
-        console.log(email_existente.email)
+            }
+        });
 
         const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: email_app,
-            pass: senha_app
-        }
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
+            auth: {
+                user: email_app,
+                pass: senha_app
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000
         });
-        
-        const token = jwt.sign({ // cria um token jwt para ser usado na hora de recuperar senha
-                                // isso só vai servir para ter uma maior segurança 
-            id: email_existente.id_user,
-            email: email_existente.email,
-        },
+
+        const token = jwt.sign(
+            {
+                id: email_existente.id_user,
+                email: email_existente.email
+            },
             chave_jwt,
-        {
-            expiresIn: "10m"
-        });
+            {
+                expiresIn: "10m"
+            }
+        );
 
-
-        const mailOptions = { // funcão principal para enviar email
-            from: process.env.EMAIL_APP,
+        const mailOptions = {
+            from: email_app,
             to: email_existente.email,
             subject: "Código de verificação",
             html: `<div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px;">
@@ -77,7 +81,6 @@ export async function Cod_verify(req,res) {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
         ">
-            
             <h1 style="color: #2e7d32; margin-bottom: 10px;">
             Verificação de Conta
             </h1>
@@ -112,18 +115,16 @@ export async function Cod_verify(req,res) {
             <p style="color: #999; font-size: 12px;">
             Se você não solicitou este código, ignore este e-mail.
             </p>
-
         </div>
         </div>`
         };
+
         const resposta = await transporter.sendMail(mailOptions);
+        console.log("Email enviado:", resposta.messageId);
 
-        console.log(resposta)
-        
-        return res.status(201).json({MSG: "Token criado e email enviado", token: token})
-    }catch (erro) {
-    console.error(erro);
-}
-
-        
+        return res.status(201).json({ MSG: "Token criado e email enviado", token: token });
+    } catch (erro) {
+        console.error("Erro ao enviar email de verificação:", erro);
+        return res.status(500).json({ MSG: "Erro ao enviar e-mail de verificação." });
+    }
 }
