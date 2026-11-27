@@ -11,7 +11,14 @@ const periodos = [
     { label: 'Últimos 12 meses', meses: 12 },
 ];
 
-export function Movimentacoes({ movimentacoes = [] }) {
+function limitarCasasDecimais(valor, casas = 2) {
+    const limite = Math.max(0, Math.min(6, Number(casas) || 0));
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return 0;
+    return Number(numero.toFixed(limite));
+}
+
+export function Movimentacoes({ movimentacoes = [], casasDecimais = 2 }) {
     const [periodoSelecionado, setPeriodoSelecionado] = useState(periodos[2]);
 
     const [menuAberto, setMenuAberto] = useState(false);
@@ -24,7 +31,13 @@ export function Movimentacoes({ movimentacoes = [] }) {
                   (mesAtual - periodoSelecionado.meses + 1 + indice + movimentacoes.length) %
                   movimentacoes.length;
 
-              return movimentacoes[indiceMes];
+              const item = movimentacoes[indiceMes] ?? {};
+
+              return {
+                  ...item,
+                  entradas: limitarCasasDecimais(item.entradas, casasDecimais),
+                  saidas: limitarCasasDecimais(item.saidas, casasDecimais),
+              };
           })
         : [];
 
@@ -91,11 +104,16 @@ export function Movimentacoes({ movimentacoes = [] }) {
 
                     <XAxis dataKey="mes" stroke={corGrafico.eixo} tickLine={false} />
 
-                    <YAxis stroke={corGrafico.eixo} tickLine={false} />
+                    <YAxis
+                        stroke={corGrafico.eixo}
+                        tickLine={false}
+                        tickFormatter={(valor) => limitarCasasDecimais(valor, casasDecimais)}
+                    />
 
                     <Tooltip
                         {...estiloTooltip}
                         cursor={{ fill: 'var(--text)', fillOpacity: 0.05 }}
+                        formatter={(valor) => limitarCasasDecimais(valor, casasDecimais)}
                     />
                     <Bar
                         dataKey="entradas"

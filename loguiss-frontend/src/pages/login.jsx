@@ -1,5 +1,5 @@
 import { Lock } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/button';
@@ -15,6 +15,14 @@ function Login() {
     const [senha_tocada, setSenhaTocada] = useState(false);
     const [enviar_formulario, setEnviarFormulario] = useState(false);
     const [visualizar_senha, setVisualizarSenha] = useState(false);
+
+    const [termosAceitos, setTermosAceitos] = useState(() => { 
+        return localStorage.getItem('aceitar_termos') === 'true';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('aceitar_termos', String(termosAceitos));
+    }, [termosAceitos]); //salva a flag de termos em local storage pra não precisar ficar marcando toda vez que fizer login
 
     const navigate = useNavigate();
 
@@ -125,6 +133,8 @@ function Login() {
                             <input
                                 type="checkbox"
                                 id="aceitar_termos"
+                                checked={termosAceitos}
+                                onChange={(e) => setTermosAceitos(e.target.checked)}
                                 required
                                 className="mt-0.5 accent-primaria cursor-pointer"
                             />

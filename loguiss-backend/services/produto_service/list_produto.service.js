@@ -3,6 +3,9 @@ import { prisma } from '../../database.js';
 export default async function list_produto_service(req, res) {
     try {
         const produtos = await prisma.produto.findMany({
+            where:{
+                flag_ativo: "T"
+            },
             include:{
                 categorias:{
                     include:{

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '../components/button';
 import { EntityCard } from '../components/card';
 import { Combobox } from '../components/combobox';
+import { DeleteModal } from '../components/deleteModal';
 import { Inputs } from '../components/inputs';
 import { SideBar } from '../components/sidebar';
 import api from '../services/api';
@@ -236,6 +237,7 @@ function Produtos() {
     const [appliedSearch, setAppliedSearch] = useState('');
 
     const [editingId, setEditingId] = useState(null);
+    const [produtoParaExcluir, setProdutoParaExcluir] = useState(null);
     const [newProduct, setNewProduct] = useState(produtoInicial);
     const [newReceita, setNewReceita] = useState(receitaInicial);
 
@@ -316,8 +318,8 @@ function Produtos() {
     }, []);
 
     useEffect(() => {
-        // bloqueia o scroll da tela de trás quando um modal estiver aberto
-        if (!showProductForm) return;
+        // bloqueia o scroll da tela de trás quando algum modal estiver aberto
+        if (!showProductForm && !produtoParaExcluir) return;
 
         const overflowAnterior = document.body.style.overflow;
 
@@ -326,7 +328,7 @@ function Produtos() {
         return () => {
             document.body.style.overflow = overflowAnterior;
         };
-    }, [showProductForm]);
+    }, [showProductForm, produtoParaExcluir]);
 
     const setCampo = (campo) => (e) =>
         setNewProduct((prev) => ({
@@ -409,8 +411,26 @@ function Produtos() {
             return 'Escolha um fornecedor da lista.';
         }
 
-        if (newProduct.fgTipoProducao && newReceita.ingredientes.some((i) => !i.id_produto)) {
+        if (
+            newProduct.fgTipoProducao &&
+            newReceita.ingredientes.some(
+                (ingrediente) =>
+                    !Number.isInteger(Number(ingrediente.id_produto)) ||
+                    Number(ingrediente.id_produto) <= 0,
+            )
+        ) {
             return 'Escolha os produtos da receita na lista.';
+        }
+
+        if (
+            newProduct.fgTipoProducao &&
+            newReceita.ingredientes.some(
+                (ingrediente) =>
+                    !Number.isInteger(Number(ingrediente.id_unidade)) ||
+                    Number(ingrediente.id_unidade) <= 0,
+            )
+        ) {
+            return 'Escolha uma unidade para cada ingrediente na lista.';
         }
 
         return '';
@@ -508,15 +528,29 @@ function Produtos() {
         }
     };
 
-    const excluirProduto = async (id_produto) => {
+    const excluirProduto = async () => {
+        if (!produtoParaExcluir) return;
+
         try {
-            const response = await api.delete(`/produto/delete_produto/${id_produto}`);
+            await api.delete(
+                `/produto/delete_produto/${produtoParaExcluir.id_produto}`
+            );
 
-            toast.success(response.data.MSG || 'Produto desativado com sucesso!');
+            setProducts((listaAtual) =>
+                listaAtual.filter(
+                    (item) => item.id_produto !== produtoParaExcluir.id_produto
+                )
+            );
 
-            setProducts((prev) => prev.filter((produto) => produto.id_produto !== id_produto));
+            toast.success('Produto excluído com sucesso!');
         } catch (error) {
-            toast.error(error.response?.data?.MSG || 'Erro ao desativar produto!');
+            console.error('Erro ao excluir:', error);
+
+            toast.error(
+                error.response?.data?.MSG || 'Erro ao excluir o produto.'
+            );
+
+            throw error;
         }
     };
 
@@ -571,7 +605,7 @@ function Produtos() {
                                 titulo={produto.descricao}
                                 icone={Package}
                                 onEdit={() => abrirEdicao(produto)}
-                                onDelete={() => excluirProduto(produto.id_produto)}
+                                onDelete={() => setProdutoParaExcluir(produto)}
                             >
                                 <p className="mt-2 text-texto-suave">
                                     Categoria:{' '}
@@ -602,7 +636,7 @@ function Produtos() {
                 </div>
             </main>
 
-            {/* Modal */}
+            {/* Modal de cadastro/edição */}
             {showProductForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
                     <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-borda bg-superficie shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
@@ -995,6 +1029,14 @@ function Produtos() {
                     </div>
                 </div>
             )}
+
+            <DeleteModal
+                isOpen={!!produtoParaExcluir}
+                onClose={() => setProdutoParaExcluir(null)}
+                onConfirm={excluirProduto}
+                titulo="Excluir produto"
+                descricao={`Tem certeza de que deseja excluir o produto ${produtoParaExcluir?.descricao}?`}
+            />
         </div>
     );
 }

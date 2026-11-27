@@ -109,6 +109,56 @@ export async function create_produto_service(req, res) {
                 return res.status(400).json({ MSG: error.message });
             }
 
+            const idsProdutosIngredientes = new Set();
+            const idsUnidadesIngredientes = new Set();
+            const ingredientesInvalidos = ingredientes.some((ingrediente) => {
+                const idProduto = Number(ingrediente.id_produto);
+                const idUnidade = Number(ingrediente.unidade_medida_ingrediente);
+                const quantidade = Number(ingrediente.quantidade);
+                const produtoRepetido = idsProdutosIngredientes.has(idProduto);
+                idsProdutosIngredientes.add(idProduto);
+                idsUnidadesIngredientes.add(idUnidade);
+
+                return (
+                    !Number.isInteger(idProduto) ||
+                    idProduto <= 0 ||
+                    !Number.isInteger(idUnidade) ||
+                    idUnidade <= 0 ||
+                    !Number.isFinite(quantidade) ||
+                    quantidade < 0 ||
+                    produtoRepetido
+                );
+            });
+
+            if (ingredientesInvalidos) {
+                return res.status(400).json({
+                    MSG: 'Verifique os produtos, unidades e quantidades dos ingredientes.',
+                });
+            }
+
+            const [produtosEncontrados, unidadesEncontradas] = await Promise.all([
+                prisma.produto.findMany({
+                    where: { id_produto: { in: [...idsProdutosIngredientes] } },
+                    select: { id_produto: true },
+                }),
+                prisma.unidade_medida.findMany({
+                    where: { id_unidade: { in: [...idsUnidadesIngredientes] } },
+                    select: { id_unidade: true },
+                }),
+            ]);
+
+            if (produtosEncontrados.length !== idsProdutosIngredientes.size) {
+                return res.status(400).json({
+                    MSG: 'Um ou mais produtos dos ingredientes não existem.',
+                });
+            }
+
+            if (unidadesEncontradas.length !== idsUnidadesIngredientes.size) {
+                return res.status(400).json({
+                    MSG: 'Uma ou mais unidades dos ingredientes não existem. Selecione novamente a unidade.',
+                });
+            }
+
             const produto_producao = await prisma.$transaction(async (tx) =>{
 
                 const produto = await tx.produto.create({
