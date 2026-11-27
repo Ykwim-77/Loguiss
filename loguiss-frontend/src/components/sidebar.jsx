@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 
-import { menuItems as menuList } from '../utils/menuItems';
+import { menuItems as menuList } from '../utils/MenuItems';
 import { cn } from '../utils/cn';
 
 const baseItem =
