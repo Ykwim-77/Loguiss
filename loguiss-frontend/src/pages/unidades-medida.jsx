@@ -1,15 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { Combine,Search } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '../components/button';
-import { DeleteModal } from '../components/deleteModal';
-import { SideBar } from '../components/sidebar';
-import { Inputs } from '../components/inputs';
-import { Search, Combine } from 'lucide-react';
 import { EntityCard } from '../components/card';
+import { DeleteModal } from '../components/deleteModal';
+import { Inputs } from '../components/inputs';
+import { SideBar } from '../components/sidebar';
 import api from '../services/api';
 
+const dimensoesConversao = [
+    { value: '', label: 'Sem conversão definida' },
+    { value: 'MASSA', label: 'Massa (base g)' },
+    { value: 'VOLUME', label: 'Volume (base ml)' },
+    { value: 'CONTAGEM', label: 'Contagem (base un)' },
+];
 
 function UnidadesMedida() {
     const [showUnitForm, setShowUnitForm] = useState(false);
@@ -26,25 +32,28 @@ function UnidadesMedida() {
         desc: '',
         gramatura: '',
         unidade: '',
-        fgFracionavel: false
+        fgFracionavel: false,
+        dimensaoConversao: '',
+        fatorConversao: '',
     });
+
+    const buscarUnidades = useCallback(async () => {
+        const response = await api.get('/unidade_medida/list_unidade_medida');
+        const unidades = response.data.unidades ?? [];
+
+        return unidades.map((unidade) => ({
+            ...unidade,
+            desc: unidade.descrunidade,
+            unidade: unidade.nomenclatura,
+            fgFracionavel: unidade.is_fracionado === 'T',
+        }));
+    }, []);
 
     // LISTAR UNIDADES
     async function unit_api() {
         try {
             setLoading(true);
-
-            const response = await api.get('/unidade_medida/list_unidade_medida');
-
-            const unidades = response.data.unidades ?? [];
-
-            setUnits(unidades.map((unidade) => ({
-                ...unidade,
-                desc: unidade.descrunidade,
-                unidade: unidade.nomenclatura,
-                fgFracionavel: unidade.is_fracionado === 'T'
-            })));
-
+            setUnits(await buscarUnidades());
         } catch (error) {
             toast.error(
                 error.response?.data?.MSG ||
@@ -56,8 +65,27 @@ function UnidadesMedida() {
     }
 
     useEffect(() => {
-        unit_api();
-    }, []);
+        let cancelado = false;
+
+        buscarUnidades()
+            .then((unidades) => {
+                if (!cancelado) setUnits(unidades);
+            })
+            .catch((error) => {
+                if (!cancelado) {
+                    toast.error(
+                        error.response?.data?.MSG || 'Erro ao carregar unidades de medida!',
+                    );
+                }
+            })
+            .finally(() => {
+                if (!cancelado) setLoading(false);
+            });
+
+        return () => {
+            cancelado = true;
+        };
+    }, [buscarUnidades]);
 
     // FILTRAR UNIDADES
     const filteredUnidades = units.filter((unidade) => {
@@ -72,7 +100,9 @@ function UnidadesMedida() {
             desc: '',
             gramatura: '',
             unidade: '',
-            fgFracionavel: false
+            fgFracionavel: false,
+            dimensaoConversao: '',
+            fatorConversao: '',
         });
 
         setEditingIndex(null);
@@ -80,6 +110,23 @@ function UnidadesMedida() {
 
     // CADASTRAR OU EDITAR
     async function addNewUnit() {
+        const dimensaoInformada = Boolean(newUnit.dimensaoConversao);
+        const fatorInformado = String(newUnit.fatorConversao ?? '').trim() !== '';
+
+        if (dimensaoInformada !== fatorInformado) {
+            toast.error('Informe a dimensão e o fator de conversão juntos.');
+            return;
+        }
+
+        if (
+            fatorInformado &&
+            (!Number.isFinite(Number(newUnit.fatorConversao)) ||
+                Number(newUnit.fatorConversao) <= 0)
+        ) {
+            toast.error('O fator de conversão deve ser um número maior que zero.');
+            return;
+        }
+
         try {
             setSaving(true);
 
@@ -87,7 +134,9 @@ function UnidadesMedida() {
                 descrunidade: newUnit.desc.trim(),
                 gramatura: newUnit.gramatura.trim() || null,
                 nomenclatura: newUnit.unidade.trim(),
-                is_fracionado: newUnit.fgFracionavel ? 'T' : 'F'
+                is_fracionado: newUnit.fgFracionavel ? 'T' : 'F',
+                dimensao_conversao: newUnit.dimensaoConversao || null,
+                fator_conversao: fatorInformado ? newUnit.fatorConversao : null,
             };
 
             if (editingIndex !== null) {
@@ -193,6 +242,8 @@ function UnidadesMedida() {
                                 gramatura: '',
                                 unidade: '',
                                 fgFracionavel: false,
+                                dimensaoConversao: '',
+                                fatorConversao: '',
                             });
                             setShowUnitForm(true);
                         }}
@@ -235,7 +286,9 @@ function UnidadesMedida() {
                                     desc: unidade.descrunidade,
                                     gramatura: unidade.gramatura ?? '',
                                     unidade: unidade.nomenclatura,
-                                    fgFracionavel: unidade.is_fracionado === 'T'
+                                    fgFracionavel: unidade.is_fracionado === 'T',
+                                    dimensaoConversao: unidade.dimensao_conversao ?? '',
+                                    fatorConversao: unidade.fator_conversao ?? '',
                                 });
 
                                 setShowUnitForm(true);
@@ -252,6 +305,13 @@ function UnidadesMedida() {
 
                             <p className="mt-1 text-[var(--text-secondary)]">
                                 Fracionável: {unidade.fgFracionavel ? 'Sim' : 'Não'}
+                            </p>
+
+                            <p className="mt-1 text-[var(--text-secondary)]">
+                                Conversão:{' '}
+                                {unidade.dimensao_conversao && unidade.fator_conversao
+                                    ? `${unidade.dimensao_conversao} / fator ${unidade.fator_conversao}`
+                                    : 'Não definida'}
                             </p>
                         </EntityCard>
                     ))}
@@ -329,6 +389,41 @@ function UnidadesMedida() {
                                     placeholder="Ex: UN, KG, L"
                                     required
                                 />
+
+                                <Inputs
+                                    label="Dimensão de conversão"
+                                    type="select"
+                                    value={newUnit.dimensaoConversao}
+                                    options={dimensoesConversao}
+                                    onChange={(e) =>
+                                        setNewUnit({
+                                            ...newUnit,
+                                            dimensaoConversao: e.target.value,
+                                        })
+                                    }
+                                />
+
+                                <Inputs
+                                    label="Fator para a unidade-base"
+                                    type="number"
+                                    min="0"
+                                    step="any"
+                                    value={newUnit.fatorConversao}
+                                    onChange={(e) =>
+                                        setNewUnit({
+                                            ...newUnit,
+                                            fatorConversao: e.target.value,
+                                        })
+                                    }
+                                    placeholder="Ex.: kg = 1000 (base g)"
+                                />
+
+                                <p className="text-sm text-texto-suave sm:col-span-2">
+                                    Para converter, informe dimensão e fator. Bases: massa em g,
+                                    volume em ml e contagem em un. Unidades sem conversão definida
+                                    só podem ser usadas quando a receita e o estoque usam a mesma
+                                    unidade.
+                                </p>
 
                                 <div>
                                     <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-borda bg-elevada/50 p-3 transition-colors hover:border-primaria/40">

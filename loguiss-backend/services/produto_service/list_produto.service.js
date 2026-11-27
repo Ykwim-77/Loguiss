@@ -26,7 +26,12 @@ export default async function list_produto_service(req, res) {
                     include: {
                         produtos: {
                             include: {
-                                produto: true,
+                                produto: {
+                                    include: {
+                                        estoque: true,
+                                        unidade_medida: true,
+                                    },
+                                },
                                 unidade_medida: true,
                             },
                         },

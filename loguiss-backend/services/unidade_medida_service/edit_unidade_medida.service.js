@@ -1,4 +1,5 @@
 import { prisma } from '../../database.js';
+import { validar_conversao_unidade } from './validar_conversao_unidade.js';
 
 export async function edit_unidade_service(req, res) {
     try {
@@ -8,7 +9,9 @@ export async function edit_unidade_service(req, res) {
             descrunidade,
             gramatura,
             is_fracionado,
-            nomenclatura
+            nomenclatura,
+            dimensao_conversao,
+            fator_conversao,
         } = req.body;
 
         if (!Number.isInteger(id) || id <= 0) {
@@ -21,6 +24,17 @@ export async function edit_unidade_service(req, res) {
             return res.status(400).json({
                 MSG: 'Informe a descrição e a nomenclatura!'
             });
+        }
+
+        const informouConversao =
+            Object.hasOwn(req.body, 'dimensao_conversao') ||
+            Object.hasOwn(req.body, 'fator_conversao');
+        const conversao = informouConversao
+            ? validar_conversao_unidade(dimensao_conversao, fator_conversao)
+            : null;
+
+        if (conversao?.erro) {
+            return res.status(400).json({ MSG: conversao.erro });
         }
 
         const unidade_existente = await prisma.unidade_medida.findUnique({
@@ -53,7 +67,8 @@ export async function edit_unidade_service(req, res) {
                 descrunidade,
                 gramatura: gramatura || null,
                 is_fracionado: is_fracionado || null,
-                nomenclatura
+                nomenclatura,
+                ...(conversao?.dados ?? {}),
             }
         });
 
