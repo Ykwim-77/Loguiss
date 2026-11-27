@@ -28,7 +28,6 @@ export const menuItems = [
         label: 'Movimentações',
         icon: Shuffle,
         subMenu: [
-            { label: 'Produção', href: '/producao', icon: Factory },
             { label: 'Movimentações de saída', href: '/movimentacao-saida' },
             { label: 'Movimentações de entrada', href: '/movimentacao-entrada' },
         ],
