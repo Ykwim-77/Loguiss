@@ -1,3 +1,4 @@
+import dns from 'node:dns';
 import jwt from 'jsonwebtoken';
 import nodemailer from "nodemailer";
 import { prisma } from '../../database.js';
@@ -20,9 +21,7 @@ export async function Cod_verify(req, res) {
 
     try {
         const email_existente = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
+            where: { email }
         });
 
         if (!email_existente) {
@@ -34,9 +33,7 @@ export async function Cod_verify(req, res) {
         expira_em.setMinutes(expira_em.getMinutes() + 15);
 
         await prisma.verificacao_user.update({
-            where: {
-                id_user: email_existente.id_user
-            },
+            where: { id_user: email_existente.id_user },
             data: {
                 cod_verify: codigo_verify,
                 expira_em: expira_em
@@ -47,10 +44,12 @@ export async function Cod_verify(req, res) {
             host: "smtp.gmail.com",
             port: 465,
             secure: true,
-            family: 4,
             auth: {
                 user: email_app,
                 pass: senha_app
+            },
+            lookup: (hostname, options, callback) => {
+                dns.lookup(hostname, { ...options, family: 4 }, callback);
             },
             connectionTimeout: 10000,
             greetingTimeout: 10000,
@@ -63,9 +62,7 @@ export async function Cod_verify(req, res) {
                 email: email_existente.email
             },
             chave_jwt,
-            {
-                expiresIn: "10m"
-            }
+            { expiresIn: "10m" }
         );
 
         const mailOptions = {
@@ -85,15 +82,12 @@ export async function Cod_verify(req, res) {
             <h1 style="color: #2e7d32; margin-bottom: 10px;">
             Verificação de Conta
             </h1>
-
             <p style="color: #555; font-size: 16px;">
             Recebemos uma solicitação para confirmar sua identidade.
             </p>
-
             <p style="color: #555; font-size: 16px;">
             Utilize o código abaixo:
             </p>
-
             <div style="
             background: #e8f5e9;
             color: #2e7d32;
@@ -106,13 +100,10 @@ export async function Cod_verify(req, res) {
             ">
             ${codigo_verify}
             </div>
-
             <p style="color: #777; font-size: 14px;">
             Este código expira em 10 minutos.
             </p>
-
             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
-
             <p style="color: #999; font-size: 12px;">
             Se você não solicitou este código, ignore este e-mail.
             </p>
@@ -123,7 +114,7 @@ export async function Cod_verify(req, res) {
         const resposta = await transporter.sendMail(mailOptions);
         console.log("Email enviado:", resposta.messageId);
 
-        return res.status(201).json({ MSG: "Token criado e email enviado", token: token });
+        return res.status(201).json({ MSG: "Token criado e email enviado", token });
     } catch (erro) {
         console.error("Erro ao enviar email de verificação:", erro);
         return res.status(500).json({ MSG: "Erro ao enviar e-mail de verificação." });
