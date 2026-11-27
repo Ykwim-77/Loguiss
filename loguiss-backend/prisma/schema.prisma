@@ -29,16 +29,18 @@ model verificacao_user {
 }
 
 model unidade_medida {
-  id_unidade   Int               @id @default(autoincrement())
-  descrunidade String
-  gramatura    String?
-  is_fracionado String?
-  nomenclatura String
-  created_at   DateTime?         @default(now())
-  flag_ativo   String?           @default("T")
-  updated_at   DateTime?         @updatedAt
-  produtos     produto[]
-  receitas     receita_produto[]
+  id_unidade         Int               @id @default(autoincrement())
+  descrunidade       String
+  gramatura          String?
+  is_fracionado      String?
+  dimensao_conversao String?
+  fator_conversao    Decimal?
+  nomenclatura       String
+  created_at         DateTime?         @default(now())
+  flag_ativo         String?           @default("T")
+  updated_at         DateTime?         @updatedAt
+  produtos           produto[]
+  receitas           receita_produto[]
 }
 
 model categoria {
@@ -90,6 +92,7 @@ model produto {
   receitas          receita_produto[]
   previsoes         previsao_produto[]
   alertas           alerta[]
+  producoes         producao[]
 }
 
 model estoque {
@@ -132,24 +135,43 @@ model receita_produto {
   @@unique([id_receita, id_produto])
 }
 
+model producao {
+  id_producao        Int                    @id @default(autoincrement())
+  id_produto         Int
+  descricao_receita  String
+  quantidade         Decimal
+  rendimento_receita Decimal
+  margem_perda       Decimal
+  chave_idempotencia String                 @unique
+  data_producao      DateTime               @default(now())
+  produto            produto                @relation(fields: [id_produto], references: [id_produto], onDelete: Restrict)
+  movimentacoes      movimentacao_estoque[]
+
+  @@index([id_produto])
+  @@index([data_producao])
+}
+
 model movimentacao_estoque {
-  id_movimentacao Int      @id @default(autoincrement())
+  id_movimentacao Int       @id @default(autoincrement())
   id_produto      Int
+  id_producao     Int?
   id_cliente      Int?
   id_fornecedor   Int?
   tipo            String
   quantidade      Decimal
-  valor_unitario  Decimal  @default(0) @db.Decimal(10, 2)
-  valor_total     Decimal  @default(0) @db.Decimal(10, 2)
+  valor_unitario  Decimal   @default(0) @db.Decimal(10, 2)
+  valor_total     Decimal   @default(0) @db.Decimal(10, 2)
   saldo_final     Decimal
-  data_movimento  DateTime @default(now())
+  data_movimento  DateTime  @default(now())
   observacao      String?
-  prazo_chegada   DateTime? 
+  prazo_chegada   DateTime?
 
-  produto         produto    @relation(fields: [id_produto], references: [id_produto])
-  cliente         cliente?   @relation(fields: [id_cliente], references: [id_cliente])
-  fornecedor      fornecedor? @relation(fields: [id_fornecedor], references: [id_fornecedor])
+  produto    produto     @relation(fields: [id_produto], references: [id_produto])
+  cliente    cliente?    @relation(fields: [id_cliente], references: [id_cliente])
+  fornecedor fornecedor? @relation(fields: [id_fornecedor], references: [id_fornecedor])
+  producao   producao?   @relation(fields: [id_producao], references: [id_producao], onDelete: SetNull)
 
+  @@unique([id_producao, id_produto, tipo])
   @@index([id_produto])
   @@index([id_cliente])
   @@index([data_movimento])
@@ -172,7 +194,7 @@ model fornecedor {
   id_endereco   Int
   email         String
   telefone      String
-  flag_ativo    String? @default("T")
+  flag_ativo    String?              @default("T")
   endereco      endereco             @relation(fields: [id_endereco], references: [id_endereco])
   produtos      fornecedor_produto[]
 
@@ -197,21 +219,22 @@ model cliente {
   email       String?
   telefone    String?
   id_endereco Int?
-  flag_ativo  String? @default("T")
+  flag_ativo  String?   @default("T")
   endereco    endereco? @relation(fields: [id_endereco], references: [id_endereco])
 
   movimentacoes movimentacao_estoque[]
 }
+
 model empresa {
-  id_empresa        Int      @id @default(autoincrement())
-  nome      String
-  cidade    String?
-  uf        String?
-  segmento  String?
-  cnpj      String   @unique
-  telefone  String
-  email     String   @unique
-  criadoEm  DateTime @default(now())
+  id_empresa   Int      @id @default(autoincrement())
+  nome         String
+  cidade       String?
+  uf           String?
+  segmento     String?
+  cnpj         String   @unique
+  telefone     String
+  email        String   @unique
+  criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 }
 

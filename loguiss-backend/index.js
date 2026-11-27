@@ -13,6 +13,7 @@ import router_dashboard from './routes/router_dashboard.js';
 import router_empresa from './routes/routes_empresa.js';
 import router_config_ia from './routes/configuracaoIA.routes.js'
 import router_previsao from './routes/previsao.routes.js'
+import router_producao from './routes/routes_producao.js';
 import autenticarToken from './middlewares/authMiddleware.js';
 import { iniciarAgendador } from './jobs/agendadorPrevisao.js';
 
@@ -29,6 +30,7 @@ app.use("/unidade_medida", autenticarToken, router_unidade_medida);
 app.use("/cliente", autenticarToken, router_cliente);
 app.use("/user", autenticarToken, router_user);
 app.use("/movi", autenticarToken, router_movimentacao);
+app.use("/producao", autenticarToken, router_producao);
 app.use("/dashboard", router_dashboard);
 app.use("/empresa", autenticarToken, router_empresa);
 app.use("/config_ia", autenticarToken, router_config_ia);

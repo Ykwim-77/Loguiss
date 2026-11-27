@@ -1,4 +1,4 @@
-import { Brain, Cog, Folder, LayoutDashboard, Shuffle } from 'lucide-react';
+import { Brain, Cog, Factory, Folder, LayoutDashboard, Shuffle } from 'lucide-react';
 
 export const menuItems = [
     {
@@ -28,6 +28,7 @@ export const menuItems = [
         label: 'Movimentações',
         icon: Shuffle,
         subMenu: [
+            { label: 'Produção', href: '/producao', icon: Factory },
             { label: 'Movimentações de saída', href: '/movimentacao-saida' },
             { label: 'Movimentações de entrada', href: '/movimentacao-entrada' },
         ],

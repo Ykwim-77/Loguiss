@@ -1,10 +1,10 @@
 import './App.css';
 
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Toaster } from 'sonner';
 import { Navigate } from 'react-router-dom';
-import { RotaProtegida } from './components/RotaProtegida';
+import { Toaster } from 'sonner';
 
+import { RotaProtegida } from './components/RotaProtegida';
 import Categorias from './pages/categorias';
 import Clientes from './pages/clientes';
 import CodigoVerificacao from './pages/codigo-verificacao';
@@ -19,6 +19,7 @@ import MovimentacaoEntrada from './pages/movimentacao-entrada';
 import MovimentacaoSaida from './pages/movimentacao-saida';
 import Politicas from './pages/politicas';
 import PrevisaoDemandas from './pages/previsao-demanda';
+import Producao from './pages/producao';
 import Produtos from './pages/produtos';
 import RedefinirSenha from './pages/redefinir-senha';
 import Termos from './pages/termos';
@@ -51,6 +52,7 @@ function App() {
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/movimentacao-saida" element={<MovimentacaoSaida />} />
             <Route path="/movimentacao-entrada" element={<MovimentacaoEntrada />} />
+            <Route path="/producao" element={<Producao />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/configuracoes-ia" element={<ConfiguracoesIA />} />
             <Route path="/previsao-demanda" element={<PrevisaoDemandas />} />

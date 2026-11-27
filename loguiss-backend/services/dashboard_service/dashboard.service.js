@@ -35,6 +35,7 @@ export default async function dashboard_service(req, res) {
         const movimentacoes = await prisma.movimentacao_estoque.findMany({
             select: {
                 id_produto: true,
+                id_producao: true,
                 tipo: true,
                 data_movimento: true,
                 quantidade: true,
@@ -69,7 +70,10 @@ export default async function dashboard_service(req, res) {
                 valorUnitario: Number(produto.valor ?? 0),
                 categoria: obterCategoria(produto.categorias),
                 saidas: movimentacoesProduto
-                    .filter((movimentacao) => isSaida(movimentacao.tipo))
+                    .filter(
+                        (movimentacao) =>
+                            !movimentacao.id_producao && isSaida(movimentacao.tipo)
+                    )
                     .reduce((total, movimentacao) => Number(total) + Number(movimentacao.quantidade), 0),
                 diasSemMovimentacao: dias
             };
@@ -108,7 +112,9 @@ export default async function dashboard_service(req, res) {
             anual: {}
         };
 
-        const saidas = movimentacoes.filter((m) => isSaida(m.tipo));
+        const saidas = movimentacoes.filter(
+            (m) => !m.id_producao && isSaida(m.tipo)
+        );
 
         saidas.forEach((m) => {
             const data = new Date(m.data_movimento);

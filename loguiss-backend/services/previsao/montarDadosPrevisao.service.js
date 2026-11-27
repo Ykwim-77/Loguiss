@@ -1,3 +1,12 @@
+import { prisma } from '../../database.js';
+import { erroHttp } from '../../utils/erros.js';
+import {
+  DIAS_HISTORICO,
+  MAX_MOVIMENTACOES_PREVISAO,
+  MAX_PRODUTOS_PREVISAO,
+} from '../../utils/previsao/constantes.js';
+import calc from '../../utils/previsao/calculos.js';
+
 export async function montarDadosPrevisao({
   horizonteDias,
   idsProdutos = [],
@@ -58,6 +67,7 @@ export async function montarDadosPrevisao({
     await prisma.movimentacao_estoque.groupBy({
       by: ['id_produto', 'tipo'],
       where: {
+        id_producao: null,
         id_produto: {
           in: produtosCandidatos.map(
             (produto) => produto.id_produto
@@ -119,6 +129,7 @@ export async function montarDadosPrevisao({
   const movimentos =
     await prisma.movimentacao_estoque.findMany({
       where: {
+        id_producao: null,
         id_produto: { in: idsSelecionados },
         data_movimento: { gte: dataCorteHistorico },
       },
