@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import { RotaProtegida } from './components/RotaProtegida';
+import { RotaProtegida } from './components/rotaProtegida';
 import Categorias from './pages/categorias';
 import Clientes from './pages/clientes';
 import CodigoVerificacao from './pages/codigo-verificacao';
