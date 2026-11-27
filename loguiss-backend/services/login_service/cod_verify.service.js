@@ -45,8 +45,9 @@ export async function Cod_verify(req, res) {
 
         const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
+            port: 465,
+            secure: true,
+            family: 4,
             auth: {
                 user: email_app,
                 pass: senha_app
