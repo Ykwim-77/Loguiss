@@ -16,9 +16,6 @@ import router_previsao from './routes/previsao.routes.js'
 import router_producao from './routes/routes_producao.js';
 import autenticarToken from './middlewares/authMiddleware.js';
 import { iniciarAgendador } from './jobs/agendadorPrevisao.js';
-import dns from 'node:dns';
-
-dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 
